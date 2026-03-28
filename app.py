@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 import streamlit as st
 
 st.set_page_config(
@@ -275,8 +274,8 @@ module1, module2, module3, module4 = st.tabs([
 # Module 1
 # -----------------------------
 with module1:
-    st.subheader("Module 1: Dynamic accumulation function")
-    st.caption("See that A(x) is not a fixed number. It changes with x as an accumulation function.")
+    st.subheader("模組 1：累積函數動態生成")
+    st.caption("看懂 A(x) 不是固定數字，而是會跟著 x 改變的累積函數。")
 
     st.markdown(
         """
@@ -311,84 +310,38 @@ with module1:
         st.markdown(
             f"""
             <div class="panel" style="margin-top:0.55rem;">
-            <b>Current settings</b><br>
-            Function: <b>{fname}</b><br>
-            Fixed point: <b>a = {a:.2f}</b><br>
-            Colors: curve <span style="color:{curve_color_m1};font-weight:700;">■</span>　
+            <b>目前設定</b><br>
+            函數：<b>{fname}</b><br>
+            固定點：<b>a = {a:.2f}</b><br>
+            顏色：曲線 <span style="color:{curve_color_m1};font-weight:700;">■</span>　
             面積 <span style="color:{fill_color_m1};font-weight:700;">■</span>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    st.markdown(
-        """
-        <div class="panel">
-        <b>How to use</b><br>
-        Click the function graph on the right. The clicked position becomes the current x, and the accumulation function A(x) on the left updates at the same time.
-        </div>
-        """,
-        unsafe_allow_html=True,
+    x1 = st.number_input(
+        "輸入 x，觀察從固定點 a 到 x 的面積如何形成 A(x)",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1x", (domain_left + domain_right) / 2)),
+        step=0.05,
+        format="%.2f",
+        key="m1x",
     )
 
-    if "m1x" not in st.session_state:
-        st.session_state["m1x"] = float((domain_left + domain_right) / 2)
-
-    chart_col_left, chart_col_right = st.columns([1.35, 1.35], gap="large")
-
-    with chart_col_right:
-        fig_click = go.Figure()
-        fig_click.add_trace(
-            go.Scatter(
-                x=xs,
-                y=ys,
-                mode="lines+markers",
-                line=dict(color=curve_color_m1, width=4),
-                marker=dict(size=9, color=curve_color_m1, opacity=0.18),
-                hovertemplate="x=%{x:.2f}<br>f(x)=%{y:.3f}<extra></extra>",
-                showlegend=False,
-            )
-        )
-        fig_click.add_vline(x=float(a), line_dash="dash", line_color="#666666")
-        fig_click.update_layout(
-            title="Click the function graph to set x",
-            height=540,
-            margin=dict(l=20, r=20, t=60, b=20),
-            clickmode="event+select",
-        )
-        fig_click.update_xaxes(title="x", range=[float(domain_left), float(domain_right)])
-        ypad = max(1.0, (float(np.max(ys)) - float(np.min(ys))) * 0.15)
-        fig_click.update_yaxes(title="f(x)", range=[float(np.min(ys) - ypad), float(np.max(ys) + ypad)])
-
-        event = st.plotly_chart(
-            fig_click,
-            key="module1_click_chart",
-            use_container_width=True,
-            on_select="rerun",
-            selection_mode=("points",),
-        )
-
-        selected_x = None
-        if event and getattr(event, "selection", None):
-            points = event.selection.get("points", [])
-            if points:
-                selected_x = points[0].get("x")
-
-        if selected_x is not None:
-            st.session_state["m1x"] = float(selected_x)
-
-        st.caption("提示：請直接點函數曲線上的位置。系統會取最近的圖上點作為 x。")
-
-    x1 = float(st.session_state["m1x"])
     current_A = np.interp(x1, xs, Axs)
     current_f = f(np.array([x1]))[0]
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
 
     m1c1, m1c2, m1c3 = st.columns(3)
-    m1c1.metric("Current x", f"{x1:.3f}")
-    m1c2.metric("Current f(x)", f"{current_f:.4f}")
-    m1c3.metric("Current A(x)", f"{current_A:.4f}")
+    m1c1.metric("目前 x", f"{x1:.3f}")
+    m1c2.metric("目前 f(x)", f"{current_f:.4f}")
+    m1c3.metric("目前 A(x)", f"{current_A:.4f}")
 
+    chart_col_left, chart_col_right = st.columns([1.35, 1.35], gap="large")
+
+    # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
     if x1 >= domain_left:
         mask_A = xs <= x1
     else:
@@ -399,7 +352,7 @@ with module1:
         ax12.plot(xs[mask_A], Axs[mask_A], linewidth=3.0, color=curve_color_m1)
         ax12.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
         ax12.scatter([x1], [current_A], s=95, color=curve_color_m1, zorder=5)
-        ax12.set_title("Accumulation function A(x) (revealed progressively)", fontsize=16, pad=14)
+        ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
         ax12.tick_params(labelsize=11)
@@ -413,7 +366,7 @@ with module1:
         ax11.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
         ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
         ax11.scatter([x1], [current_f], s=95, color=curve_color_m1, zorder=5)
-        ax11.set_title("Function f(x) and accumulated area from fixed point a to x", fontsize=16, pad=14)
+        ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
         ax11.set_ylabel("f(x)", fontsize=12)
         ax11.tick_params(labelsize=11)
@@ -423,11 +376,11 @@ with module1:
     st.markdown(
         f"""
         <div class="panel">
-        <b>What you should notice</b><br>
-        1. As x changes, the A(x) curve on the left is revealed progressively.<br>
-        2. The shaded area on the right changes with the selected x, showing where the accumulated value comes from.<br>
+        <b>你現在應該看到什麼</b><br>
+        1. 當你拖動 x 時，左圖的 A(x) 曲線會逐步長出來。<br>
+        2. 右圖的陰影面積會跟著改變，代表新的累積量來源。<br>
         3. 這表示積分可以看成「從 a 開始，一路累積到 x」。<br><br>
-        Current values: when x = <b>{x1:.2f}</b>, f(x) ≈ <b>{current_f:.4f}</b>, and A(x) ≈ <b>{current_A:.4f}</b>.
+        目前：當 x = <b>{x1:.2f}</b> 時，f(x) ≈ <b>{current_f:.4f}</b>，A(x) ≈ <b>{current_A:.4f}</b>。
         </div>
         """,
         unsafe_allow_html=True,
@@ -498,7 +451,7 @@ with module2:
     st.markdown(
         f"""
         <div class="panel">
-        <b>What you should notice</b><br>
+        <b>你現在應該看到什麼</b><br>
         - 當 f(x) &gt; 0，A(x) 會往上走。<br>
         - 當 f(x) &lt; 0，A(x) 會往下走。<br>
         - 當 f(x) 接近 0，A(x) 的斜率也會接近 0。<br><br>
@@ -586,7 +539,7 @@ with module3:
     st.markdown(
         f"""
         <div class="panel">
-        <b>What you should notice</b><br>
+        <b>你現在應該看到什麼</b><br>
         - 在積分號裡的 <b>t</b> 只是內部記號。<br>
         - 真正控制面積怎麼變的是上限 <b>g(x)</b>。<br>
         - 所以導數會變成 <b>f(g(x))g'(x)</b>。<br><br>
@@ -658,7 +611,7 @@ with module4:
         st.markdown(
             f"""
             <div class="panel">
-            <b>What you should notice</b><br>
+            <b>你現在應該看到什麼</b><br>
             左邊的陰影面積，對應到右邊原函數從 F(a) 走到 F(b) 的總改變量。<br>
             這就是：<b>定積分 = 總改變量</b>。<br><br>
             現在 a = <b>{a:.2f}</b>，b = <b>{b4:.2f}</b>，所以<br>
