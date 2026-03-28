@@ -58,11 +58,47 @@ st.markdown(
         color: #4f6478;
         font-size: 0.95rem;
     }
-    div[data-testid="stMetric"] {
+div[data-testid="stMetric"] {
         background: #ffffff;
         border: 1px solid #e6eef7;
         padding: 0.7rem 0.8rem;
         border-radius: 14px;
+    }
+    div[data-testid="stButton"] > button {
+        border-radius: 999px;
+        border: 1px solid #cfe0ff;
+        background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+        color: #184a90;
+        font-weight: 700;
+        padding: 0.5rem 1.1rem;
+    }
+    div[data-testid="stButton"] > button:hover {
+        border-color: #8fb6ff;
+        color: #0f3d82;
+    }
+    .module-toolbar {
+        background: linear-gradient(135deg, #f8fbff 0%, #edf4ff 100%);
+        border: 1px solid #dbe8fb;
+        border-radius: 18px;
+        padding: 1rem 1.1rem 0.5rem 1.1rem;
+        margin: 0.4rem 0 1rem 0;
+    }
+    .module-chip {
+        display: inline-block;
+        margin-right: 0.45rem;
+        margin-bottom: 0.45rem;
+        padding: 0.36rem 0.8rem;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid #d9e7fb;
+        color: #355070;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+    .big-note {
+        font-size: 1.02rem;
+        color: #38506a;
+        line-height: 1.8;
     }
     </style>
     """,
@@ -196,6 +232,11 @@ with st.sidebar:
         domain_right = domain_left + 0.5
 
     st.markdown("---")
+    st.subheader("模組 1 圖形樣式")
+    curve_color_m1 = st.color_picker("函數曲線顏色", "#1f77b4")
+    fill_color_m1 = st.color_picker("面積塗色顏色", "#ff7f0e")
+
+    st.markdown("---")
     show_help = st.checkbox("顯示操作提醒", value=True)
     show_formula = st.checkbox("顯示公式區", value=True)
 
@@ -231,16 +272,56 @@ module1, module2, module3, module4 = st.tabs([
 # -----------------------------
 with module1:
     st.subheader("模組 1：累積函數動態生成")
-    st.caption("看懂 A(x) 不是一個固定數字，而是一個會隨 x 改變的累積函數。")
+    st.caption("看懂 A(x) 不是固定數字，而是會跟著 x 改變的累積函數。")
 
-    if show_formula:
-        st.markdown('<div class="formula-box">\n$$A(x)=\\int_a^x f(t)\,dt$$\n</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="module-toolbar">
+            <div class="module-chip">步驟 1：選函數</div>
+            <div class="module-chip">步驟 2：拖動 x</div>
+            <div class="module-chip">步驟 3：看面積變化</div>
+            <div class="module-chip">步驟 4：對照 A(x) 上的點</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    top_left, top_right = st.columns([1.55, 1.0])
+    with top_left:
+        if show_formula:
+            st.markdown('<div class="formula-box">$$A(x)=\int_a^x f(t)\,dt$$</div>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="big-note">
+            觀察重點：當你把 x 往右拖時，從 a 到 x 的面積會持續累積，
+            而下方的 <b>A(x)</b> 也會跟著改變。
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with top_right:
+        reset_default = float((domain_left + domain_right) / 2)
+        if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
+            st.session_state["m1x"] = reset_default
+        st.markdown(
+            f"""
+            <div class="panel" style="margin-top:0.55rem;">
+            <b>目前設定</b><br>
+            函數：<b>{fname}</b><br>
+            下限：<b>a = {a:.2f}</b><br>
+            顏色：曲線 <span style="color:{curve_color_m1};font-weight:700;">■</span>　
+            面積 <span style="color:{fill_color_m1};font-weight:700;">■</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     x1 = st.slider(
         "拖動 x，觀察從 a 到 x 的面積如何形成 A(x)",
         min_value=float(domain_left),
         max_value=float(domain_right),
-        value=float((domain_left + domain_right) / 2),
+        value=float(st.session_state.get("m1x", (domain_left + domain_right) / 2)),
         step=0.05,
         key="m1x",
     )
@@ -254,32 +335,40 @@ with module1:
     m1c2.metric("目前 f(x)", f"{current_f:.4f}")
     m1c3.metric("目前 A(x)", f"{current_A:.4f}")
 
-    fig1, (ax11, ax12) = plt.subplots(2, 1, figsize=(10, 9), constrained_layout=True)
-    ax11.plot(xs, ys, linewidth=2)
-    ax11.axvline(a, linestyle="--", linewidth=1.2)
-    ax11.axvline(x1, linestyle="--", linewidth=1.2)
-    ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.3)
-    ax11.scatter([x1], [current_f], s=55)
-    ax11.set_title("上圖：原函數 f(x) 與從 a 到 x 的累積面積", fontsize=14)
-    ax11.set_xlabel("x")
-    ax11.set_ylabel("f(x)")
-    add_common_style(ax11)
+    chart_col_left, chart_col_right = st.columns([1.35, 1.35], gap="large")
 
-    ax12.plot(xs, Axs, linewidth=2)
-    ax12.axvline(x1, linestyle="--", linewidth=1.2)
-    ax12.scatter([x1], [current_A], s=55)
-    ax12.set_title("下圖：累積函數 A(x)", fontsize=14)
-    ax12.set_xlabel("x")
-    ax12.set_ylabel("A(x)")
-    add_common_style(ax12)
-    st.pyplot(fig1, use_container_width=True)
+    with chart_col_left:
+        fig11, ax11 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
+        ax11.plot(xs, ys, linewidth=3.0, color=curve_color_m1)
+        ax11.axvline(a, linestyle="--", linewidth=1.4, color="#666666")
+        ax11.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
+        ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
+        ax11.scatter([x1], [current_f], s=95, color=curve_color_m1, zorder=5)
+        ax11.set_title("原函數 f(x) 與從 a 到 x 的累積面積", fontsize=16, pad=14)
+        ax11.set_xlabel("x", fontsize=12)
+        ax11.set_ylabel("f(x)", fontsize=12)
+        ax11.tick_params(labelsize=11)
+        add_common_style(ax11)
+        st.pyplot(fig11, use_container_width=True)
+
+    with chart_col_right:
+        fig12, ax12 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
+        ax12.plot(xs, Axs, linewidth=3.0, color=curve_color_m1)
+        ax12.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
+        ax12.scatter([x1], [current_A], s=95, color=curve_color_m1, zorder=5)
+        ax12.set_title("累積函數 A(x)", fontsize=16, pad=14)
+        ax12.set_xlabel("x", fontsize=12)
+        ax12.set_ylabel("A(x)", fontsize=12)
+        ax12.tick_params(labelsize=11)
+        add_common_style(ax12)
+        st.pyplot(fig12, use_container_width=True)
 
     st.markdown(
         f"""
         <div class="panel">
         <b>你現在應該看到什麼</b><br>
-        1. 當你拖動 x 時，上面的陰影面積會跟著改變。<br>
-        2. 下面的點會在 A(x) 上移動，代表新的累積量。<br>
+        1. 當你拖動 x 時，左圖的陰影面積會跟著改變。<br>
+        2. 右圖上的點會在 A(x) 曲線上移動，代表新的累積量。<br>
         3. 這表示積分可以看成「從 a 開始，一路累積到 x」。<br><br>
         目前：當 x = <b>{x1:.2f}</b> 時，f(x) ≈ <b>{current_f:.4f}</b>，A(x) ≈ <b>{current_A:.4f}</b>。
         </div>
