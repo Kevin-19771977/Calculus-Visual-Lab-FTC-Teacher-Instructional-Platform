@@ -225,14 +225,16 @@ with st.sidebar:
     F = antiderivative_factory(fname)
 
     st.markdown("---")
-    a = st.number_input("固定點 a", min_value=-3.0, max_value=2.0, value=0.0, step=0.5, format="%.2f")
-    left_col, right_col = st.columns(2)
-    with left_col:
-        domain_left = st.number_input("左端點", min_value=-5.0, max_value=0.0, value=-3.0, step=0.5, format="%.2f")
-    with right_col:
-        domain_right = st.number_input("右端點", min_value=1.0, max_value=5.0, value=3.0, step=0.5, format="%.2f")
-    if domain_right <= domain_left + 0.5:
-        domain_right = domain_left + 0.5
+    left_input_col, right_input_col = st.columns(2)
+    with left_input_col:
+        domain_left = st.number_input("顯示區間左端點", value=-3.0, step=0.5, format="%.2f")
+    with right_input_col:
+        domain_right = st.number_input("顯示區間右端點", value=3.0, step=0.5, format="%.2f")
+    if domain_right <= domain_left:
+        st.warning("右端點必須大於左端點，已暫時使用預設區間 [-3, 3]。")
+        domain_left, domain_right = -3.0, 3.0
+
+    a = st.number_input("固定點 a", min_value=float(domain_left), max_value=float(domain_right), value=0.0, step=0.5, format="%.2f")
 
     st.markdown("---")
     st.subheader("模組 1 圖形樣式")
@@ -282,7 +284,7 @@ with module1:
         <div class="module-toolbar">
             <div class="module-chip">步驟 1：選函數</div>
             <div class="module-chip">步驟 2：拖動 x</div>
-            <div class="module-chip">步驟 3：看從固定點 a 到 x 的面積變化</div>
+            <div class="module-chip">步驟 3：看面積變化</div>
             <div class="module-chip">步驟 4：對照 A(x) 上的點</div>
         </div>
         """,
@@ -313,6 +315,8 @@ with module1:
             <b>目前設定</b><br>
             函數：<b>{fname}</b><br>
             固定點：<b>a = {a:.2f}</b><br>
+            顯示區間：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
+            顯示區間：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
             顏色：曲線 <span style="color:{curve_color_m1};font-weight:700;">■</span>　
             面積 <span style="color:{fill_color_m1};font-weight:700;">■</span>
             </div>
@@ -320,13 +324,12 @@ with module1:
             unsafe_allow_html=True,
         )
 
-    x1 = st.number_input(
-        "輸入 x，觀察從固定點 a 到 x 的面積如何形成 A(x)",
+    x1 = st.slider(
+        "拖動 x，觀察從固定點 a 到 x 的面積如何形成 A(x)",
         min_value=float(domain_left),
         max_value=float(domain_right),
         value=float(st.session_state.get("m1x", (domain_left + domain_right) / 2)),
         step=0.05,
-        format="%.2f",
         key="m1x",
     )
 
@@ -347,6 +350,14 @@ with module1:
     else:
         mask_A = xs >= x1
 
+    # 左右兩圖使用一致的 x、y 顯示範圍
+    y_candidates = np.concatenate([ys, Axs, np.array([0.0])])
+    y_min_common = float(np.min(y_candidates))
+    y_max_common = float(np.max(y_candidates))
+    y_pad = max(0.5, 0.08 * (y_max_common - y_min_common if y_max_common > y_min_common else 1.0))
+    y_min_common -= y_pad
+    y_max_common += y_pad
+
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
         ax12.plot(xs[mask_A], Axs[mask_A], linewidth=3.0, color=curve_color_m1)
@@ -355,6 +366,8 @@ with module1:
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
+        ax12.set_xlim(domain_left, domain_right)
+        ax12.set_ylim(y_min_common, y_max_common)
         ax12.tick_params(labelsize=11)
         add_common_style(ax12)
         st.pyplot(fig12, use_container_width=True)
@@ -369,6 +382,8 @@ with module1:
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
         ax11.set_ylabel("f(x)", fontsize=12)
+        ax11.set_xlim(domain_left, domain_right)
+        ax11.set_ylim(y_min_common, y_max_common)
         ax11.tick_params(labelsize=11)
         add_common_style(ax11)
         st.pyplot(fig11, use_container_width=True)
@@ -379,7 +394,7 @@ with module1:
         <b>你現在應該看到什麼</b><br>
         1. 當你拖動 x 時，左圖的 A(x) 曲線會逐步長出來。<br>
         2. 右圖的陰影面積會跟著改變，代表新的累積量來源。<br>
-        3. 這表示積分可以看成「從 a 開始，一路累積到 x」。<br><br>
+        3. 這表示積分可以看成「從固定點 a 開始，一路累積到 x」。<br><br>
         目前：當 x = <b>{x1:.2f}</b> 時，f(x) ≈ <b>{current_f:.4f}</b>，A(x) ≈ <b>{current_A:.4f}</b>。
         </div>
         """,
