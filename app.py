@@ -115,6 +115,16 @@ div[data-testid="stMetric"] {
         margin: 0 auto 0.75rem auto;
         width: 100%;
     }
+
+    div[data-testid="stTabs"] [role="tablist"] {
+        justify-content: space-between;
+        gap: 1.2rem;
+    }
+    div[data-testid="stTabs"] [role="tab"] {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
     </style>
     """,
     unsafe_allow_html=True,
