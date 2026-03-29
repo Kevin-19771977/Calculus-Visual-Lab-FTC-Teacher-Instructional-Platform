@@ -729,48 +729,46 @@ with module4:
         arr = np.array(x, dtype=float)
         return np.interp(arr, xs, Axs_m4)
 
-    if b4 <= a:
-        pass
-    else:
-        exact_area = (F_m4(np.array([b4])) - F_m4(np.array([a])))[0]
-        Fa = F_m4(np.array([a]))[0]
-        Fb = F_m4(np.array([b4]))[0]
+    b4_display = max(b4, a)
+    exact_area = (F_m4(np.array([b4_display])) - F_m4(np.array([a])))[0]
+    Fa = F_m4(np.array([a]))[0]
+    Fb = F_m4(np.array([b4_display]))[0]
 
-        m4c1, m4c2, m4c3 = st.columns(3)
-        m4c1.metric("F(a)", f"{Fa:.4f}")
-        m4c2.metric("F(b)", f"{Fb:.4f}")
-        m4c3.metric("F(b)-F(a)", f"{exact_area:.4f}")
+    m4c1, m4c2, m4c3 = st.columns(3)
+    m4c1.metric("F(a)", f"{Fa:.4f}")
+    m4c2.metric("F(b)", f"{Fb:.4f}")
+    m4c3.metric("F(b)-F(a)", f"{exact_area:.4f}")
 
-        left, right = st.columns(2)
-        with left:
-            Fx = Axs_m4
-            fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-            ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
-            ax42.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-            ax42.axvline(b4, linestyle="--", linewidth=1.2)
-            ax42.scatter([a, b4], [Fa, Fb], s=55, color="#8bbce9")
-            ax42.set_title("原函數的總改變量", fontsize=14)
-            ax42.set_xlabel("x")
-            ax42.set_ylabel("F(x)")
-            ax42.set_xlim(x_min_common, x_max_common)
-            ax42.set_ylim(y_min_common, y_max_common)
-            add_common_style(ax42)
-            st.pyplot(fig42, use_container_width=True)
+    left, right = st.columns(2)
+    with left:
+        Fx = Axs_m4
+        fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+        ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
+        ax42.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
+        ax42.axvline(b4_display, linestyle="--", linewidth=1.2)
+        ax42.scatter([a, b4_display], [Fa, Fb], s=55, color="#8bbce9")
+        ax42.set_title("原函數的總改變量", fontsize=14)
+        ax42.set_xlabel("x")
+        ax42.set_ylabel("F(x)")
+        ax42.set_xlim(x_min_common, x_max_common)
+        ax42.set_ylim(y_min_common, y_max_common)
+        add_common_style(ax42)
+        st.pyplot(fig42, use_container_width=True)
 
-        with right:
-            fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-            ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
-            ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-            ax4.axvline(b4, linestyle="--", linewidth=1.2)
-            mask4 = (xs >= a) & (xs <= b4)
-            ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3, color=fill_color_m1)
-            ax4.set_title("陰影面積：定積分", fontsize=14)
-            ax4.set_xlabel("x")
-            ax4.set_ylabel("f(x)")
-            ax4.set_xlim(x_min_common, x_max_common)
-            ax4.set_ylim(y_min_common, y_max_common)
-            add_common_style(ax4)
-            st.pyplot(fig4, use_container_width=True)
+    with right:
+        fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+        ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
+        ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
+        ax4.axvline(b4_display, linestyle="--", linewidth=1.2)
+        mask4 = (xs >= a) & (xs <= b4_display)
+        ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3, color=fill_color_m1)
+        ax4.set_title("陰影面積：定積分", fontsize=14)
+        ax4.set_xlabel("x")
+        ax4.set_ylabel("f(x)")
+        ax4.set_xlim(x_min_common, x_max_common)
+        ax4.set_ylim(y_min_common, y_max_common)
+        add_common_style(ax4)
+        st.pyplot(fig4, use_container_width=True)
 
         st.markdown(
             f"""
