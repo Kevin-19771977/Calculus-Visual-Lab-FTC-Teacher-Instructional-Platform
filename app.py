@@ -467,6 +467,9 @@ with module1:
         step=0.05,
         key="m1x",
     )
+    if x1 < a:
+        x1 = float(a)
+        st.session_state["m1x"] = float(a)
     reset_default = float((domain_left + domain_right) / 2)
     if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
         st.session_state["m1x"] = reset_default
@@ -697,6 +700,9 @@ with module4:
         step=0.05,
         key="m4b",
     )
+    if b4 < a:
+        b4 = float(a)
+        st.session_state["m4b"] = float(a)
     st.markdown('</div>', unsafe_allow_html=True)
 
     Axs_m4 = cumulative_integral(f, a, xs)
