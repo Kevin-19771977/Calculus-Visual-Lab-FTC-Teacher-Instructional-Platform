@@ -159,6 +159,26 @@ def function_factory(name: str):
     raise ValueError("Unknown function")
 
 
+
+def build_custom_function(expr_text: str):
+    x = sp.symbols("x")
+    allowed = {
+        "x": x,
+        "sin": sp.sin,
+        "cos": sp.cos,
+        "tan": sp.tan,
+        "exp": sp.exp,
+        "log": sp.log,
+        "sqrt": sp.sqrt,
+        "Abs": sp.Abs,
+        "pi": sp.pi,
+        "E": sp.E,
+    }
+    expr = sp.sympify(expr_text, locals=allowed)
+    func = sp.lambdify(x, expr, modules=["numpy"])
+    return expr, func
+
+
 def g_factory(name: str):
     if name == "x":
         return lambda x: x
@@ -189,8 +209,8 @@ def gprime_factory(name: str):
 
 def add_common_style(ax):
     ax.grid(alpha=0.22)
-    ax.axhline(0, linewidth=1.6, color="#4a4a4a", zorder=0)
-    ax.axvline(0, linewidth=1.6, color="#4a4a4a", zorder=0)
+    ax.axhline(0, linewidth=1.6, color="#9a9a9a", zorder=0)
+    ax.axvline(0, linewidth=1.6, color="#9a9a9a", zorder=0)
     for spine in ["top", "right"]:
         ax.spines[spine].set_visible(False)
 
@@ -224,12 +244,47 @@ with colC:
 # -----------------------------
 with st.sidebar:
     st.header("操作設定")
-    fname = st.selectbox(
-        "選擇原函數 f(x)",
-        ["x", "x^2", "sin(x)", "cos(x)", "x^2 - 1", "0.5x^3 - x"],
-    )
-    f = function_factory(fname)
-    F = antiderivative_factory(fname)
+    function_mode = st.radio("函數來源", ["使用內建函數", "自行輸入函數"], index=0)
+
+    if function_mode == "使用內建函數":
+        fname = st.selectbox(
+            "選擇原函數 f(x)",
+            ["x", "x^2", "sin(x)", "cos(x)", "x^2 - 1", "0.5x^3 - x"],
+        )
+        f = function_factory(fname)
+    else:
+        if st.button("顯示常用函數輸入示範", use_container_width=True):
+            st.session_state["show_function_examples"] = not st.session_state.get("show_function_examples", False)
+
+        if st.session_state.get("show_function_examples", False):
+            st.info(
+                "可參考這些輸入格式：\n"
+                "• x\n"
+                "• x**2\n"
+                "• x**3 - x\n"
+                "• sin(x)\n"
+                "• cos(x) + x\n"
+                "• exp(x)\n"
+                "• log(x+2)\n"
+                "• sqrt(x+3)\n"
+                "• Abs(x)\n"
+                "• sin(x) + x/2"
+            )
+
+        custom_expr_text = st.text_input(
+            "自行輸入 f(x)",
+            value="sin(x)+x/2",
+            help="可輸入：x**2、sin(x)、cos(x)、exp(x)、log(x+2)、sqrt(x+3) 等",
+        )
+        try:
+            custom_expr, custom_func = build_custom_function(custom_expr_text)
+            fname = str(custom_expr)
+            f = lambda x: np.array(custom_func(x), dtype=float)
+            st.success("自訂函數已載入")
+        except Exception:
+            fname = "x"
+            f = function_factory(fname)
+            st.error("自訂函數格式有誤，已暫時改用 f(x)=x")
 
     st.markdown("---")
     left_input_col, right_input_col = st.columns(2)
@@ -253,9 +308,23 @@ with st.sidebar:
     show_formula = st.checkbox("顯示公式區", value=True)
 
 xs = np.linspace(domain_left, domain_right, 800)
-ys = f(xs)
+
+try:
+    ys = np.array(f(xs), dtype=float)
+    if ys.shape == ():
+        ys = np.full_like(xs, float(ys))
+except Exception:
+    st.error("目前函數無法在這個區間正常計算，請修改函數或調整顯示區間。")
+    st.stop()
+
 Axs = cumulative_integral(f, a, xs)
 Aprime = safe_gradient(Axs, xs)
+
+# 以數值方式建立一個原函數 F，使得 F'(x)=f(x) 且 F(a)=0
+def F(x):
+    arr = np.array(x, dtype=float)
+    return np.interp(arr, xs, Axs)
+
 Fxs = F(xs)
 
 x_min_common = float(domain_left)
