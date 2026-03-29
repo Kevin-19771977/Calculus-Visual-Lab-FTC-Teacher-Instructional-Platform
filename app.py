@@ -730,7 +730,7 @@ with module4:
         return np.interp(arr, xs, Axs_m4)
 
     if b4 <= a:
-        st.warning("目前 b 小於等於 a，請把 b 調整到大於 a。")
+        pass
     else:
         exact_area = (F_m4(np.array([b4])) - F_m4(np.array([a])))[0]
         Fa = F_m4(np.array([a]))[0]
