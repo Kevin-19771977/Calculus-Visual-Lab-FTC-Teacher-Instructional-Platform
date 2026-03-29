@@ -209,8 +209,8 @@ def gprime_factory(name: str):
 
 def add_common_style(ax):
     ax.grid(alpha=0.22)
-    ax.axhline(0, linewidth=1.6, color="#9a9a9a", zorder=0)
-    ax.axvline(0, linewidth=1.6, color="#9a9a9a", zorder=0)
+    ax.axhline(0, linewidth=1.6, color="#4a4a4a", zorder=0)
+    ax.axvline(0, linewidth=1.6, color="#4a4a4a", zorder=0)
     for spine in ["top", "right"]:
         ax.spines[spine].set_visible(False)
 
@@ -327,12 +327,13 @@ def F(x):
 
 Fxs = F(xs)
 
+# 固定共同座標範圍：不因固定點 a 改變而跳動
 x_min_common = float(domain_left)
 x_max_common = float(domain_right)
-y_candidates_all = np.concatenate([ys, Axs, Aprime, Fxs, np.array([0.0])])
-y_min_common = float(np.min(y_candidates_all))
-y_max_common = float(np.max(y_candidates_all))
-y_pad_common = max(0.5, 0.08 * (y_max_common - y_min_common if y_max_common > y_min_common else 1.0))
+y_candidates_base = np.concatenate([ys, np.array([0.0])])
+y_min_common = float(np.min(y_candidates_base))
+y_max_common = float(np.max(y_candidates_base))
+y_pad_common = max(0.5, 0.12 * (y_max_common - y_min_common if y_max_common > y_min_common else 1.0))
 y_min_common -= y_pad_common
 y_max_common += y_pad_common
 
