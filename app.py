@@ -115,6 +115,10 @@ div[data-testid="stMetric"] {
         margin: 0 auto 0.75rem auto;
         width: 100%;
     }
+    .goal-panel {
+        padding: 1.2rem 1.4rem;
+        font-size: 1.08rem;
+    }
 
     div[data-testid="stTabs"] [role="tablist"] {
         justify-content: space-between;
@@ -258,11 +262,11 @@ st.markdown(
 
 colA, colB, colC = st.columns([1.2, 1.2, 1.6])
 with colA:
-    st.markdown('<div class="panel"><b>建議使用方式</b><br>先看左邊設定，再依序操作 4 個模組。</div>', unsafe_allow_html=True)
+    st.empty()
 with colB:
-    st.markdown('<div class="panel"><b>學習目標</b><br>看懂「面積累積 → 導數 → 定積分」的完整連結。</div>', unsafe_allow_html=True)
+    st.markdown('<div class="panel goal-panel"><b>學習目標</b><br>看懂「面積累積 → 導數 → 定積分」的完整連結。</div>', unsafe_allow_html=True)
 with colC:
-    st.markdown('<div class="panel"><b>適合情境</b><br>課堂操作、翻轉學習、研究試教、學生自主練習。</div>', unsafe_allow_html=True)
+    st.empty()
 
 # -----------------------------
 # Sidebar
