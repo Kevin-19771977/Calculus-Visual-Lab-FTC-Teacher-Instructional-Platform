@@ -459,7 +459,7 @@ with module1:
     m1c2.metric("目前 f(x)", f"{current_f:.4f}")
     m1c3.metric("目前 A(x)", f"{current_A:.4f}")
 
-    chart_col_left, chart_col_right = st.columns([1.35, 1.35], gap="large")
+    chart_col_left, chart_col_right = st.columns(2, gap="large")
 
     # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
     if x1 >= domain_left:
@@ -468,7 +468,7 @@ with module1:
         mask_A = xs >= x1
 
     with chart_col_left:
-        fig12, ax12 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
+        fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         mask_A_display = (xs >= a) & mask_A
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=3.0, color=curve_color_m1)
         ax12.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
@@ -484,7 +484,7 @@ with module1:
         st.pyplot(fig12, use_container_width=True)
 
     with chart_col_right:
-        fig11, ax11 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
+        fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         mask_f_display = xs >= a
         ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=3.0, color=curve_color_m1)
         ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
@@ -640,9 +640,9 @@ with module4:
         m4c2.metric("F(b)", f"{Fb:.4f}")
         m4c3.metric("F(b)-F(a)", f"{exact_area:.4f}")
 
-        left, right = st.columns([1.15, 1])
+        left, right = st.columns(2)
         with left:
-            fig4, ax4 = plt.subplots(figsize=(9, 5.5), constrained_layout=True)
+            fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
             ax4.plot(xs, ys, linewidth=2)
             ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
             ax4.axvline(b4, linestyle="--", linewidth=1.2)
@@ -658,7 +658,7 @@ with module4:
 
         with right:
             Fx = Axs_m4
-            fig42, ax42 = plt.subplots(figsize=(8, 5.5), constrained_layout=True)
+            fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
             ax42.plot(xs, Fx, linewidth=2)
             ax42.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
             ax42.axvline(b4, linestyle="--", linewidth=1.2)
