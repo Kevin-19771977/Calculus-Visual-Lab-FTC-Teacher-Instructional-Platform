@@ -113,7 +113,7 @@ div[data-testid="stMetric"] {
         border-radius: 16px;
         padding: 0.8rem 0.9rem 0.4rem 0.9rem;
         margin: 0 auto 0.75rem auto;
-        max-width: 640px;
+        max-width: 520px;
     }
     </style>
     """,
@@ -542,7 +542,7 @@ with module2:
         unsafe_allow_html=True,
     )
 
-    pad_left, center_col, pad_right = st.columns([0.18, 0.64, 0.18])
+    pad_left, center_col, pad_right = st.columns([0.28, 0.44, 0.28])
     with center_col:
         st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
         a2 = st.slider(
