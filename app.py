@@ -209,8 +209,8 @@ def gprime_factory(name: str):
 
 def add_common_style(ax):
     ax.grid(alpha=0.22)
-    ax.axhline(0, linewidth=1.6, color="#4a4a4a", zorder=0)
-    ax.axvline(0, linewidth=1.6, color="#4a4a4a", zorder=0)
+    ax.axhline(0, linewidth=1.6, color="#b0b0b0", zorder=0)
+    ax.axvline(0, linewidth=1.6, color="#b0b0b0", zorder=0)
     for spine in ["top", "right"]:
         ax.spines[spine].set_visible(False)
 
