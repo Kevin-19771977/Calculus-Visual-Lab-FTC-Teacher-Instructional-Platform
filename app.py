@@ -532,19 +532,18 @@ with module2:
     if show_formula:
         st.markdown('<div class="formula-box">\n$$A(x)=\\int_a^x f(t)\\,dt \quad \Rightarrow \quad A\'(x)=f(x)$$\n</div>', unsafe_allow_html=True)
 
-    top_left2, top_right2 = st.columns([1.55, 1.0])
-    with top_left2:
-        st.markdown(
-            """
-            <div class="big-note">
-            觀察重點：當你拖動 x 時，左圖的 A(x) 會顯示目前位置與切線，
-            右圖的 f(x) 會同步顯示對應的函數值，幫助你理解 A'(x)=f(x)。
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        """
+        <div class="big-note">
+        觀察重點：當你拖動 x 時，左圖的 A(x) 會顯示目前位置與切線，
+        右圖的 f(x) 會同步顯示對應的函數值，幫助你理解 A'(x)=f(x)。
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    with top_right2:
+    pad_left, center_col, pad_right = st.columns([0.24, 0.52, 0.24])
+    with center_col:
         st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
         a2 = st.slider(
             "固定點 a",
@@ -581,6 +580,8 @@ with module2:
         else:
             trend = "A(x) 在這附近斜率接近 0"
 
+    m2_info_left, m2_info_center, m2_info_right = st.columns([0.20, 0.60, 0.20])
+    with m2_info_center:
         st.markdown(
             f"""
             <div class="panel" style="margin-top:0.55rem;">
