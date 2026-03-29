@@ -718,7 +718,7 @@ with module4:
             ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
             ax4.axvline(b4, linestyle="--", linewidth=1.2)
             mask4 = (xs >= a) & (xs <= b4)
-            ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3)
+            ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3, color=fill_color_m1)
             ax4.set_title("陰影面積：定積分", fontsize=14)
             ax4.set_xlabel("x")
             ax4.set_ylabel("f(x)")
