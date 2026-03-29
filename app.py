@@ -189,7 +189,8 @@ def gprime_factory(name: str):
 
 def add_common_style(ax):
     ax.grid(alpha=0.22)
-    ax.axhline(0, linewidth=1)
+    ax.axhline(0, linewidth=1.6, color="#4a4a4a", zorder=0)
+    ax.axvline(0, linewidth=1.6, color="#4a4a4a", zorder=0)
     for spine in ["top", "right"]:
         ax.spines[spine].set_visible(False)
 
@@ -255,6 +256,16 @@ xs = np.linspace(domain_left, domain_right, 800)
 ys = f(xs)
 Axs = cumulative_integral(f, a, xs)
 Aprime = safe_gradient(Axs, xs)
+Fxs = F(xs)
+
+x_min_common = float(domain_left)
+x_max_common = float(domain_right)
+y_candidates_all = np.concatenate([ys, Axs, Aprime, Fxs, np.array([0.0])])
+y_min_common = float(np.min(y_candidates_all))
+y_max_common = float(np.max(y_candidates_all))
+y_pad_common = max(0.5, 0.08 * (y_max_common - y_min_common if y_max_common > y_min_common else 1.0))
+y_min_common -= y_pad_common
+y_max_common += y_pad_common
 
 if show_help:
     st.markdown(
@@ -271,10 +282,9 @@ if show_help:
 # -----------------------------
 # Tabs
 # -----------------------------
-module1, module2, module3, module4 = st.tabs([
+module1, module2, module4 = st.tabs([
     "模組 1｜累積函數動態生成",
     "模組 2｜導數與累積同步",
-    "模組 3｜變上限積分符號辨識",
     "模組 4｜FTC Part 2 幾何意義",
 ])
 
@@ -355,14 +365,6 @@ with module1:
     else:
         mask_A = xs >= x1
 
-    # 左右兩圖使用一致的 x、y 顯示範圍
-    y_candidates = np.concatenate([ys, Axs, np.array([0.0])])
-    y_min_common = float(np.min(y_candidates))
-    y_max_common = float(np.max(y_candidates))
-    y_pad = max(0.5, 0.08 * (y_max_common - y_min_common if y_max_common > y_min_common else 1.0))
-    y_min_common -= y_pad
-    y_max_common += y_pad
-
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
         ax12.plot(xs[mask_A], Axs[mask_A], linewidth=3.0, color=curve_color_m1)
@@ -371,7 +373,7 @@ with module1:
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
-        ax12.set_xlim(domain_left, domain_right)
+        ax12.set_xlim(x_min_common, x_max_common)
         ax12.set_ylim(y_min_common, y_max_common)
         ax12.tick_params(labelsize=11)
         add_common_style(ax12)
@@ -387,7 +389,7 @@ with module1:
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
         ax11.set_ylabel("f(x)", fontsize=12)
-        ax11.set_xlim(domain_left, domain_right)
+        ax11.set_xlim(x_min_common, x_max_common)
         ax11.set_ylim(y_min_common, y_max_common)
         ax11.tick_params(labelsize=11)
         add_common_style(ax11)
@@ -453,6 +455,8 @@ with module2:
         ax2.set_title("比較 f(x) 與 A'(x)", fontsize=14)
         ax2.set_xlabel("x")
         ax2.set_ylabel("數值")
+        ax2.set_xlim(x_min_common, x_max_common)
+        ax2.set_ylim(y_min_common, y_max_common)
         ax2.legend()
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
@@ -465,6 +469,8 @@ with module2:
         ax22.set_title("累積函數 A(x)", fontsize=14)
         ax22.set_xlabel("x")
         ax22.set_ylabel("A(x)")
+        ax22.set_xlim(x_min_common, x_max_common)
+        ax22.set_ylim(y_min_common, y_max_common)
         add_common_style(ax22)
         st.pyplot(fig22, use_container_width=True)
 
@@ -476,95 +482,6 @@ with module2:
         - 當 f(x) &lt; 0，A(x) 會往下走。<br>
         - 當 f(x) 接近 0，A(x) 的斜率也會接近 0。<br><br>
         目前這個位置的判讀：<b>{trend}</b>。
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# -----------------------------
-# Module 3
-# -----------------------------
-with module3:
-    st.subheader("模組 3：變上限積分符號辨識")
-    st.caption("分清楚誰是虛變數、誰才是真正控制上限變化的變數。")
-
-    gname = st.selectbox("選擇上限函數 g(x)", ["x", "x^2", "sin(x)+1", "0.5x+1", "2-x"], key="gselect")
-    g = g_factory(gname)
-    gp = gprime_factory(gname)
-
-    if show_formula:
-        st.markdown(
-            '<div class="formula-box">\n$$\\frac{d}{dx}\\int_a^x f(t)\,dt = f(x)$$\n$$\\frac{d}{dx}\\int_a^{g(x)} f(t)\,dt = f(g(x))g\'(x)$$\n</div>',
-            unsafe_allow_html=True,
-        )
-
-    x3_left, x3_right = -1.5, 1.5
-    xs3 = np.linspace(x3_left, x3_right, 600)
-    gx = g(xs3)
-    Hxs = F(gx) - F(np.full_like(gx, a))
-    Hprime_numeric = safe_gradient(Hxs, xs3)
-    Hprime_formula = f(gx) * gp(xs3)
-
-    x3 = st.slider(
-        "拖動 x，觀察 H(x)=∫_a^{g(x)} f(t)dt 的變化",
-        min_value=float(x3_left),
-        max_value=float(x3_right),
-        value=0.5,
-        step=0.05,
-        key="m3x",
-    )
-
-    g_now = g(np.array([x3]))[0]
-    gp_now = gp(np.array([x3]))[0]
-    H_now = (F(np.array([g_now])) - F(np.array([a])))[0]
-    Hf_now = f(np.array([g_now]))[0] * gp_now
-
-    m3c1, m3c2, m3c3, m3c4 = st.columns(4)
-    m3c1.metric("x", f"{x3:.3f}")
-    m3c2.metric("g(x)", f"{g_now:.4f}")
-    m3c3.metric("g'(x)", f"{gp_now:.4f}")
-    m3c4.metric("f(g(x))g'(x)", f"{Hf_now:.4f}")
-
-    left, right = st.columns([1.15, 1.15])
-    with left:
-        fig3, ax3 = plt.subplots(figsize=(8.8, 5.3), constrained_layout=True)
-        dense_t = np.linspace(min(a, np.min(gx)) - 0.5, max(a, np.max(gx)) + 0.5, 800)
-        ax3.plot(dense_t, f(dense_t), linewidth=2)
-        ax3.axvline(a, linestyle="--", linewidth=1.2)
-        ax3.axvline(g_now, linestyle="--", linewidth=1.2)
-        lo, hi = min(a, g_now), max(a, g_now)
-        mask3 = (dense_t >= lo) & (dense_t <= hi)
-        ax3.fill_between(dense_t[mask3], f(dense_t[mask3]), 0, alpha=0.3)
-        ax3.scatter([g_now], [f(np.array([g_now]))[0]], s=55)
-        ax3.set_title("以 t 為積分變數的面積", fontsize=14)
-        ax3.set_xlabel("t")
-        ax3.set_ylabel("f(t)")
-        add_common_style(ax3)
-        st.pyplot(fig3, use_container_width=True)
-
-    with right:
-        fig32, ax32 = plt.subplots(figsize=(8.8, 5.3), constrained_layout=True)
-        ax32.plot(xs3, Hprime_numeric, linewidth=2, label="數值近似 H'(x)")
-        ax32.plot(xs3, Hprime_formula, linestyle="--", linewidth=2, label="f(g(x))g'(x)")
-        ax32.axvline(x3, linestyle=":", linewidth=1.2)
-        ax32.scatter([x3], [np.interp(x3, xs3, Hprime_numeric)], s=55)
-        ax32.scatter([x3], [Hf_now], s=55)
-        ax32.set_title("比較導數結果", fontsize=14)
-        ax32.set_xlabel("x")
-        ax32.set_ylabel("數值")
-        ax32.legend()
-        add_common_style(ax32)
-        st.pyplot(fig32, use_container_width=True)
-
-    st.markdown(
-        f"""
-        <div class="panel">
-        <b>你現在應該看到什麼</b><br>
-        - 在積分號裡的 <b>t</b> 只是內部記號。<br>
-        - 真正控制面積怎麼變的是上限 <b>g(x)</b>。<br>
-        - 所以導數會變成 <b>f(g(x))g'(x)</b>。<br><br>
-        目前選擇 g(x)=<b>{gname}</b>，當 x = <b>{x3:.2f}</b> 時：<br>
-        g(x) ≈ <b>{g_now:.4f}</b>，g'(x) ≈ <b>{gp_now:.4f}</b>，H(x) ≈ <b>{H_now:.4f}</b>。
         </div>
         """,
         unsafe_allow_html=True,
@@ -612,11 +529,13 @@ with module4:
             ax4.set_title("陰影面積：定積分", fontsize=14)
             ax4.set_xlabel("x")
             ax4.set_ylabel("f(x)")
+            ax4.set_xlim(x_min_common, x_max_common)
+            ax4.set_ylim(y_min_common, y_max_common)
             add_common_style(ax4)
             st.pyplot(fig4, use_container_width=True)
 
         with right:
-            Fx = F(xs)
+            Fx = Fxs
             fig42, ax42 = plt.subplots(figsize=(8, 5.5), constrained_layout=True)
             ax42.plot(xs, Fx, linewidth=2)
             ax42.axvline(a, linestyle="--", linewidth=1.2)
@@ -625,6 +544,8 @@ with module4:
             ax42.set_title("原函數的總改變量", fontsize=14)
             ax42.set_xlabel("x")
             ax42.set_ylabel("F(x)")
+            ax42.set_xlim(x_min_common, x_max_common)
+            ax42.set_ylim(y_min_common, y_max_common)
             add_common_style(ax42)
             st.pyplot(fig42, use_container_width=True)
 
