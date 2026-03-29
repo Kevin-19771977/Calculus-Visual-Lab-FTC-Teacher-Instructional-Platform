@@ -411,27 +411,8 @@ with module1:
         )
 
     with top_right:
-        st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
-        a = st.slider(
-            "固定點 a",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
-            step=0.05,
-            key="m1a",
-        )
-        x1 = st.slider(
-            "拖動 x",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m1x", (domain_left + domain_right) / 2)),
-            step=0.05,
-            key="m1x",
-        )
-        reset_default = float((domain_left + domain_right) / 2)
-        if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
-            st.session_state["m1x"] = reset_default
-        st.markdown('</div>', unsafe_allow_html=True)
+        a = float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right)))
+        x1 = float(st.session_state.get("m1x", (domain_left + domain_right) / 2))
         st.markdown(
             f"""
             <div class="panel" style="margin-top:0.55rem;">
@@ -445,6 +426,28 @@ with module1:
             """,
             unsafe_allow_html=True,
         )
+
+    st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
+    a = st.slider(
+        "固定點 a",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
+        step=0.05,
+        key="m1a",
+    )
+    x1 = st.slider(
+        "拖動 x",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1x", (domain_left + domain_right) / 2)),
+        step=0.05,
+        key="m1x",
+    )
+    reset_default = float((domain_left + domain_right) / 2)
+    if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
+        st.session_state["m1x"] = reset_default
+    st.markdown('</div>', unsafe_allow_html=True)
 
     Axs = cumulative_integral(f, a, xs)
     current_A = np.interp(x1, xs, Axs)
@@ -610,7 +613,7 @@ with module4:
     )
     b4 = st.slider(
         "選擇右端點 b",
-        min_value=float(domain_left + 0.2),
+        min_value=float(domain_left),
         max_value=float(domain_right),
         value=float(st.session_state.get("m4b", min(domain_right, 2.0))),
         step=0.05,
