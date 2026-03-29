@@ -612,7 +612,7 @@ with module2:
         ax22.scatter([x2], [current_A2], s=55, color="#8fc9a8")
 
         # 在目前 x2 對應點畫出一小段切線
-        tangent_half_width = 0.35
+        tangent_half_width = 0.60
         tangent_x = np.linspace(
             max(x_min_common, x2 - tangent_half_width),
             min(x_max_common, x2 + tangent_half_width),
