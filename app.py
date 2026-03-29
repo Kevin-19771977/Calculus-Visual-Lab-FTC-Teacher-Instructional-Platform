@@ -583,13 +583,13 @@ with module2:
 
         st.markdown(
             f"""
-            <div class="panel">
-            <b>目前判讀</b><br>
+            <div class="panel" style="margin-top:0.55rem;">
+            <b>目前設定</b><br>
             固定點：<b>a = {a2:.2f}</b><br>
-            f(x) ≈ <b>{current_f2:.4f}</b><br>
-            A'(x) ≈ <b>{current_Ap2:.4f}</b><br>
-            A(x) ≈ <b>{current_A2:.4f}</b><br>
-            判讀：<b>{trend}</b>
+            x 範圍：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
+            y 範圍：<b>[{y_min_common:.2f}, {y_max_common:.2f}]</b><br>
+            左圖曲線 <span style="color:#8fc9a8;font-weight:700;">■</span>　
+            右圖曲線 <span style="color:#8bbce9;font-weight:700;">■</span>
             </div>
             """,
             unsafe_allow_html=True,
