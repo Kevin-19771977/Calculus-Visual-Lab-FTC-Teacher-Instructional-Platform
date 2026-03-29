@@ -353,6 +353,8 @@ if "m4a" not in st.session_state:
     st.session_state["m4a"] = float(min(max(0.0, domain_left), domain_right))
 if "m1x_raw" not in st.session_state:
     st.session_state["m1x_raw"] = float((domain_left + domain_right) / 2)
+if "m4b_raw" not in st.session_state:
+    st.session_state["m4b_raw"] = float(min(domain_right, 2.0))
 
 xs = np.linspace(domain_left, domain_right, 800)
 
@@ -399,6 +401,12 @@ def enforce_m1x_not_below_a():
     raw_val = float(st.session_state.get("m1x_raw", a_val))
     if raw_val < a_val:
         st.session_state["m1x_raw"] = a_val
+
+def enforce_m4b_not_below_a():
+    a_val = float(st.session_state.get("m4a", domain_left))
+    raw_val = float(st.session_state.get("m4b_raw", a_val))
+    if raw_val < a_val:
+        st.session_state["m4b_raw"] = a_val
 
 # -----------------------------
 # Tabs
@@ -704,15 +712,16 @@ with module4:
     )
     if st.session_state.get("m4b_raw", min(domain_right, 2.0)) < a:
         st.session_state["m4b_raw"] = float(a)
-    b4_default = max(float(st.session_state.get("m4b", min(domain_right, 2.0))), float(a))
     b4 = st.slider(
         "選擇右端點 b",
-        min_value=float(a),
+        min_value=float(domain_left),
         max_value=float(domain_right),
-        value=float(b4_default),
+        value=float(st.session_state.get("m4b_raw", max(min(domain_right, 2.0), float(a)))),
         step=0.05,
-        key="m4b",
+        key="m4b_raw",
+        on_change=enforce_m4b_not_below_a,
     )
+    b4 = float(max(b4, a))
     st.markdown('</div>', unsafe_allow_html=True)
 
     Axs_m4 = cumulative_integral(f, a, xs)
@@ -720,9 +729,10 @@ with module4:
         arr = np.array(x, dtype=float)
         return np.interp(arr, xs, Axs_m4)
 
-    exact_area = (F_m4(np.array([b4])) - F_m4(np.array([a])))[0]
+    b4_display = max(b4, a)
+    exact_area = (F_m4(np.array([b4_display])) - F_m4(np.array([a])))[0]
     Fa = F_m4(np.array([a]))[0]
-    Fb = F_m4(np.array([b4]))[0]
+    Fb = F_m4(np.array([b4_display]))[0]
 
     m4c1, m4c2, m4c3 = st.columns(3)
     m4c1.metric("F(a)", f"{Fa:.4f}")
@@ -735,8 +745,8 @@ with module4:
         fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
         ax42.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax42.axvline(b4, linestyle="--", linewidth=1.2)
-        ax42.scatter([a, b4], [Fa, Fb], s=55, color="#8bbce9")
+        ax42.axvline(b4_display, linestyle="--", linewidth=1.2)
+        ax42.scatter([a, b4_display], [Fa, Fb], s=55, color="#8bbce9")
         ax42.set_title("原函數的總改變量", fontsize=14)
         ax42.set_xlabel("x")
         ax42.set_ylabel("F(x)")
@@ -749,8 +759,8 @@ with module4:
         fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
         ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax4.axvline(b4, linestyle="--", linewidth=1.2)
-        mask4 = (xs >= a) & (xs <= b4)
+        ax4.axvline(b4_display, linestyle="--", linewidth=1.2)
+        mask4 = (xs >= a) & (xs <= b4_display)
         ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3, color=fill_color_m1)
         ax4.set_title("陰影面積：定積分", fontsize=14)
         ax4.set_xlabel("x")
