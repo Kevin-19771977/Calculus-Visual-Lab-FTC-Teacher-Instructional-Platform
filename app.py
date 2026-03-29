@@ -757,7 +757,8 @@ with module4:
 
     with right:
         fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
+        mask_f4_display = xs >= a
+        ax4.plot(xs[mask_f4_display], ys[mask_f4_display], linewidth=3.4, color="#8fc9a8")
         ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax4.axvline(b4_display, linestyle="--", linewidth=1.2)
         mask4 = (xs >= a) & (xs <= b4_display)
