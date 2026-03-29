@@ -521,27 +521,59 @@ with module2:
     st.caption("觀察 A'(x) 為什麼會接近 f(x)，這就是 FTC 第一部分的核心。")
 
     if show_formula:
-        st.markdown('<div class="formula-box">\n$$A(x)=\\int_a^x f(t)\,dt \quad \Rightarrow \quad A\'(x)=f(x)$$\n</div>', unsafe_allow_html=True)
+        st.markdown('<div class="formula-box">\n$$A(x)=\\int_a^x f(t)\\,dt \quad \Rightarrow \quad A\'(x)=f(x)$$\n</div>', unsafe_allow_html=True)
 
-    x2 = st.slider(
-        "拖動 x，觀察 f(x)、A(x)、A'(x) 的同步變化",
-        min_value=float(domain_left),
-        max_value=float(domain_right),
-        value=float((domain_left + domain_right) / 3),
-        step=0.05,
-        key="m2x",
-    )
+    left2, right2 = st.columns([1.55, 1.0])
+    with left2:
+        st.markdown(
+            """
+            <div class="big-note">
+            觀察重點：當你拖動 x 時，左圖的 f(x) 與 A'(x) 會一起對照，
+            右圖的 A(x) 會同步顯示目前位置，幫助你理解 A'(x)=f(x)。
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-    current_A2 = np.interp(x2, xs, Axs)
-    current_f2 = f(np.array([x2]))[0]
-    current_Ap2 = np.interp(x2, xs, Aprime)
+    with right2:
+        st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
+        x2 = st.slider(
+            "拖動 x",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m2x", (domain_left + domain_right) / 3)),
+            step=0.05,
+            key="m2x",
+        )
+        reset_default_m2 = float((domain_left + domain_right) / 3)
+        if st.button("把 x 回到中間位置", key="m2_reset_button", use_container_width=True):
+            st.session_state["m2x"] = reset_default_m2
+            x2 = reset_default_m2
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    if current_f2 > 1e-3:
-        trend = "A(x) 正在上升"
-    elif current_f2 < -1e-3:
-        trend = "A(x) 正在下降"
-    else:
-        trend = "A(x) 在這附近斜率接近 0"
+        current_A2 = np.interp(x2, xs, Axs)
+        current_f2 = f(np.array([x2]))[0]
+        current_Ap2 = np.interp(x2, xs, Aprime)
+
+        if current_f2 > 1e-3:
+            trend = "A(x) 正在上升"
+        elif current_f2 < -1e-3:
+            trend = "A(x) 正在下降"
+        else:
+            trend = "A(x) 在這附近斜率接近 0"
+
+        st.markdown(
+            f"""
+            <div class="panel">
+            <b>目前判讀</b><br>
+            f(x) ≈ <b>{current_f2:.4f}</b><br>
+            A'(x) ≈ <b>{current_Ap2:.4f}</b><br>
+            A(x) ≈ <b>{current_A2:.4f}</b><br>
+            判讀：<b>{trend}</b>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     m2c1, m2c2, m2c3, m2c4 = st.columns(4)
     m2c1.metric("x", f"{x2:.3f}")
@@ -549,9 +581,9 @@ with module2:
     m2c3.metric("A(x)", f"{current_A2:.4f}")
     m2c4.metric("A'(x) 近似", f"{current_Ap2:.4f}")
 
-    left, right = st.columns([1.25, 1])
+    left, right = st.columns(2, gap="large")
     with left:
-        fig2, ax2 = plt.subplots(figsize=(9, 5.4), constrained_layout=True)
+        fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax2.plot(xs, ys, linewidth=2, label="f(x)")
         ax2.plot(xs, Aprime, linestyle="--", linewidth=2, label="A'(x) 的數值近似")
         ax2.axvline(a_default, linestyle="--", linewidth=1.6, color="#f2a3c7")
@@ -568,7 +600,7 @@ with module2:
         st.pyplot(fig2, use_container_width=True)
 
     with right:
-        fig22, ax22 = plt.subplots(figsize=(8, 5.4), constrained_layout=True)
+        fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax22.plot(xs, Axs, linewidth=2)
         ax22.axvline(a_default, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax22.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
