@@ -100,6 +100,13 @@ div[data-testid="stMetric"] {
         color: #38506a;
         line-height: 1.8;
     }
+    .soft-control-box {
+        background: linear-gradient(180deg, #fcfdff 0%, #f4f8ff 100%);
+        border: 1px solid #dbe7f7;
+        border-radius: 16px;
+        padding: 0.8rem 0.9rem 0.4rem 0.9rem;
+        margin-bottom: 0.75rem;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -404,20 +411,27 @@ with module1:
         )
 
     with top_right:
-        ctrl_left, ctrl_right = st.columns(2)
-        with ctrl_left:
-            a = st.slider(
-                "固定點 a",
-                min_value=float(domain_left),
-                max_value=float(domain_right),
-                value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
-                step=0.05,
-                key="m1a",
-            )
-        with ctrl_right:
-            reset_default = float((domain_left + domain_right) / 2)
-            if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
-                st.session_state["m1x"] = reset_default
+        st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
+        a = st.slider(
+            "固定點 a",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
+            step=0.05,
+            key="m1a",
+        )
+        x1 = st.slider(
+            "拖動 x",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m1x", (domain_left + domain_right) / 2)),
+            step=0.05,
+            key="m1x",
+        )
+        reset_default = float((domain_left + domain_right) / 2)
+        if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
+            st.session_state["m1x"] = reset_default
+        st.markdown('</div>', unsafe_allow_html=True)
         st.markdown(
             f"""
             <div class="panel" style="margin-top:0.55rem;">
@@ -431,15 +445,6 @@ with module1:
             """,
             unsafe_allow_html=True,
         )
-
-    x1 = st.slider(
-        "拖動 x，觀察從固定點 a 到 x 的面積如何形成 A(x)",
-        min_value=float(domain_left),
-        max_value=float(domain_right),
-        value=float(st.session_state.get("m1x", (domain_left + domain_right) / 2)),
-        step=0.05,
-        key="m1x",
-    )
 
     Axs = cumulative_integral(f, a, xs)
     current_A = np.interp(x1, xs, Axs)
@@ -594,25 +599,24 @@ with module4:
     if show_formula:
         st.markdown('<div class="formula-box">\n$$F\'(x)=f(x) \quad \Rightarrow \quad \\int_a^b f(x)\,dx = F(b)-F(a)$$\n</div>', unsafe_allow_html=True)
 
-    ctrl4_left, ctrl4_right = st.columns(2)
-    with ctrl4_left:
-        a = st.slider(
-            "固定點 a",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m4a", min(max(0.0, domain_left), domain_right))),
-            step=0.05,
-            key="m4a",
-        )
-    with ctrl4_right:
-        b4 = st.slider(
-            "選擇右端點 b",
-            min_value=float(domain_left + 0.2),
-            max_value=float(domain_right),
-            value=float(min(domain_right, 2.0)),
-            step=0.05,
-            key="m4b",
-        )
+    st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
+    a = st.slider(
+        "固定點 a",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m4a", min(max(0.0, domain_left), domain_right))),
+        step=0.05,
+        key="m4a",
+    )
+    b4 = st.slider(
+        "選擇右端點 b",
+        min_value=float(domain_left + 0.2),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m4b", min(domain_right, 2.0))),
+        step=0.05,
+        key="m4b",
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
     Axs_m4 = cumulative_integral(f, a, xs)
     def F_m4(x):
