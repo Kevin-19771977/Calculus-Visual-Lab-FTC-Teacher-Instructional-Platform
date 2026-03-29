@@ -713,21 +713,6 @@ with module4:
 
         left, right = st.columns(2)
         with left:
-            fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-            ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
-            ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-            ax4.axvline(b4, linestyle="--", linewidth=1.2)
-            mask4 = (xs >= a) & (xs <= b4)
-            ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3, color=fill_color_m1)
-            ax4.set_title("陰影面積：定積分", fontsize=14)
-            ax4.set_xlabel("x")
-            ax4.set_ylabel("f(x)")
-            ax4.set_xlim(x_min_common, x_max_common)
-            ax4.set_ylim(y_min_common, y_max_common)
-            add_common_style(ax4)
-            st.pyplot(fig4, use_container_width=True)
-
-        with right:
             Fx = Axs_m4
             fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
             ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
@@ -741,6 +726,21 @@ with module4:
             ax42.set_ylim(y_min_common, y_max_common)
             add_common_style(ax42)
             st.pyplot(fig42, use_container_width=True)
+
+        with right:
+            fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+            ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
+            ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
+            ax4.axvline(b4, linestyle="--", linewidth=1.2)
+            mask4 = (xs >= a) & (xs <= b4)
+            ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3, color=fill_color_m1)
+            ax4.set_title("陰影面積：定積分", fontsize=14)
+            ax4.set_xlabel("x")
+            ax4.set_ylabel("f(x)")
+            ax4.set_xlim(x_min_common, x_max_common)
+            ax4.set_ylim(y_min_common, y_max_common)
+            add_common_style(ax4)
+            st.pyplot(fig4, use_container_width=True)
 
         st.markdown(
             f"""
