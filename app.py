@@ -433,50 +433,47 @@ with module1:
     m1c2.metric("目前 f(x)", f"{current_f:.4f}")
     m1c3.metric("目前 A(x)", f"{current_A:.4f}")
 
-    chart_col_left, chart_col_right = st.columns([1.35, 1.35], gap="large")
-
     # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
     if x1 >= domain_left:
         mask_A = xs <= x1
     else:
         mask_A = xs >= x1
 
-    with chart_col_left:
-        fig12, ax12 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
-        ax12.plot(xs[mask_A], Axs[mask_A], linewidth=3.0, color=curve_color_m1)
-        ax12.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
-        ax12.scatter([x1], [current_A], s=95, color=curve_color_m1, zorder=5)
-        ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
-        ax12.set_xlabel("x", fontsize=12)
-        ax12.set_ylabel("A(x)", fontsize=12)
-        ax12.set_xlim(x_min_common, x_max_common)
-        ax12.set_ylim(y_min_common, y_max_common)
-        ax12.tick_params(labelsize=11)
-        add_common_style(ax12)
-        st.pyplot(fig12, use_container_width=True)
+    fig12, ax12 = plt.subplots(figsize=(10.2, 6.8), constrained_layout=True)
+    ax12.plot(xs[mask_A], Axs[mask_A], linewidth=3.0, color=curve_color_m1)
+    ax12.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
+    ax12.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
+    ax12.scatter([x1], [current_A], s=95, color=curve_color_m1, zorder=5)
+    ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
+    ax12.set_xlabel("x", fontsize=12)
+    ax12.set_ylabel("A(x)", fontsize=12)
+    ax12.set_xlim(x_min_common, x_max_common)
+    ax12.set_ylim(y_min_common, y_max_common)
+    ax12.tick_params(labelsize=11)
+    add_common_style(ax12)
+    st.pyplot(fig12, use_container_width=True)
 
-    with chart_col_right:
-        fig11, ax11 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
-        ax11.plot(xs, ys, linewidth=3.0, color=curve_color_m1)
-        ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax11.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
-        ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
-        ax11.scatter([x1], [current_f], s=95, color=curve_color_m1, zorder=5)
-        ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
-        ax11.set_xlabel("x", fontsize=12)
-        ax11.set_ylabel("f(x)", fontsize=12)
-        ax11.set_xlim(x_min_common, x_max_common)
-        ax11.set_ylim(y_min_common, y_max_common)
-        ax11.tick_params(labelsize=11)
-        add_common_style(ax11)
-        st.pyplot(fig11, use_container_width=True)
+    fig11, ax11 = plt.subplots(figsize=(10.2, 6.8), constrained_layout=True)
+    ax11.plot(xs, ys, linewidth=3.0, color=curve_color_m1)
+    ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
+    ax11.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
+    ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
+    ax11.scatter([x1], [current_f], s=95, color=curve_color_m1, zorder=5)
+    ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
+    ax11.set_xlabel("x", fontsize=12)
+    ax11.set_ylabel("f(x)", fontsize=12)
+    ax11.set_xlim(x_min_common, x_max_common)
+    ax11.set_ylim(y_min_common, y_max_common)
+    ax11.tick_params(labelsize=11)
+    add_common_style(ax11)
+    st.pyplot(fig11, use_container_width=True)
 
     st.markdown(
         f"""
         <div class="panel">
         <b>你現在應該看到什麼</b><br>
-        1. 當你拖動 x 時，左圖的 A(x) 曲線會逐步長出來。<br>
-        2. 右圖的陰影面積會跟著改變，代表新的累積量來源。<br>
+        1. 當你拖動 x 時，上圖的 A(x) 曲線會逐步長出來。<br>
+        2. 下圖的陰影面積會跟著改變，代表新的累積量來源。<br>
         3. 這表示積分可以看成「從固定點 a 開始，一路累積到 x」。<br><br>
         目前：當 x = <b>{x1:.2f}</b> 時，f(x) ≈ <b>{current_f:.4f}</b>，A(x) ≈ <b>{current_A:.4f}</b>。
         </div>
