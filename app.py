@@ -532,19 +532,20 @@ with module2:
     if show_formula:
         st.markdown('<div class="formula-box">\n$$A(x)=\\int_a^x f(t)\\,dt \quad \Rightarrow \quad A\'(x)=f(x)$$\n</div>', unsafe_allow_html=True)
 
-    st.markdown(
-        """
-        <div class="big-note">
-        觀察重點：當你拖動 x 時，左圖的 A(x) 會顯示目前位置與切線，
-        右圖的 f(x) 會同步顯示對應的函數值，幫助你理解 A'(x)=f(x)。
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    top_left2, top_right2 = st.columns([1.55, 1.0])
+    with top_left2:
+        st.markdown(
+            """
+            <div class="big-note">
+            觀察重點：當你拖動 x 時，左圖的 A(x) 會顯示目前位置與切線，
+            右圖的 f(x) 會同步顯示對應的函數值，幫助你理解 A'(x)=f(x)。
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-    pad_left, center_col, pad_right = st.columns([0.304, 0.392, 0.304])
-    with center_col:
-        st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
+    with top_right2:
+        st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
         a2 = st.slider(
             "固定點 a",
             min_value=float(domain_left),
@@ -567,18 +568,32 @@ with module2:
             x2 = reset_default_m2
         st.markdown('</div>', unsafe_allow_html=True)
 
-    Axs_m2 = cumulative_integral(f, a2, xs)
-    Aprime_m2 = safe_gradient(Axs_m2, xs)
-    current_A2 = np.interp(x2, xs, Axs_m2)
-    current_f2 = f(np.array([x2]))[0]
-    current_Ap2 = np.interp(x2, xs, Aprime_m2)
+        Axs_m2 = cumulative_integral(f, a2, xs)
+        Aprime_m2 = safe_gradient(Axs_m2, xs)
+        current_A2 = np.interp(x2, xs, Axs_m2)
+        current_f2 = f(np.array([x2]))[0]
+        current_Ap2 = np.interp(x2, xs, Aprime_m2)
 
-    if current_f2 > 1e-3:
-        trend = "A(x) 正在上升"
-    elif current_f2 < -1e-3:
-        trend = "A(x) 正在下降"
-    else:
-        trend = "A(x) 在這附近斜率接近 0"
+        if current_f2 > 1e-3:
+            trend = "A(x) 正在上升"
+        elif current_f2 < -1e-3:
+            trend = "A(x) 正在下降"
+        else:
+            trend = "A(x) 在這附近斜率接近 0"
+
+        st.markdown(
+            f"""
+            <div class="panel">
+            <b>目前判讀</b><br>
+            固定點：<b>a = {a2:.2f}</b><br>
+            f(x) ≈ <b>{current_f2:.4f}</b><br>
+            A'(x) ≈ <b>{current_Ap2:.4f}</b><br>
+            A(x) ≈ <b>{current_A2:.4f}</b><br>
+            判讀：<b>{trend}</b>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     m2c1, m2c2, m2c3, m2c4 = st.columns(4)
     m2c1.metric("x", f"{x2:.3f}")
