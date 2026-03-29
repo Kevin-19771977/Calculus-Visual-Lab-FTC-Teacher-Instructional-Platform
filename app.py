@@ -403,7 +403,7 @@ with module1:
         st.markdown(
             """
             <div class="big-note">
-            觀察重點：當你把 x 往右拖時，從固定點 a 到 x 的面積會持續累積，
+            觀察重點：圖形只顯示固定點 a 右邊的部分。當你把 x 往右拖時，從固定點 a 到 x 的面積會持續累積，
             而下方的 <b>A(x)</b> 也會跟著改變。
             </div>
             """,
@@ -469,7 +469,8 @@ with module1:
 
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
-        ax12.plot(xs[mask_A], Axs[mask_A], linewidth=3.0, color=curve_color_m1)
+        mask_A_display = (xs >= a) & mask_A
+        ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=3.0, color=curve_color_m1)
         ax12.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax12.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax12.scatter([x1], [current_A], s=95, color=curve_color_m1, zorder=5)
@@ -484,7 +485,8 @@ with module1:
 
     with chart_col_right:
         fig11, ax11 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
-        ax11.plot(xs, ys, linewidth=3.0, color=curve_color_m1)
+        mask_f_display = xs >= a
+        ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=3.0, color=curve_color_m1)
         ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax11.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
