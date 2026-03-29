@@ -316,7 +316,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.subheader("模組 1 圖形樣式")
-    curve_color_m1 = st.color_picker("函數曲線顏色", "#1f77b4")
     fill_color_m1 = st.color_picker("面積塗色顏色", "#ff7f0e")
 
     st.markdown("---")
@@ -326,6 +325,8 @@ with st.sidebar:
 
 if "m1a" not in st.session_state:
     st.session_state["m1a"] = float(min(max(0.0, domain_left), domain_right))
+if "m2a" not in st.session_state:
+    st.session_state["m2a"] = float(min(max(0.0, domain_left), domain_right))
 if "m4a" not in st.session_state:
     st.session_state["m4a"] = float(min(max(0.0, domain_left), domain_right))
 
@@ -420,7 +421,7 @@ with module1:
             函數：<b>{fname}</b><br>
             固定點：<b>a = {a:.2f}</b><br>
             顯示區間：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
-            顏色：曲線 <span style="color:{curve_color_m1};font-weight:700;">■</span>　
+            顏色：左圖曲線 <span style="color:#2e8b57;font-weight:700;">■</span>　右圖曲線 <span style="color:#1f77b4;font-weight:700;">■</span>　
             面積 <span style="color:{fill_color_m1};font-weight:700;">■</span>
             </div>
             """,
@@ -470,10 +471,10 @@ with module1:
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         mask_A_display = (xs >= a) & mask_A
-        ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=3.0, color=curve_color_m1)
+        ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=3.0, color="#2e8b57")
         ax12.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax12.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax12.scatter([x1], [current_A], s=95, color=curve_color_m1, zorder=5)
+        ax12.scatter([x1], [current_A], s=95, color="#2e8b57", zorder=5)
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
@@ -486,11 +487,11 @@ with module1:
     with chart_col_right:
         fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         mask_f_display = xs >= a
-        ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=3.0, color=curve_color_m1)
+        ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=3.0, color="#1f77b4")
         ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax11.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
-        ax11.scatter([x1], [current_f], s=95, color=curve_color_m1, zorder=5)
+        ax11.scatter([x1], [current_f], s=95, color="#1f77b4", zorder=5)
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
         ax11.set_ylabel("f(x)", fontsize=12)
@@ -537,6 +538,14 @@ with module2:
 
     with right2:
         st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
+        a2 = st.slider(
+            "固定點 a",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m2a", min(max(0.0, domain_left), domain_right))),
+            step=0.05,
+            key="m2a",
+        )
         x2 = st.slider(
             "拖動 x",
             min_value=float(domain_left),
@@ -551,9 +560,11 @@ with module2:
             x2 = reset_default_m2
         st.markdown('</div>', unsafe_allow_html=True)
 
-        current_A2 = np.interp(x2, xs, Axs)
+        Axs_m2 = cumulative_integral(f, a2, xs)
+        Aprime_m2 = safe_gradient(Axs_m2, xs)
+        current_A2 = np.interp(x2, xs, Axs_m2)
         current_f2 = f(np.array([x2]))[0]
-        current_Ap2 = np.interp(x2, xs, Aprime)
+        current_Ap2 = np.interp(x2, xs, Aprime_m2)
 
         if current_f2 > 1e-3:
             trend = "A(x) 正在上升"
@@ -566,6 +577,7 @@ with module2:
             f"""
             <div class="panel">
             <b>目前判讀</b><br>
+            固定點：<b>a = {a2:.2f}</b><br>
             f(x) ≈ <b>{current_f2:.4f}</b><br>
             A'(x) ≈ <b>{current_Ap2:.4f}</b><br>
             A(x) ≈ <b>{current_A2:.4f}</b><br>
@@ -583,28 +595,11 @@ with module2:
 
     left, right = st.columns(2, gap="large")
     with left:
-        fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax2.plot(xs, ys, linewidth=2, label="f(x)")
-        ax2.plot(xs, Aprime, linestyle="--", linewidth=2, label="A'(x) 的數值近似")
-        ax2.axvline(a_default, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax2.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax2.scatter([x2], [current_f2], s=55)
-        ax2.scatter([x2], [current_Ap2], s=55)
-        ax2.set_title("比較 f(x) 與 A'(x)", fontsize=14)
-        ax2.set_xlabel("x")
-        ax2.set_ylabel("數值")
-        ax2.set_xlim(x_min_common, x_max_common)
-        ax2.set_ylim(y_min_common, y_max_common)
-        ax2.legend()
-        add_common_style(ax2)
-        st.pyplot(fig2, use_container_width=True)
-
-    with right:
         fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax22.plot(xs, Axs, linewidth=2)
-        ax22.axvline(a_default, linestyle="--", linewidth=1.6, color="#f2a3c7")
+        ax22.plot(xs, Axs_m2, linewidth=2, color="#2e8b57")
+        ax22.axvline(a2, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax22.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax22.scatter([x2], [current_A2], s=55)
+        ax22.scatter([x2], [current_A2], s=55, color="#2e8b57")
         ax22.set_title("累積函數 A(x)", fontsize=14)
         ax22.set_xlabel("x")
         ax22.set_ylabel("A(x)")
@@ -612,6 +607,21 @@ with module2:
         ax22.set_ylim(y_min_common, y_max_common)
         add_common_style(ax22)
         st.pyplot(fig22, use_container_width=True)
+
+    with right:
+        fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+        ax2.plot(xs, ys, linewidth=2, label="f(x)", color="#1f77b4")
+        ax2.axvline(a2, linestyle="--", linewidth=1.6, color="#f2a3c7")
+        ax2.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
+        ax2.scatter([x2], [current_f2], s=55, color="#1f77b4")
+        ax2.set_title("函數 f(x)", fontsize=14)
+        ax2.set_xlabel("x")
+        ax2.set_ylabel("f(x)")
+        ax2.set_xlim(x_min_common, x_max_common)
+        ax2.set_ylim(y_min_common, y_max_common)
+        ax2.legend()
+        add_common_style(ax2)
+        st.pyplot(fig2, use_container_width=True)
 
     st.markdown(
         f"""
@@ -675,7 +685,7 @@ with module4:
         left, right = st.columns(2)
         with left:
             fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-            ax4.plot(xs, ys, linewidth=2)
+            ax4.plot(xs, ys, linewidth=2, color="#2e8b57")
             ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
             ax4.axvline(b4, linestyle="--", linewidth=1.2)
             mask4 = (xs >= a) & (xs <= b4)
@@ -691,10 +701,10 @@ with module4:
         with right:
             Fx = Axs_m4
             fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-            ax42.plot(xs, Fx, linewidth=2)
+            ax42.plot(xs, Fx, linewidth=2, color="#1f77b4")
             ax42.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
             ax42.axvline(b4, linestyle="--", linewidth=1.2)
-            ax42.scatter([a, b4], [Fa, Fb], s=55)
+            ax42.scatter([a, b4], [Fa, Fb], s=55, color="#1f77b4")
             ax42.set_title("原函數的總改變量", fontsize=14)
             ax42.set_xlabel("x")
             ax42.set_ylabel("F(x)")
