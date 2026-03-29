@@ -308,15 +308,6 @@ with st.sidebar:
         st.warning("圖形上界必須大於圖形下界，已暫時使用預設範圍 [-5, 5]。")
         y_min_input, y_max_input = -5.0, 5.0
 
-    b_global = st.number_input(
-        "固定參考點 b",
-        min_value=float(domain_left),
-        max_value=float(domain_right),
-        value=float(min(domain_right, 2.0)),
-        step=0.5,
-        format="%.2f"
-    )
-
     st.markdown("---")
     st.subheader("模組 1 圖形樣式")
     curve_color_m1 = st.color_picker("函數曲線顏色", "#1f77b4")
@@ -453,8 +444,6 @@ with module1:
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
         ax12.plot(xs[mask_A], Axs[mask_A], linewidth=3.0, color=curve_color_m1)
-        ax12.axvline(a, linestyle="--", linewidth=1.6, color="#f4a3c2")
-        ax12.axvline(b_global, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax12.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
         ax12.scatter([x1], [current_A], s=95, color=curve_color_m1, zorder=5)
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
@@ -469,8 +458,7 @@ with module1:
     with chart_col_right:
         fig11, ax11 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
         ax11.plot(xs, ys, linewidth=3.0, color=curve_color_m1)
-        ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f4a3c2")
-        ax11.axvline(b_global, linestyle="--", linewidth=1.6, color="#9bd18b")
+        ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax11.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
         ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
         ax11.scatter([x1], [current_f], s=95, color=curve_color_m1, zorder=5)
@@ -585,14 +573,13 @@ with module4:
     if show_formula:
         st.markdown('<div class="formula-box">\n$$F\'(x)=f(x) \quad \Rightarrow \quad \\int_a^b f(x)\,dx = F(b)-F(a)$$\n</div>', unsafe_allow_html=True)
 
-    b4 = b_global
-    st.markdown(
-        f"""
-        <div class="panel">
-        本頁與其他模組共用同一個參考點：<b>b = {b4:.2f}</b>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    b4 = st.slider(
+        "選擇右端點 b",
+        min_value=float(domain_left + 0.2),
+        max_value=float(domain_right),
+        value=float(min(domain_right, 2.0)),
+        step=0.05,
+        key="m4b",
     )
 
     if b4 <= a:
@@ -611,8 +598,8 @@ with module4:
         with left:
             fig4, ax4 = plt.subplots(figsize=(9, 5.5), constrained_layout=True)
             ax4.plot(xs, ys, linewidth=2)
-            ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f4a3c2")
-            ax4.axvline(b4, linestyle="--", linewidth=1.6, color="#9bd18b")
+            ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
+            ax4.axvline(b4, linestyle="--", linewidth=1.2)
             mask4 = (xs >= a) & (xs <= b4)
             ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3)
             ax4.set_title("陰影面積：定積分", fontsize=14)
