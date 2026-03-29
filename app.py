@@ -436,7 +436,7 @@ with module1:
             unsafe_allow_html=True,
         )
 
-    st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
+    st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
     a = st.slider(
         "固定點 a",
         min_value=float(domain_left),
@@ -542,8 +542,8 @@ with module2:
         unsafe_allow_html=True,
     )
 
-    pad_left, center_col, pad_right = st.columns([0.10, 0.80, 0.10])
-    with center_col:
+    full_width_col = st.container()
+    with full_width_col:
         st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
         a2 = st.slider(
             "固定點 a",
