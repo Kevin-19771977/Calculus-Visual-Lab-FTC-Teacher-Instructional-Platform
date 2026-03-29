@@ -542,7 +542,7 @@ with module2:
         unsafe_allow_html=True,
     )
 
-    pad_left, center_col, pad_right = st.columns([0.24, 0.52, 0.24])
+    pad_left, center_col, pad_right = st.columns([0.10, 0.80, 0.10])
     with center_col:
         st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
         a2 = st.slider(
