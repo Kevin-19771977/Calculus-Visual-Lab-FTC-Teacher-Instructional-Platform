@@ -351,6 +351,10 @@ if "m2a" not in st.session_state:
     st.session_state["m2a"] = float(min(max(0.0, domain_left), domain_right))
 if "m4a" not in st.session_state:
     st.session_state["m4a"] = float(min(max(0.0, domain_left), domain_right))
+if "m1x_raw" not in st.session_state:
+    st.session_state["m1x_raw"] = float((domain_left + domain_right) / 2)
+if "m4b_raw" not in st.session_state:
+    st.session_state["m4b_raw"] = float(min(domain_right, 2.0))
 
 xs = np.linspace(domain_left, domain_right, 800)
 
@@ -390,6 +394,19 @@ if show_help:
         """,
         unsafe_allow_html=True,
     )
+
+
+def enforce_m1x_not_below_a():
+    a_val = float(st.session_state.get("m1a", domain_left))
+    raw_val = float(st.session_state.get("m1x_raw", a_val))
+    if raw_val < a_val:
+        st.session_state["m1x_raw"] = a_val
+
+def enforce_m4b_not_below_a():
+    a_val = float(st.session_state.get("m4a", domain_left))
+    raw_val = float(st.session_state.get("m4b_raw", a_val))
+    if raw_val < a_val:
+        st.session_state["m4b_raw"] = a_val
 
 # -----------------------------
 # Tabs
@@ -459,15 +476,18 @@ with module1:
         step=0.05,
         key="m1a",
     )
-    x1_default = max(float(st.session_state.get("m1x", (domain_left + domain_right) / 2)), float(a))
+    if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
+        st.session_state["m1x_raw"] = float(a)
     x1 = st.slider(
         "拖動 x",
-        min_value=float(a),
+        min_value=float(domain_left),
         max_value=float(domain_right),
-        value=float(x1_default),
+        value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
         step=0.05,
-        key="m1x",
+        key="m1x_raw",
+        on_change=enforce_m1x_not_below_a,
     )
+    x1 = float(max(x1, a))
     reset_default = float((domain_left + domain_right) / 2)
     if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
         st.session_state["m1x"] = reset_default
@@ -690,15 +710,18 @@ with module4:
         step=0.05,
         key="m4a",
     )
-    b4_default = max(float(st.session_state.get("m4b", min(domain_right, 2.0))), float(a))
+    if st.session_state.get("m4b_raw", min(domain_right, 2.0)) < a:
+        st.session_state["m4b_raw"] = float(a)
     b4 = st.slider(
         "選擇右端點 b",
-        min_value=float(a),
+        min_value=float(domain_left),
         max_value=float(domain_right),
-        value=float(b4_default),
+        value=float(st.session_state.get("m4b_raw", max(min(domain_right, 2.0), float(a)))),
         step=0.05,
-        key="m4b",
+        key="m4b_raw",
+        on_change=enforce_m4b_not_below_a,
     )
+    b4 = float(max(b4, a))
     st.markdown('</div>', unsafe_allow_html=True)
 
     Axs_m4 = cumulative_integral(f, a, xs)
