@@ -459,11 +459,16 @@ with module1:
         step=0.05,
         key="m1a",
     )
+    x1_default = float(st.session_state.get("m1x", (domain_left + domain_right) / 2))
+    if x1_default < a:
+        x1_default = float(a)
+        st.session_state["m1x"] = x1_default
+
     x1 = st.slider(
         "拖動 x",
-        min_value=float(domain_left),
+        min_value=float(a),
         max_value=float(domain_right),
-        value=float(st.session_state.get("m1x", (domain_left + domain_right) / 2)),
+        value=float(x1_default),
         step=0.05,
         key="m1x",
     )
@@ -689,11 +694,16 @@ with module4:
         step=0.05,
         key="m4a",
     )
+    b4_default = float(st.session_state.get("m4b", min(domain_right, 2.0)))
+    if b4_default < a:
+        b4_default = float(a)
+        st.session_state["m4b"] = b4_default
+
     b4 = st.slider(
         "選擇右端點 b",
-        min_value=float(domain_left),
+        min_value=float(a),
         max_value=float(domain_right),
-        value=float(st.session_state.get("m4b", min(domain_right, 2.0))),
+        value=float(b4_default),
         step=0.05,
         key="m4b",
     )
