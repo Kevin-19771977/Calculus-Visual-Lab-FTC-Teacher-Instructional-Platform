@@ -114,10 +114,16 @@ def safe_gradient(y, x):
 
 def cumulative_integral(func, a, xs):
     ys = func(xs)
-    area = np.zeros_like(xs)
     dx = np.diff(xs)
     trap = 0.5 * (ys[:-1] + ys[1:]) * dx
-    area[1:] = np.cumsum(trap)
+
+    # cumulative_from_left[i] ≈ ∫_{xs[0]}^{xs[i]} f(t) dt
+    cumulative_from_left = np.concatenate(([0.0], np.cumsum(trap)))
+
+    # 重新以固定點 a 為基準：
+    # A(x) = ∫_a^x f(t) dt = ∫_{xs[0]}^x f(t) dt - ∫_{xs[0]}^a f(t) dt
+    area_at_a = np.interp(a, xs, cumulative_from_left)
+    area = cumulative_from_left - area_at_a
     return area
 
 
@@ -315,7 +321,6 @@ with module1:
             <b>目前設定</b><br>
             函數：<b>{fname}</b><br>
             固定點：<b>a = {a:.2f}</b><br>
-            顯示區間：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
             顯示區間：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
             顏色：曲線 <span style="color:{curve_color_m1};font-weight:700;">■</span>　
             面積 <span style="color:{fill_color_m1};font-weight:700;">■</span>
