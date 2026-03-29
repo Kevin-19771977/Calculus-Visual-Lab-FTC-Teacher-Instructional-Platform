@@ -298,6 +298,16 @@ with st.sidebar:
 
     a = st.number_input("固定點 a", min_value=float(domain_left), max_value=float(domain_right), value=0.0, step=0.5, format="%.2f")
 
+    y_input_col1, y_input_col2 = st.columns(2)
+    with y_input_col1:
+        y_min_input = st.number_input("圖形下界", value=-5.0, step=0.5, format="%.2f")
+    with y_input_col2:
+        y_max_input = st.number_input("圖形上界", value=5.0, step=0.5, format="%.2f")
+
+    if y_max_input <= y_min_input:
+        st.warning("圖形上界必須大於圖形下界，已暫時使用預設範圍 [-5, 5]。")
+        y_min_input, y_max_input = -5.0, 5.0
+
     st.markdown("---")
     st.subheader("模組 1 圖形樣式")
     curve_color_m1 = st.color_picker("函數曲線顏色", "#1f77b4")
@@ -330,12 +340,8 @@ Fxs = F(xs)
 # 固定共同座標範圍：不因固定點 a 改變而跳動
 x_min_common = float(domain_left)
 x_max_common = float(domain_right)
-y_candidates_base = np.concatenate([ys, np.array([0.0])])
-y_min_common = float(np.min(y_candidates_base))
-y_max_common = float(np.max(y_candidates_base))
-y_pad_common = max(0.5, 0.12 * (y_max_common - y_min_common if y_max_common > y_min_common else 1.0))
-y_min_common -= y_pad_common
-y_max_common += y_pad_common
+y_min_common = float(y_min_input)
+y_max_common = float(y_max_input)
 
 if show_help:
     st.markdown(
