@@ -296,7 +296,13 @@ with st.sidebar:
         st.warning("右端點必須大於左端點，已暫時使用預設區間 [-3, 3]。")
         domain_left, domain_right = -3.0, 3.0
 
-    a = st.number_input("固定點 a", min_value=float(domain_left), max_value=float(domain_right), value=0.0, step=0.5, format="%.2f")
+    a = st.slider(
+        "固定點 a",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(min(max(0.0, domain_left), domain_right)),
+        step=0.05,
+    )
 
     y_input_col1, y_input_col2 = st.columns(2)
     with y_input_col1:
@@ -445,7 +451,7 @@ with module1:
         fig12, ax12 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
         ax12.plot(xs[mask_A], Axs[mask_A], linewidth=3.0, color=curve_color_m1)
         ax12.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax12.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
+        ax12.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax12.scatter([x1], [current_A], s=95, color=curve_color_m1, zorder=5)
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
@@ -460,7 +466,7 @@ with module1:
         fig11, ax11 = plt.subplots(figsize=(9.8, 6.6), constrained_layout=True)
         ax11.plot(xs, ys, linewidth=3.0, color=curve_color_m1)
         ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax11.axvline(x1, linestyle="--", linewidth=1.4, color="#666666")
+        ax11.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
         ax11.scatter([x1], [current_f], s=95, color=curve_color_m1, zorder=5)
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
