@@ -107,6 +107,14 @@ div[data-testid="stMetric"] {
         padding: 0.8rem 0.9rem 0.4rem 0.9rem;
         margin-bottom: 0.75rem;
     }
+    .center-soft-control-box {
+        background: linear-gradient(180deg, #fcfdff 0%, #f4f8ff 100%);
+        border: 1px solid #dbe7f7;
+        border-radius: 16px;
+        padding: 0.8rem 0.9rem 0.4rem 0.9rem;
+        margin: 0 auto 0.75rem auto;
+        max-width: 560px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -421,7 +429,7 @@ with module1:
             函數：<b>{fname}</b><br>
             固定點：<b>a = {a:.2f}</b><br>
             顯示區間：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
-            顏色：左圖曲線 <span style="color:#2e8b57;font-weight:700;">■</span>　右圖曲線 <span style="color:#1f77b4;font-weight:700;">■</span>　
+            顏色：左圖曲線 <span style="color:#8fc9a8;font-weight:700;">■</span>　右圖曲線 <span style="color:#8bbce9;font-weight:700;">■</span>　
             面積 <span style="color:{fill_color_m1};font-weight:700;">■</span>
             </div>
             """,
@@ -471,10 +479,10 @@ with module1:
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         mask_A_display = (xs >= a) & mask_A
-        ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=3.0, color="#2e8b57")
+        ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         ax12.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax12.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax12.scatter([x1], [current_A], s=95, color="#2e8b57", zorder=5)
+        ax12.scatter([x1], [current_A], s=95, color="#8fc9a8", zorder=5)
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
@@ -487,11 +495,11 @@ with module1:
     with chart_col_right:
         fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         mask_f_display = xs >= a
-        ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=3.0, color="#1f77b4")
+        ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=4.2, color="#8bbce9")
         ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax11.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
-        ax11.scatter([x1], [current_f], s=95, color="#1f77b4", zorder=5)
+        ax11.scatter([x1], [current_f], s=95, color="#8bbce9", zorder=5)
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
         ax11.set_ylabel("f(x)", fontsize=12)
@@ -537,28 +545,30 @@ with module2:
         )
 
     with right2:
-        st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
-        a2 = st.slider(
-            "固定點 a",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m2a", min(max(0.0, domain_left), domain_right))),
-            step=0.05,
-            key="m2a",
-        )
-        x2 = st.slider(
-            "拖動 x",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m2x", (domain_left + domain_right) / 3)),
-            step=0.05,
-            key="m2x",
-        )
-        reset_default_m2 = float((domain_left + domain_right) / 3)
-        if st.button("把 x 回到中間位置", key="m2_reset_button", use_container_width=True):
-            st.session_state["m2x"] = reset_default_m2
-            x2 = reset_default_m2
-        st.markdown('</div>', unsafe_allow_html=True)
+        left_pad, center_box, right_pad = st.columns([0.12, 0.76, 0.12])
+        with center_box:
+            st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
+            a2 = st.slider(
+                "固定點 a",
+                min_value=float(domain_left),
+                max_value=float(domain_right),
+                value=float(st.session_state.get("m2a", min(max(0.0, domain_left), domain_right))),
+                step=0.05,
+                key="m2a",
+            )
+            x2 = st.slider(
+                "拖動 x",
+                min_value=float(domain_left),
+                max_value=float(domain_right),
+                value=float(st.session_state.get("m2x", (domain_left + domain_right) / 3)),
+                step=0.05,
+                key="m2x",
+            )
+            reset_default_m2 = float((domain_left + domain_right) / 3)
+            if st.button("把 x 回到中間位置", key="m2_reset_button", use_container_width=True):
+                st.session_state["m2x"] = reset_default_m2
+                x2 = reset_default_m2
+            st.markdown('</div>', unsafe_allow_html=True)
 
         Axs_m2 = cumulative_integral(f, a2, xs)
         Aprime_m2 = safe_gradient(Axs_m2, xs)
@@ -596,10 +606,21 @@ with module2:
     left, right = st.columns(2, gap="large")
     with left:
         fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax22.plot(xs, Axs_m2, linewidth=2, color="#2e8b57")
+        ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
         ax22.axvline(a2, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax22.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax22.scatter([x2], [current_A2], s=55, color="#2e8b57")
+        ax22.scatter([x2], [current_A2], s=55, color="#8fc9a8")
+
+        # 在目前 x2 對應點畫出一小段切線
+        tangent_half_width = 0.35
+        tangent_x = np.linspace(
+            max(x_min_common, x2 - tangent_half_width),
+            min(x_max_common, x2 + tangent_half_width),
+            40,
+        )
+        tangent_y = current_A2 + current_Ap2 * (tangent_x - x2)
+        ax22.plot(tangent_x, tangent_y, linewidth=3.0, color="#ffb347")
+
         ax22.set_title("累積函數 A(x)", fontsize=14)
         ax22.set_xlabel("x")
         ax22.set_ylabel("A(x)")
@@ -610,10 +631,10 @@ with module2:
 
     with right:
         fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax2.plot(xs, ys, linewidth=2, label="f(x)", color="#1f77b4")
+        ax2.plot(xs, ys, linewidth=3.4, label="f(x)", color="#8bbce9")
         ax2.axvline(a2, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax2.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax2.scatter([x2], [current_f2], s=55, color="#1f77b4")
+        ax2.scatter([x2], [current_f2], s=55, color="#8bbce9")
         ax2.set_title("函數 f(x)", fontsize=14)
         ax2.set_xlabel("x")
         ax2.set_ylabel("f(x)")
@@ -685,7 +706,7 @@ with module4:
         left, right = st.columns(2)
         with left:
             fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-            ax4.plot(xs, ys, linewidth=2, color="#2e8b57")
+            ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
             ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
             ax4.axvline(b4, linestyle="--", linewidth=1.2)
             mask4 = (xs >= a) & (xs <= b4)
@@ -701,10 +722,10 @@ with module4:
         with right:
             Fx = Axs_m4
             fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-            ax42.plot(xs, Fx, linewidth=2, color="#1f77b4")
+            ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
             ax42.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
             ax42.axvline(b4, linestyle="--", linewidth=1.2)
-            ax42.scatter([a, b4], [Fa, Fb], s=55, color="#1f77b4")
+            ax42.scatter([a, b4], [Fa, Fb], s=55, color="#8bbce9")
             ax42.set_title("原函數的總改變量", fontsize=14)
             ax42.set_xlabel("x")
             ax42.set_ylabel("F(x)")
