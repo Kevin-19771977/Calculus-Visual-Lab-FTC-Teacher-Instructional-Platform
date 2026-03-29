@@ -512,7 +512,8 @@ with module1:
         ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=4.2, color="#8bbce9")
         ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax11.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
+        if x1 >= a:
+            ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
         ax11.scatter([x1], [current_f], s=95, color="#8bbce9", zorder=5)
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
