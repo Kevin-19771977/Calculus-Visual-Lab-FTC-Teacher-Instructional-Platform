@@ -296,13 +296,6 @@ with st.sidebar:
         st.warning("右端點必須大於左端點，已暫時使用預設區間 [-3, 3]。")
         domain_left, domain_right = -3.0, 3.0
 
-    a = st.slider(
-        "固定點 a",
-        min_value=float(domain_left),
-        max_value=float(domain_right),
-        value=float(min(max(0.0, domain_left), domain_right)),
-        step=0.05,
-    )
 
     y_input_col1, y_input_col2 = st.columns(2)
     with y_input_col1:
@@ -323,6 +316,12 @@ with st.sidebar:
     show_help = st.checkbox("顯示操作提醒", value=True)
     show_formula = st.checkbox("顯示公式區", value=True)
 
+
+if "m1a" not in st.session_state:
+    st.session_state["m1a"] = float(min(max(0.0, domain_left), domain_right))
+if "m4a" not in st.session_state:
+    st.session_state["m4a"] = float(min(max(0.0, domain_left), domain_right))
+
 xs = np.linspace(domain_left, domain_right, 800)
 
 try:
@@ -333,7 +332,8 @@ except Exception:
     st.error("目前函數無法在這個區間正常計算，請修改函數或調整顯示區間。")
     st.stop()
 
-Axs = cumulative_integral(f, a, xs)
+a_default = float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right)))
+Axs = cumulative_integral(f, a_default, xs)
 Aprime = safe_gradient(Axs, xs)
 
 # 以數值方式建立一個原函數 F，使得 F'(x)=f(x) 且 F(a)=0
@@ -404,9 +404,20 @@ with module1:
         )
 
     with top_right:
-        reset_default = float((domain_left + domain_right) / 2)
-        if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
-            st.session_state["m1x"] = reset_default
+        ctrl_left, ctrl_right = st.columns(2)
+        with ctrl_left:
+            a = st.slider(
+                "固定點 a",
+                min_value=float(domain_left),
+                max_value=float(domain_right),
+                value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
+                step=0.05,
+                key="m1a",
+            )
+        with ctrl_right:
+            reset_default = float((domain_left + domain_right) / 2)
+            if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
+                st.session_state["m1x"] = reset_default
         st.markdown(
             f"""
             <div class="panel" style="margin-top:0.55rem;">
@@ -430,6 +441,7 @@ with module1:
         key="m1x",
     )
 
+    Axs = cumulative_integral(f, a, xs)
     current_A = np.interp(x1, xs, Axs)
     current_f = f(np.array([x1]))[0]
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
@@ -532,7 +544,8 @@ with module2:
         fig2, ax2 = plt.subplots(figsize=(9, 5.4), constrained_layout=True)
         ax2.plot(xs, ys, linewidth=2, label="f(x)")
         ax2.plot(xs, Aprime, linestyle="--", linewidth=2, label="A'(x) 的數值近似")
-        ax2.axvline(x2, linestyle=":", linewidth=1.2)
+        ax2.axvline(a_default, linestyle="--", linewidth=1.6, color="#f2a3c7")
+        ax2.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax2.scatter([x2], [current_f2], s=55)
         ax2.scatter([x2], [current_Ap2], s=55)
         ax2.set_title("比較 f(x) 與 A'(x)", fontsize=14)
@@ -547,7 +560,8 @@ with module2:
     with right:
         fig22, ax22 = plt.subplots(figsize=(8, 5.4), constrained_layout=True)
         ax22.plot(xs, Axs, linewidth=2)
-        ax22.axvline(x2, linestyle=":", linewidth=1.2)
+        ax22.axvline(a_default, linestyle="--", linewidth=1.6, color="#f2a3c7")
+        ax22.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
         ax22.scatter([x2], [current_A2], s=55)
         ax22.set_title("累積函數 A(x)", fontsize=14)
         ax22.set_xlabel("x")
@@ -580,21 +594,37 @@ with module4:
     if show_formula:
         st.markdown('<div class="formula-box">\n$$F\'(x)=f(x) \quad \Rightarrow \quad \\int_a^b f(x)\,dx = F(b)-F(a)$$\n</div>', unsafe_allow_html=True)
 
-    b4 = st.slider(
-        "選擇右端點 b",
-        min_value=float(domain_left + 0.2),
-        max_value=float(domain_right),
-        value=float(min(domain_right, 2.0)),
-        step=0.05,
-        key="m4b",
-    )
+    ctrl4_left, ctrl4_right = st.columns(2)
+    with ctrl4_left:
+        a = st.slider(
+            "固定點 a",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m4a", min(max(0.0, domain_left), domain_right))),
+            step=0.05,
+            key="m4a",
+        )
+    with ctrl4_right:
+        b4 = st.slider(
+            "選擇右端點 b",
+            min_value=float(domain_left + 0.2),
+            max_value=float(domain_right),
+            value=float(min(domain_right, 2.0)),
+            step=0.05,
+            key="m4b",
+        )
+
+    Axs_m4 = cumulative_integral(f, a, xs)
+    def F_m4(x):
+        arr = np.array(x, dtype=float)
+        return np.interp(arr, xs, Axs_m4)
 
     if b4 <= a:
         st.warning("目前 b 小於等於 a，請把 b 調整到大於 a。")
     else:
-        exact_area = (F(np.array([b4])) - F(np.array([a])))[0]
-        Fa = F(np.array([a]))[0]
-        Fb = F(np.array([b4]))[0]
+        exact_area = (F_m4(np.array([b4])) - F_m4(np.array([a])))[0]
+        Fa = F_m4(np.array([a]))[0]
+        Fb = F_m4(np.array([b4]))[0]
 
         m4c1, m4c2, m4c3 = st.columns(3)
         m4c1.metric("F(a)", f"{Fa:.4f}")
@@ -618,11 +648,10 @@ with module4:
             st.pyplot(fig4, use_container_width=True)
 
         with right:
-            Fx = Fxs
+            Fx = Axs_m4
             fig42, ax42 = plt.subplots(figsize=(8, 5.5), constrained_layout=True)
             ax42.plot(xs, Fx, linewidth=2)
             ax42.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-            ax42.axvline(a, linestyle="--", linewidth=1.2)
             ax42.axvline(b4, linestyle="--", linewidth=1.2)
             ax42.scatter([a, b4], [Fa, Fb], s=55)
             ax42.set_title("原函數的總改變量", fontsize=14)
