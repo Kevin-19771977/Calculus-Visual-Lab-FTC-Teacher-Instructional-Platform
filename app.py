@@ -342,7 +342,6 @@ with st.sidebar:
 
     st.markdown("---")
     show_help = st.checkbox("顯示操作提醒", value=True)
-    show_formula = st.checkbox("顯示公式區", value=True)
 
 
 if "m1a" not in st.session_state:
@@ -438,8 +437,7 @@ with module1:
 
     top_left, top_right = st.columns([1.55, 1.0])
     with top_left:
-        if show_formula:
-            st.markdown('<div class="formula-box">$$A(x)=\int_a^x f(t)\,dt$$</div>', unsafe_allow_html=True)
+        st.markdown('<div class="formula-box">$$A(x)=\int_a^x f(t)\,dt$$</div>', unsafe_allow_html=True)
         st.markdown(
             """
             <div class="big-note">
@@ -565,8 +563,7 @@ with module2:
     st.subheader("模組 2：導數與累積同步")
     st.caption("觀察 A'(x) 為什麼會接近 f(x)，這就是 FTC 第一部分的核心。")
 
-    if show_formula:
-        st.markdown('<div class="formula-box">\n$$A(x)=\\int_a^x f(t)\\,dt \quad \Rightarrow \quad A\'(x)=f(x)$$\n</div>', unsafe_allow_html=True)
+    st.markdown('<div class="formula-box">\n$$A(x)=\\int_a^x f(t)\\,dt \quad \Rightarrow \quad A\'(x)=f(x)$$\n</div>', unsafe_allow_html=True)
 
     st.markdown(
         """
@@ -698,8 +695,7 @@ with module4:
     st.subheader("模組 4：FTC Part 2 幾何意義")
     st.caption("把定積分看成原函數的總改變量，而不是一條要背的公式。")
 
-    if show_formula:
-        st.markdown('<div class="formula-box">\n$$F\'(x)=f(x) \quad \Rightarrow \quad \\int_a^b f(x)\,dx = F(b)-F(a)$$\n</div>', unsafe_allow_html=True)
+    st.markdown('<div class="formula-box">\n$$F\'(x)=f(x) \quad \Rightarrow \quad \\int_a^b f(x)\,dx = F(b)-F(a)$$\n</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
     a = st.slider(
