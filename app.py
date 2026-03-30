@@ -146,6 +146,15 @@ def safe_gradient(y, x):
     return np.gradient(y, x)
 
 
+def fill_area_by_sign(ax, xs_segment, ys_segment, pos_color, neg_color, alpha=0.4):
+    xs_segment = np.array(xs_segment, dtype=float)
+    ys_segment = np.array(ys_segment, dtype=float)
+    if len(xs_segment) == 0:
+        return
+    ax.fill_between(xs_segment, ys_segment, 0, where=(ys_segment >= 0), interpolate=True, alpha=alpha, color=pos_color)
+    ax.fill_between(xs_segment, ys_segment, 0, where=(ys_segment < 0), interpolate=True, alpha=alpha, color=neg_color)
+
+
 def cumulative_integral(func, a, xs):
     ys = func(xs)
     dx = np.diff(xs)
@@ -351,7 +360,8 @@ with st.sidebar:
 
     st.markdown("---")
     st.subheader("模組 1 圖形樣式")
-    fill_color_m1 = st.color_picker("面積塗色顏色", "#ff7f0e")
+    fill_pos_color = st.color_picker("面積塗色（x軸上方）", "#f4b183")
+    fill_neg_color = st.color_picker("面積塗色（x軸下方）", "#9cc2e5")
 
     st.markdown("---")
     show_help = st.checkbox("顯示操作提醒", value=True)
@@ -476,7 +486,7 @@ with module1:
             固定點：<b>a = {a:.2f}</b><br>
             顯示區間：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
             顏色：左圖曲線 <span style="color:#8fc9a8;font-weight:700;">■</span>　右圖曲線 <span style="color:#8bbce9;font-weight:700;">■</span>　
-            面積 <span style="color:{fill_color_m1};font-weight:700;">■</span>
+            上方面積 <span style="color:{fill_pos_color};font-weight:700;">■</span>　下方面積 <span style="color:{fill_neg_color};font-weight:700;">■</span>
             </div>
             """,
             unsafe_allow_html=True,
@@ -549,7 +559,7 @@ with module1:
         ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax11.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
         if x1 >= a:
-            ax11.fill_between(xs[mask], ys[mask], 0, alpha=0.40, color=fill_color_m1)
+            fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
         ax11.scatter([x1], [current_f], s=95, color="#8bbce9", zorder=5)
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
@@ -781,7 +791,7 @@ with module4:
         ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
         ax4.axvline(b4_display, linestyle="--", linewidth=1.2)
         mask4 = (xs >= a) & (xs <= b4_display)
-        ax4.fill_between(xs[mask4], ys[mask4], 0, alpha=0.3, color=fill_color_m1)
+        fill_area_by_sign(ax4, xs[mask4], ys[mask4], fill_pos_color, fill_neg_color, alpha=0.30)
         ax4.set_title("陰影面積：定積分", fontsize=14)
         ax4.set_xlabel("x")
         ax4.set_ylabel("f(x)")
