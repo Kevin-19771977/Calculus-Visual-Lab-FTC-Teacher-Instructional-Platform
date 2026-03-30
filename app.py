@@ -100,6 +100,11 @@ div[data-testid="stMetric"] {
         color: #38506a;
         line-height: 1.8;
     }
+    code {
+        background: #f3f6fb;
+        padding: 0.12rem 0.35rem;
+        border-radius: 6px;
+    }
     .soft-control-box {
         background: linear-gradient(180deg, #fcfdff 0%, #f4f8ff 100%);
         border: 1px solid #dbe7f7;
@@ -274,17 +279,29 @@ with st.sidebar:
         )
         f = function_factory(fname)
     else:
+        st.markdown(
+            """
+            <div class="panel" style="margin-top:0.35rem;">
+            <b>自訂函數輸入區</b><br>
+            請直接輸入 <b>Python 形式</b> 的函數，例如：<code>x**2</code>、<code>sin(x)</code>、<code>exp(x)</code>。<br>
+            注意：次方要用 <code>**</code>，不要用 <code>^</code>。
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         if st.button("顯示常用函數輸入示範", use_container_width=True):
             st.session_state["show_function_examples"] = not st.session_state.get("show_function_examples", False)
 
         if st.session_state.get("show_function_examples", False):
             st.info(
-                "可參考這些輸入格式：\n"
+                "可直接複製這些格式：\n"
+                "• 3\n"
                 "• x\n"
                 "• x**2\n"
-                "• x**3 - x\n"
+                "• x**3\n"
                 "• sin(x)\n"
-                "• cos(x) + x\n"
+                "• cos(x)\n"
                 "• exp(x)\n"
                 "• log(x+2)\n"
                 "• sqrt(x+3)\n"
@@ -294,18 +311,22 @@ with st.sidebar:
 
         custom_expr_text = st.text_input(
             "自行輸入 f(x)",
-            value="sin(x)+x/2",
-            help="可輸入：x**2、sin(x)、cos(x)、exp(x)、log(x+2)、sqrt(x+3) 等",
+            value=st.session_state.get("custom_expr_text", "sin(x)+x/2"),
+            placeholder="例如：x**2、sin(x)、exp(x)、log(x+2)",
+            help="請用 Python 形式輸入，例如 x**2、sin(x)、exp(x)、log(x+2)。",
+            key="custom_expr_text",
         )
+
+        normalized_expr_text = custom_expr_text.replace("^", "**").replace("ln(", "log(")
         try:
-            custom_expr, custom_func = build_custom_function(custom_expr_text)
+            custom_expr, custom_func = build_custom_function(normalized_expr_text)
             fname = str(custom_expr)
             f = lambda x: np.array(custom_func(x), dtype=float)
-            st.success("自訂函數已載入")
+            st.success(f"自訂函數已載入：f(x) = {normalized_expr_text}")
         except Exception:
             fname = "x"
             f = function_factory(fname)
-            st.error("自訂函數格式有誤，已暫時改用 f(x)=x")
+            st.error("自訂函數格式有誤，已暫時改用 f(x)=x。請確認有使用 ** 表示次方。")
 
     st.markdown("---")
     left_input_col, right_input_col = st.columns(2)
@@ -431,7 +452,9 @@ with module1:
     top_left, top_right = st.columns([1.55, 1.0])
     with top_left:
         if show_formula:
-            st.markdown('<div class="formula-box">$$A(x)=\int_a^x f(t)\,dt$$</div>', unsafe_allow_html=True)
+            st.markdown('<div class="formula-box">', unsafe_allow_html=True)
+        st.latex(r"A(x)=\int_a^x f(t)\,dt")
+        st.markdown('</div>', unsafe_allow_html=True)
         st.markdown(
             """
             <div class="big-note">
@@ -558,7 +581,9 @@ with module2:
     st.caption("觀察 A'(x) 為什麼會接近 f(x)，這就是 FTC 第一部分的核心。")
 
     if show_formula:
-        st.markdown('<div class="formula-box">\n$$A(x)=\\int_a^x f(t)\\,dt \quad \Rightarrow \quad A\'(x)=f(x)$$\n</div>', unsafe_allow_html=True)
+        st.markdown('<div class="formula-box">', unsafe_allow_html=True)
+    st.latex(r"A(x)=\int_a^x f(t)\,dt \quad \Rightarrow \quad A'(x)=f(x)")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(
         """
@@ -691,7 +716,9 @@ with module4:
     st.caption("把定積分看成原函數的總改變量，而不是一條要背的公式。")
 
     if show_formula:
-        st.markdown('<div class="formula-box">\n$$F\'(x)=f(x) \quad \Rightarrow \quad \\int_a^b f(x)\,dx = F(b)-F(a)$$\n</div>', unsafe_allow_html=True)
+        st.markdown('<div class="formula-box">', unsafe_allow_html=True)
+    st.latex(r"F'(x)=f(x) \quad \Rightarrow \quad \int_a^b f(x)\,dx = F(b)-F(a)")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
     a = st.slider(
