@@ -155,6 +155,20 @@ def fill_area_by_sign(ax, xs_segment, ys_segment, pos_color, neg_color, alpha=0.
     ax.fill_between(xs_segment, ys_segment, 0, where=(ys_segment < 0), interpolate=True, alpha=alpha, color=neg_color)
 
 
+def draw_to_x_axis(ax, x0, y0, color, linewidth=1.6, marker_size=55):
+    ax.plot([x0, x0], [0, y0], linestyle="--", linewidth=linewidth, color=color)
+    ax.scatter([x0], [y0], s=marker_size, color=color, zorder=6)
+
+
+def fill_area_by_sign(ax, xs_segment, ys_segment, pos_color, neg_color, alpha=0.4):
+    xs_segment = np.array(xs_segment, dtype=float)
+    ys_segment = np.array(ys_segment, dtype=float)
+    if len(xs_segment) == 0:
+        return
+    ax.fill_between(xs_segment, ys_segment, 0, where=(ys_segment >= 0), interpolate=True, alpha=alpha, color=pos_color)
+    ax.fill_between(xs_segment, ys_segment, 0, where=(ys_segment < 0), interpolate=True, alpha=alpha, color=neg_color)
+
+
 def cumulative_integral(func, a, xs):
     ys = func(xs)
     dx = np.diff(xs)
@@ -540,9 +554,8 @@ with module1:
         fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         mask_A_display = (xs >= a) & mask_A
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
-        ax12.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax12.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax12.scatter([x1], [current_A], s=95, color="#8fc9a8", zorder=5)
+        draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
+        draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
@@ -556,11 +569,10 @@ with module1:
         fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         mask_f_display = xs >= a
         ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=4.2, color="#8bbce9")
-        ax11.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax11.axvline(x1, linestyle="--", linewidth=1.6, color="#9bd18b")
+        draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
+        draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
         if x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
-        ax11.scatter([x1], [current_f], s=95, color="#8bbce9", zorder=5)
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
         ax11.set_ylabel("f(x)", fontsize=12)
@@ -669,9 +681,8 @@ with module2:
     with left:
         fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
-        ax22.axvline(a2, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax22.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax22.scatter([x2], [current_A2], s=55, color="#8fc9a8")
+        draw_to_x_axis(ax22, a2, np.interp(a2, xs, Axs_m2), "#f2a3c7", linewidth=1.6, marker_size=45)
+        draw_to_x_axis(ax22, x2, current_A2, "#9bd18b", linewidth=1.6, marker_size=55)
 
         tangent_half_width = 0.60
         tangent_x = np.linspace(
@@ -693,9 +704,8 @@ with module2:
     with right:
         fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax2.plot(xs, ys, linewidth=3.4, label="f(x)", color="#8bbce9")
-        ax2.axvline(a2, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax2.axvline(x2, linestyle="--", linewidth=1.6, color="#9bd18b")
-        ax2.scatter([x2], [current_f2], s=55, color="#8bbce9")
+        draw_to_x_axis(ax2, a2, f(np.array([a2]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
+        draw_to_x_axis(ax2, x2, current_f2, "#9bd18b", linewidth=1.6, marker_size=55)
         ax2.set_title("函數 f(x)", fontsize=14)
         ax2.set_xlabel("x")
         ax2.set_ylabel("f(x)")
@@ -773,9 +783,8 @@ with module4:
         Fx = Axs_m4
         fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
-        ax42.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax42.axvline(b4_display, linestyle="--", linewidth=1.2)
-        ax42.scatter([a, b4_display], [Fa, Fb], s=55, color="#8bbce9")
+        draw_to_x_axis(ax42, a, Fa, "#f2a3c7", linewidth=1.6, marker_size=45)
+        draw_to_x_axis(ax42, b4_display, Fb, "#9bd18b", linewidth=1.6, marker_size=55)
         ax42.set_title("原函數的總改變量", fontsize=14)
         ax42.set_xlabel("x")
         ax42.set_ylabel("F(x)")
@@ -787,8 +796,8 @@ with module4:
     with right:
         fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
-        ax4.axvline(a, linestyle="--", linewidth=1.6, color="#f2a3c7")
-        ax4.axvline(b4_display, linestyle="--", linewidth=1.2)
+        draw_to_x_axis(ax4, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
+        draw_to_x_axis(ax4, b4_display, f(np.array([b4_display]))[0], "#9bd18b", linewidth=1.6, marker_size=55)
         mask4 = (xs >= a) & (xs <= b4_display)
         fill_area_by_sign(ax4, xs[mask4], ys[mask4], fill_pos_color, fill_neg_color, alpha=0.30)
         ax4.set_title("陰影面積：定積分", fontsize=14)
