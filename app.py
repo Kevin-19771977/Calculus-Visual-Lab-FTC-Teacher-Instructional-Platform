@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
+import sympy as sp
 
 st.set_page_config(
     page_title="FTC 學生互動學習平台",
@@ -491,7 +492,7 @@ with module1:
 
     with top_right:
         a = float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right)))
-        x1 = float(st.session_state.get("m1x", (domain_left + domain_right) / 2))
+        x1 = float(st.session_state.get("m1x_raw", (domain_left + domain_right) / 2))
         st.markdown(
             f"""
             <div class="panel" style="margin-top:0.55rem;">
@@ -529,7 +530,7 @@ with module1:
     x1 = float(max(x1, a))
     reset_default = float((domain_left + domain_right) / 2)
     if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
-        st.session_state["m1x"] = reset_default
+        st.session_state["m1x_raw"] = reset_default
     st.markdown('</div>', unsafe_allow_html=True)
 
     Axs = cumulative_integral(f, a, xs)
