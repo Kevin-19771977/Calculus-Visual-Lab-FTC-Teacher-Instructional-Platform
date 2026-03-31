@@ -537,6 +537,13 @@ with module1:
     current_f = f(np.array([x1]))[0]
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
 
+    st.markdown('<div class="formula-box">', unsafe_allow_html=True)
+    st.latex(
+        rf"A(x)=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
+        rf"=\color{{#355C7D}}{{{current_A:.4f}}}"
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+
     m1c1, m1c2, m1c3 = st.columns(3)
     m1c1.metric("目前 x", f"{x1:.3f}")
     m1c2.metric("目前 f(x)", f"{current_f:.4f}")
@@ -567,7 +574,8 @@ with module1:
 
     with chart_col_right:
         fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
+        mask_f_display = xs >= a
+        ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=4.2, color="#8bbce9")
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
         if x1 >= a:
