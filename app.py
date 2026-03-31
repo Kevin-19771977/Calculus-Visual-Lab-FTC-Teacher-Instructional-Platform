@@ -563,15 +563,18 @@ with module1:
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
+        offset_x = 12 if x1 <= (x_min_common + x_max_common) / 2 else -88
+        offset_y = 12 if current_A <= (y_min_common + y_max_common) / 2 else -18
         ax12.annotate(
             f"({x1:.2f}, {current_A:.2f})",
             xy=(x1, current_A),
-            xytext=(10, 10),
+            xytext=(offset_x, offset_y),
             textcoords="offset points",
             color="#2e8b57",
             fontsize=11,
             fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#9bd18b", alpha=0.9),
+            bbox=dict(boxstyle="round,pad=0.28", fc="white", ec="#9bd18b", alpha=0.95),
+            arrowprops=dict(arrowstyle="-", color="#9bd18b", lw=1.2, alpha=0.9),
         )
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
@@ -590,7 +593,21 @@ with module1:
         if x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
             x_mid = (a + x1) / 2
-            y_mid = np.interp(x_mid, xs, ys) / 2
+            ys_mask = ys[mask]
+            positive_part = ys_mask[ys_mask >= 0]
+            negative_part = ys_mask[ys_mask < 0]
+
+            if current_A >= 0:
+                if len(positive_part) > 0:
+                    y_mid = 0.45 * np.max(positive_part)
+                else:
+                    y_mid = 0.35 * max(y_max_common, 1.0)
+            else:
+                if len(negative_part) > 0:
+                    y_mid = 0.45 * np.min(negative_part)
+                else:
+                    y_mid = 0.35 * min(y_min_common, -1.0)
+
             ax11.text(
                 x_mid,
                 y_mid,
@@ -600,7 +617,7 @@ with module1:
                 fontsize=12,
                 fontweight="bold",
                 color="#333333",
-                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#c8c8c8", alpha=0.9),
+                bbox=dict(boxstyle="round,pad=0.35", fc="white", ec="#bfc7d5", alpha=0.95),
             )
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
