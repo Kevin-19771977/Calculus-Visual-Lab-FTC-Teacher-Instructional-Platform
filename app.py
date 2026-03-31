@@ -539,7 +539,7 @@ with module1:
 
     st.markdown('<div class="formula-box">', unsafe_allow_html=True)
     st.latex(
-        rf"A(\color{{green}}{{{x1:.2f}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
+        rf"A({{\color{{green}}{{{x1:.2f}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
         rf"={current_A:.4f}"
     )
     st.markdown('</div>', unsafe_allow_html=True)
