@@ -539,8 +539,8 @@ with module1:
 
     st.markdown('<div class="formula-box">', unsafe_allow_html=True)
     st.latex(
-        rf"A(\color{{green}}{{{x1:.2f}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
-        rf"=\color{{#355C7D}}{{{current_A:.4f}}}"
+        rf"A(x)=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
+        rf"={current_A:.4f}"
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -574,8 +574,7 @@ with module1:
 
     with chart_col_right:
         fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        mask_f_display = xs >= a
-        ax11.plot(xs[mask_f_display], ys[mask_f_display], linewidth=4.2, color="#8bbce9")
+        ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
         if x1 >= a:
