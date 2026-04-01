@@ -536,32 +536,43 @@ with module1:
     components.html(
         """
         <script>
-        const applyModule1SliderStyle = () => {
-            try {
-                const parentDoc = window.parent.document;
-                const tabPanels = parentDoc.querySelectorAll('[role=\"tabpanel\"]');
-                if (!tabPanels || tabPanels.length === 0) return;
+        const repaintModule1Sliders = () => {
+            const doc = window.parent.document;
+            const sliders = doc.querySelectorAll('div[data-testid="stSlider"]');
+            [0, 1].forEach((idx) => {
+                const slider = sliders[idx];
+                if (!slider) return;
 
-                const module1Panel = tabPanels[0];
-                const sliders = module1Panel.querySelectorAll('div[data-baseweb=\"slider\"]');
-                sliders.forEach((slider, idx) => {
-                    if (idx > 1) return;
-                    const innerDivs = slider.querySelectorAll(':scope > div > div');
-                    innerDivs.forEach((node, j) => {
-                        if (j < 2) {
-                            node.style.background = '#d9d9d9';
-                            node.style.borderColor = '#d9d9d9';
-                            node.style.boxShadow = 'none';
-                        }
-                    });
+                const trackBits = slider.querySelectorAll('div[data-baseweb="slider"] div');
+                trackBits.forEach((el) => {
+                    const style = window.parent.getComputedStyle(el);
+                    const h = parseFloat(style.height || "0");
+                    const w = parseFloat(style.width || "0");
+                    const radius = parseFloat(style.borderTopLeftRadius || "0");
+
+                    const isThumbLike = h >= 12 && w >= 12 && Math.abs(h - w) <= 6 && radius >= 8;
+                    const isTrackLike = h > 0 && h <= 8 && w > 20;
+
+                    if (isTrackLike) {
+                        el.style.background = "#d9dee7";
+                        el.style.backgroundColor = "#d9dee7";
+                        el.style.borderColor = "#d9dee7";
+                        el.style.boxShadow = "none";
+                    }
+
+                    if (isThumbLike) {
+                        el.style.background = "#ff4b4b";
+                        el.style.backgroundColor = "#ff4b4b";
+                        el.style.borderColor = "#ff4b4b";
+                    }
                 });
-            } catch (e) {}
+            });
         };
 
-        applyModule1SliderStyle();
-        const observer = new MutationObserver(() => applyModule1SliderStyle());
-        observer.observe(window.parent.document.body, { childList: true, subtree: true, attributes: true });
-        setInterval(applyModule1SliderStyle, 500);
+        repaintModule1Sliders();
+        const intervalId = setInterval(repaintModule1Sliders, 500);
+
+        window.addEventListener("beforeunload", () => clearInterval(intervalId));
         </script>
         """,
         height=0,
