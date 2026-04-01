@@ -642,6 +642,18 @@ with module1:
         ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
+
+# 顯示 x 的數值（綠色線與 x 軸交點）
+offset = -0.35 if abs(x1 - x_max_common) < 0.3 or abs(x1 - x_min_common) < 0.3 else -0.15
+ax11.text(
+    x1,
+    0 + offset,
+    f"{x1:.2f}",
+    ha="center",
+    va="top",
+    fontsize=13
+)
+
         if x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
             x_mid = (a + x1) / 2
