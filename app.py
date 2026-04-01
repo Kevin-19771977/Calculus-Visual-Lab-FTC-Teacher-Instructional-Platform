@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="FTC 學生互動學習平台",
@@ -507,7 +508,6 @@ with module1:
         )
 
     st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
-    st.markdown('<div class="m1-slider-marker-start"></div>', unsafe_allow_html=True)
     a = st.slider(
         "固定點 a",
         min_value=float(domain_left),
@@ -531,8 +531,52 @@ with module1:
     reset_default = float((domain_left + domain_right) / 2)
     if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
         st.session_state["m1x"] = reset_default
-    st.markdown('<div class="m1-slider-marker-end"></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+    components.html(
+        """
+        <script>
+        const repaintModule1Sliders = () => {
+            const doc = window.parent.document;
+            const sliders = doc.querySelectorAll('div[data-testid="stSlider"]');
+            [0, 1].forEach((idx) => {
+                const slider = sliders[idx];
+                if (!slider) return;
+
+                const trackBits = slider.querySelectorAll('div[data-baseweb="slider"] div');
+                trackBits.forEach((el) => {
+                    const style = window.parent.getComputedStyle(el);
+                    const h = parseFloat(style.height || "0");
+                    const w = parseFloat(style.width || "0");
+                    const radius = parseFloat(style.borderTopLeftRadius || "0");
+
+                    const isThumbLike = h >= 12 && w >= 12 && Math.abs(h - w) <= 6 && radius >= 8;
+                    const isTrackLike = h > 0 && h <= 8 && w > 20;
+
+                    if (isTrackLike) {
+                        el.style.background = "#d9dee7";
+                        el.style.backgroundColor = "#d9dee7";
+                        el.style.borderColor = "#d9dee7";
+                        el.style.boxShadow = "none";
+                    }
+
+                    if (isThumbLike) {
+                        el.style.background = "#ff4b4b";
+                        el.style.backgroundColor = "#ff4b4b";
+                        el.style.borderColor = "#ff4b4b";
+                    }
+                });
+            });
+        };
+
+        repaintModule1Sliders();
+        const intervalId = setInterval(repaintModule1Sliders, 500);
+
+        window.addEventListener("beforeunload", () => clearInterval(intervalId));
+        </script>
+        """,
+        height=0,
+    )
 
     Axs = cumulative_integral(f, a, xs)
     current_A = np.interp(x1, xs, Axs)
