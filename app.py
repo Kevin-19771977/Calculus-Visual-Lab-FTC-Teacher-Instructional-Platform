@@ -531,6 +531,7 @@ with module1:
     reset_default = float((domain_left + domain_right) / 2)
     if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
         st.session_state["m1x"] = reset_default
+    show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
     st.markdown('</div>', unsafe_allow_html=True)
 
     components.html(
@@ -605,7 +606,10 @@ with module1:
 
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        mask_A_display = (xs >= a) & mask_A
+        if show_full_A_curve:
+            mask_A_display = xs >= a
+        else:
+            mask_A_display = (xs >= a) & mask_A
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
