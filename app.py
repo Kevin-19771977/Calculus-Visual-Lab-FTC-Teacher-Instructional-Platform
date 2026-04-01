@@ -607,7 +607,7 @@ with module1:
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         if show_full_A_curve:
-            mask_A_display = xs >= a
+            mask_A_display = np.full_like(xs, True, dtype=bool)
         else:
             mask_A_display = (xs >= a) & mask_A
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
