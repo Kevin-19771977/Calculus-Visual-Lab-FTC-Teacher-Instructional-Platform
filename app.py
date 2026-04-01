@@ -537,13 +537,10 @@ with module1:
     components.html(
         """
         <script>
-        const repaintModule1Sliders = () => {
+        const repaintAllModuleSliders = () => {
             const doc = window.parent.document;
             const sliders = doc.querySelectorAll('div[data-testid="stSlider"]');
-            [0, 1].forEach((idx) => {
-                const slider = sliders[idx];
-                if (!slider) return;
-
+            sliders.forEach((slider) => {
                 const trackBits = slider.querySelectorAll('div[data-baseweb="slider"] div');
                 trackBits.forEach((el) => {
                     const style = window.parent.getComputedStyle(el);
@@ -570,8 +567,8 @@ with module1:
             });
         };
 
-        repaintModule1Sliders();
-        const intervalId = setInterval(repaintModule1Sliders, 500);
+        repaintAllModuleSliders();
+        const intervalId = setInterval(repaintAllModuleSliders, 500);
 
         window.addEventListener("beforeunload", () => clearInterval(intervalId));
         </script>
