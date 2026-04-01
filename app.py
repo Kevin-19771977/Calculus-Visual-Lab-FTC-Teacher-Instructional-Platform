@@ -134,6 +134,16 @@ div[data-testid="stMetric"] {
         min-width: 0;
     }
 
+    /* 模組 1：滑桿只保留紅色圓點，隱藏左側紅色填滿線 */
+    div[data-testid="stTabs"] [role="tabpanel"]:nth-of-type(1) div[data-baseweb="slider"] > div > div {
+        background: #d9dee8 !important;
+    }
+    div[data-testid="stTabs"] [role="tabpanel"]:nth-of-type(1) div[data-baseweb="slider"] [role="slider"] {
+        background: #ff4b4b !important;
+        border-color: #ff4b4b !important;
+        box-shadow: 0 0 0 1px #ff4b4b !important;
+    }
+
     </style>
     """,
     unsafe_allow_html=True,
