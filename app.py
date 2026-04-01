@@ -379,8 +379,6 @@ with st.sidebar:
     fill_neg_color = st.color_picker("面積塗色（x軸下方）", "#9cc2e5")
 
     st.markdown("---")
-    show_help = st.checkbox("顯示操作提醒", value=True)
-    show_formula = st.checkbox("顯示公式區", value=True)
 
 
 if "m1a" not in st.session_state:
@@ -393,6 +391,9 @@ if "m1x_raw" not in st.session_state:
     st.session_state["m1x_raw"] = float((domain_left + domain_right) / 2)
 if "m4b_raw" not in st.session_state:
     st.session_state["m4b_raw"] = float(min(domain_right, 2.0))
+
+show_help = True
+show_formula = True
 
 xs = np.linspace(domain_left, domain_right, 800)
 
@@ -477,9 +478,12 @@ with module1:
     top_left, top_right = st.columns([1.55, 1.0])
     with top_left:
         if show_formula:
-            st.markdown('<div class="formula-box">', unsafe_allow_html=True)
-        st.latex(r"A(x)=\int_a^x f(t)\,dt")
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem;">',
+                unsafe_allow_html=True
+            )
+            st.latex(r"A(x)=\int_a^x f(t)\,dt")
+            st.markdown('</div>', unsafe_allow_html=True)
         st.markdown(
             """
             <div class="big-note">
@@ -491,21 +495,7 @@ with module1:
         )
 
     with top_right:
-        a = float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right)))
-        x1 = float(st.session_state.get("m1x", (domain_left + domain_right) / 2))
-        st.markdown(
-            f"""
-            <div class="panel" style="margin-top:0.55rem;">
-            <b>目前設定</b><br>
-            函數：<b>{fname}</b><br>
-            固定點：<b>a = {a:.2f}</b><br>
-            顯示區間：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
-            顏色：左圖曲線 <span style="color:#8fc9a8;font-weight:700;">■</span>　右圖曲線 <span style="color:#8bbce9;font-weight:700;">■</span>　
-            上方面積 <span style="color:{fill_pos_color};font-weight:700;">■</span>　下方面積 <span style="color:{fill_neg_color};font-weight:700;">■</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.empty()
 
     st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
     a = st.slider(
@@ -528,9 +518,6 @@ with module1:
         on_change=enforce_m1x_not_below_a,
     )
     x1 = float(max(x1, a))
-    reset_default = float((domain_left + domain_right) / 2)
-    if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
-        st.session_state["m1x"] = reset_default
     show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -581,7 +568,10 @@ with module1:
     current_f = f(np.array([x1]))[0]
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
 
-    st.markdown('<div class="formula-box">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem; margin-top: 0.9rem;">',
+        unsafe_allow_html=True
+    )
     st.latex(
         rf"A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
         rf"={current_A:.4f}"
