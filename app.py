@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
-import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="FTC 學生互動學習平台",
@@ -446,47 +445,6 @@ def enforce_m4b_not_below_a():
     if raw_val < a_val:
         st.session_state["m4b_raw"] = a_val
 
-
-
-# 只在模組 1 的兩個滑桿上隱藏左側紅色填滿線，保留滑桿圓點
-def inject_module1_slider_style():
-    components.html(
-        """
-        <script>
-        (function() {
-            function styleModule1Sliders() {
-                const allSliders = window.parent.document.querySelectorAll('div[data-baseweb="slider"]');
-                if (!allSliders || allSliders.length < 2) return;
-
-                [allSliders[0], allSliders[1]].forEach((slider) => {
-                    const descendants = slider.querySelectorAll('div');
-                    descendants.forEach((el) => {
-                        const cs = window.parent.getComputedStyle(el);
-                        const h = parseFloat(cs.height || '0');
-                        const w = parseFloat(cs.width || '0');
-                        const bg = cs.backgroundColor;
-                        const isThumb = el.getAttribute('role') === 'slider';
-                        const looksLikeFilledTrack = !isThumb && h <= 8 && w > 0 && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
-                        if (looksLikeFilledTrack) {
-                            el.style.background = 'transparent';
-                            el.style.backgroundColor = 'transparent';
-                            el.style.borderColor = 'transparent';
-                            el.style.boxShadow = 'none';
-                        }
-                    });
-                });
-            }
-
-            styleModule1Sliders();
-            const observer = new MutationObserver(() => styleModule1Sliders());
-            observer.observe(window.parent.document.body, { childList: true, subtree: true, attributes: true });
-        })();
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
-
 # -----------------------------
 # Tabs
 # -----------------------------
@@ -548,8 +506,6 @@ with module1:
             unsafe_allow_html=True,
         )
 
-    inject_module1_slider_style()
-
     st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
     a = st.slider(
         "固定點 a",
@@ -607,6 +563,19 @@ with module1:
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
+        offset_x = 14 if x1 <= (x_min_common + x_max_common) / 2 else -96
+        offset_y = 14 if current_A <= (y_min_common + y_max_common) / 2 else -24
+        ax12.annotate(
+            f"({x1:.2f}, {current_A:.2f})",
+            xy=(x1, current_A),
+            xytext=(offset_x, offset_y),
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.5,
+            fontweight="semibold",
+            bbox=dict(boxstyle="round,pad=0.24,rounding_size=0.18", fc="white", ec="#86c79d", lw=1.0, alpha=0.96),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
@@ -623,6 +592,33 @@ with module1:
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
         if x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
+            x_mid = (a + x1) / 2
+            ys_mask = ys[mask]
+            positive_part = ys_mask[ys_mask >= 0]
+            negative_part = ys_mask[ys_mask < 0]
+
+            if current_A >= 0:
+                if len(positive_part) > 0:
+                    y_mid = 0.52 * np.max(positive_part)
+                else:
+                    y_mid = 0.38 * max(y_max_common, 1.0)
+            else:
+                if len(negative_part) > 0:
+                    y_mid = 0.52 * np.min(negative_part)
+                else:
+                    y_mid = 0.38 * min(y_min_common, -1.0)
+
+            ax11.text(
+                x_mid,
+                y_mid,
+                f"{current_A:.2f}",
+                ha="center",
+                va="center",
+                fontsize=14,
+                fontweight="semibold",
+                color="#2f2f2f",
+                bbox=dict(boxstyle="round,pad=0.28,rounding_size=0.16", fc="white", ec="#c9d2de", lw=1.0, alpha=0.94),
+            )
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
         ax11.set_ylabel("f(x)", fontsize=12)
