@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="FTC 學生互動學習平台",
@@ -123,14 +124,6 @@ div[data-testid="stMetric"] {
     .goal-panel {
         padding: 1.2rem 1.4rem;
         font-size: 1.08rem;
-    }
-
-    /* 模組 1 滑桿：移除左側紅色填滿線，只保留滑塊圓點 */
-    .module1-slider-scope div[data-baseweb="slider"] > div > div > div {
-        background: #d9d9d9 !important;
-    }
-    .module1-slider-scope div[data-baseweb="slider"] div[role="slider"] {
-        box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #d65a5a !important;
     }
 
     div[data-testid="stTabs"] [role="tablist"] {
@@ -453,6 +446,47 @@ def enforce_m4b_not_below_a():
     if raw_val < a_val:
         st.session_state["m4b_raw"] = a_val
 
+
+
+# 只在模組 1 的兩個滑桿上隱藏左側紅色填滿線，保留滑桿圓點
+def inject_module1_slider_style():
+    components.html(
+        """
+        <script>
+        (function() {
+            function styleModule1Sliders() {
+                const allSliders = window.parent.document.querySelectorAll('div[data-baseweb="slider"]');
+                if (!allSliders || allSliders.length < 2) return;
+
+                [allSliders[0], allSliders[1]].forEach((slider) => {
+                    const descendants = slider.querySelectorAll('div');
+                    descendants.forEach((el) => {
+                        const cs = window.parent.getComputedStyle(el);
+                        const h = parseFloat(cs.height || '0');
+                        const w = parseFloat(cs.width || '0');
+                        const bg = cs.backgroundColor;
+                        const isThumb = el.getAttribute('role') === 'slider';
+                        const looksLikeFilledTrack = !isThumb && h <= 8 && w > 0 && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
+                        if (looksLikeFilledTrack) {
+                            el.style.background = 'transparent';
+                            el.style.backgroundColor = 'transparent';
+                            el.style.borderColor = 'transparent';
+                            el.style.boxShadow = 'none';
+                        }
+                    });
+                });
+            }
+
+            styleModule1Sliders();
+            const observer = new MutationObserver(() => styleModule1Sliders());
+            observer.observe(window.parent.document.body, { childList: true, subtree: true, attributes: true });
+        })();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
 # -----------------------------
 # Tabs
 # -----------------------------
@@ -514,7 +548,8 @@ with module1:
             unsafe_allow_html=True,
         )
 
-    st.markdown('<div class="module1-slider-scope">', unsafe_allow_html=True)
+    inject_module1_slider_style()
+
     st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
     a = st.slider(
         "固定點 a",
@@ -539,7 +574,6 @@ with module1:
     reset_default = float((domain_left + domain_right) / 2)
     if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
         st.session_state["m1x"] = reset_default
-    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     Axs = cumulative_integral(f, a, xs)
