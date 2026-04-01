@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
-import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="FTC 學生互動學習平台",
@@ -133,6 +132,16 @@ div[data-testid="stMetric"] {
     div[data-testid="stTabs"] [role="tab"] {
         flex: 1 1 0;
         min-width: 0;
+    }
+
+    /* 模組 1：滑桿只保留紅色圓點，隱藏左側紅色填滿線 */
+    div[data-testid="stTabs"] [role="tabpanel"]:nth-of-type(1) div[data-baseweb="slider"] > div > div {
+        background: #d9dee8 !important;
+    }
+    div[data-testid="stTabs"] [role="tabpanel"]:nth-of-type(1) div[data-baseweb="slider"] [role="slider"] {
+        background: #ff4b4b !important;
+        border-color: #ff4b4b !important;
+        box-shadow: 0 0 0 1px #ff4b4b !important;
     }
 
     </style>
@@ -533,51 +542,6 @@ with module1:
         st.session_state["m1x"] = reset_default
     st.markdown('</div>', unsafe_allow_html=True)
 
-    components.html(
-        """
-        <script>
-        const repaintModule1Sliders = () => {
-            const doc = window.parent.document;
-            const sliders = doc.querySelectorAll('div[data-testid="stSlider"]');
-            [0, 1].forEach((idx) => {
-                const slider = sliders[idx];
-                if (!slider) return;
-
-                const trackBits = slider.querySelectorAll('div[data-baseweb="slider"] div');
-                trackBits.forEach((el) => {
-                    const style = window.parent.getComputedStyle(el);
-                    const h = parseFloat(style.height || "0");
-                    const w = parseFloat(style.width || "0");
-                    const radius = parseFloat(style.borderTopLeftRadius || "0");
-
-                    const isThumbLike = h >= 12 && w >= 12 && Math.abs(h - w) <= 6 && radius >= 8;
-                    const isTrackLike = h > 0 && h <= 8 && w > 20;
-
-                    if (isTrackLike) {
-                        el.style.background = "#d9dee7";
-                        el.style.backgroundColor = "#d9dee7";
-                        el.style.borderColor = "#d9dee7";
-                        el.style.boxShadow = "none";
-                    }
-
-                    if (isThumbLike) {
-                        el.style.background = "#ff4b4b";
-                        el.style.backgroundColor = "#ff4b4b";
-                        el.style.borderColor = "#ff4b4b";
-                    }
-                });
-            });
-        };
-
-        repaintModule1Sliders();
-        const intervalId = setInterval(repaintModule1Sliders, 500);
-
-        window.addEventListener("beforeunload", () => clearInterval(intervalId));
-        </script>
-        """,
-        height=0,
-    )
-
     Axs = cumulative_integral(f, a, xs)
     current_A = np.interp(x1, xs, Axs)
     current_f = f(np.array([x1]))[0]
@@ -609,6 +573,16 @@ with module1:
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
+        # 顯示 x 的數值（左圖 x 軸交點）
+        ax12.text(
+            x1,
+            0 - 0.18,
+            f"{x1:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13
+        )
+
         offset_x = 14 if x1 <= (x_min_common + x_max_common) / 2 else -96
         offset_y = 14 if current_A <= (y_min_common + y_max_common) / 2 else -24
         ax12.annotate(
@@ -619,13 +593,7 @@ with module1:
             color="#2f6f4f",
             fontsize=13.5,
             fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
+            bbox=dict(boxstyle="round,pad=0.24,rounding_size=0.18", fc="white", ec="#86c79d", lw=1.0, alpha=0.96),
             arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
         )
         ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
@@ -642,19 +610,23 @@ with module1:
         ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
-        # 顯示 x 的數值（綠色線與 x 軸交點）
-        offset = -0.35 if abs(x1 - x_max_common) < 0.3 or abs(x1 - x_min_common) < 0.3 else -0.15
-        ax11.text(
-            x1,
-            0 + offset,
-            f"{x1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13
+        ax11.annotate(
+            "f(x)",
+            xy=(x1, current_f),
+            xytext=(10, 8 if current_f <= 0 else -18),
+            textcoords="offset points",
+            fontsize=12.5,
+            color="#2f6f4f",
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.20,rounding_size=0.14",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.95,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
         )
-
-
-
 
         if x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
@@ -677,19 +649,13 @@ with module1:
             ax11.text(
                 x_mid,
                 y_mid,
-                f"{current_A:.2f}",
+                f"A(x) = {current_A:.2f}",
                 ha="center",
                 va="center",
                 fontsize=14,
                 fontweight="semibold",
                 color="#2f2f2f",
-                bbox=dict(
-                    boxstyle="round,pad=0.28,rounding_size=0.16",
-                    fc="white",
-                    ec="#c9d2de",
-                    lw=1.0,
-                    alpha=0.94,
-                ),
+                bbox=dict(boxstyle="round,pad=0.28,rounding_size=0.16", fc="white", ec="#c9d2de", lw=1.0, alpha=0.94),
             )
         ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
