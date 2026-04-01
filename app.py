@@ -609,6 +609,17 @@ with module1:
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
+        # 顯示 x 的數值（左圖綠色線與 x 軸交點）
+        offset_left = -0.35 if abs(x1 - x_max_common) < 0.3 or abs(x1 - x_min_common) < 0.3 else -0.15
+        ax12.text(
+            x1,
+            0 + offset_left,
+            f"{x1:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13
+        )
+
         offset_x = 14 if x1 <= (x_min_common + x_max_common) / 2 else -96
         offset_y = 14 if current_A <= (y_min_common + y_max_common) / 2 else -24
         ax12.annotate(
