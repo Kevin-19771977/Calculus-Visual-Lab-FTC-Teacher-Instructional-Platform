@@ -134,17 +134,47 @@ div[data-testid="stMetric"] {
         min-width: 0;
     }
 
-    /* 模組 1：滑桿只保留紅色圓點，隱藏左側紅色填滿線 */
-    div[data-testid="stTabs"] [role="tabpanel"]:nth-of-type(1) div[data-baseweb="slider"] > div > div {
-        background: #d9dee8 !important;
-    }
-    div[data-testid="stTabs"] [role="tabpanel"]:nth-of-type(1) div[data-baseweb="slider"] [role="slider"] {
-        background: #ff4b4b !important;
-        border-color: #ff4b4b !important;
-        box-shadow: 0 0 0 1px #ff4b4b !important;
-    }
-
     </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# 模組 1 滑桿：只保留圓點，不顯示左側紅色填滿線
+st.markdown(
+    """
+    <style>
+    div[data-testid="stSlider"][data-module1-slider="true"] div[data-baseweb="slider"] > div:nth-child(2) {
+        background: transparent !important;
+        opacity: 0 !important;
+    }
+    div[data-testid="stSlider"][data-module1-slider="true"] div[data-baseweb="slider"] > div:nth-child(1) {
+        background: #d9d9d9 !important;
+    }
+    </style>
+    <script>
+    (function() {
+        function applyModule1SliderStyle() {
+            const doc = window.parent.document;
+            const start = doc.getElementById('module1-slider-start');
+            const end = doc.getElementById('module1-slider-end');
+            if (!start || !end) return;
+            const all = Array.from(doc.querySelectorAll('div[data-testid="stSlider"]'));
+            all.forEach((el) => el.removeAttribute('data-module1-slider'));
+            const startPos = start.getBoundingClientRect().top;
+            const endPos = end.getBoundingClientRect().top;
+            const targets = all.filter((el) => {
+                const top = el.getBoundingClientRect().top;
+                return top > startPos && top < endPos;
+            });
+            targets.slice(0, 2).forEach((el) => el.setAttribute('data-module1-slider', 'true'));
+        }
+        applyModule1SliderStyle();
+        window.addEventListener('load', applyModule1SliderStyle);
+        setTimeout(applyModule1SliderStyle, 300);
+        setTimeout(applyModule1SliderStyle, 1200);
+        setTimeout(applyModule1SliderStyle, 2500);
+    })();
+    </script>
     """,
     unsafe_allow_html=True,
 )
@@ -516,7 +546,7 @@ with module1:
             unsafe_allow_html=True,
         )
 
-    st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
+    st.markdown('<div id="module1-slider-start" class="center-soft-control-box">', unsafe_allow_html=True)
     a = st.slider(
         "固定點 a",
         min_value=float(domain_left),
@@ -540,7 +570,7 @@ with module1:
     reset_default = float((domain_left + domain_right) / 2)
     if st.button("把 x 回到中間位置", key="m1_reset_button", use_container_width=True):
         st.session_state["m1x"] = reset_default
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div><div id="module1-slider-end"></div>', unsafe_allow_html=True)
 
     Axs = cumulative_integral(f, a, xs)
     current_A = np.interp(x1, xs, Axs)
