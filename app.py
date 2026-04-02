@@ -585,10 +585,8 @@ with module1:
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
     mask_z = (xs >= min(z1, a)) & (xs <= max(z1, a))
 
-    formula_col_left, formula_col_right = st.columns(2, gap="large")
-
-    with formula_col_left:
-        st.markdown('<div style="padding: 0.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
+    with top_formula_col:
+        st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
         st.latex(
             rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
             rf"={current_Z:.4f}"
@@ -598,9 +596,6 @@ with module1:
             rf"={current_A:.4f}"
         )
         st.markdown('</div>', unsafe_allow_html=True)
-
-    with formula_col_right:
-        st.markdown('<div style="height: 112px;"></div>', unsafe_allow_html=True)
 
     chart_col_left, chart_col_right = st.columns(2, gap="large")
 
