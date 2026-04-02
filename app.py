@@ -509,7 +509,7 @@ with module1:
     if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
         st.session_state["m1x_raw"] = float(a)
     x1 = st.slider(
-        "拖動 x",
+        "向右",
         min_value=float(domain_left),
         max_value=float(domain_right),
         value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
@@ -578,11 +578,6 @@ with module1:
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    m1c1, m1c2, m1c3 = st.columns(3)
-    m1c1.metric("目前 x", f"{x1:.3f}")
-    m1c2.metric("目前 f(x)", f"{current_f:.4f}")
-    m1c3.metric("目前 A(x)", f"{current_A:.4f}")
-
     chart_col_left, chart_col_right = st.columns(2, gap="large")
 
     # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
@@ -630,7 +625,7 @@ with module1:
             ),
             arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
         )
-        ax12.set_title("累積函數 A(x)（會隨著滑桿逐步生成）", fontsize=16, pad=14)
+        ax12.set_title("y=A(x)", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
         ax12.set_xlim(x_min_common, x_max_common)
@@ -693,7 +688,7 @@ with module1:
                     alpha=0.94,
                 ),
             )
-        ax11.set_title("原函數 f(x) 與從固定點 a 到 x 的累積面積", fontsize=16, pad=14)
+        ax11.set_title("y=f(x)", fontsize=16, pad=14)
         ax11.set_xlabel("x", fontsize=12)
         ax11.set_ylabel("f(x)", fontsize=12)
         ax11.set_xlim(x_min_common, x_max_common)
@@ -942,4 +937,3 @@ with module4:
             unsafe_allow_html=True,
         )
 
-st.info("執行方式：python -m streamlit run ftc_teaching_tool_web_clear.py")
