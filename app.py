@@ -595,17 +595,11 @@ with module1:
 
     with chart_col_left:
         st.markdown(
-            '<div class="formula-box" style="text-align:center; padding: 1.0rem 1rem; margin-top: 0.9rem;">',
+            '<div style="background:#f3f5f7; border:1px solid #d9dee7; border-radius:16px; padding:0.6rem 0.7rem; margin-top:0.9rem; margin-bottom:0.5rem;">',
             unsafe_allow_html=True
         )
-        st.latex(
-            rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
-            rf"={current_Z:.4f}"
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
-
         st.markdown(
-            '<div class="formula-box" style="text-align:center; padding: 1.0rem 1rem; margin-top: 0.4rem; margin-bottom: 0.5rem;">',
+            '<div class="formula-box" style="text-align:center; padding: 1.0rem 1rem; margin-top: 0; margin-bottom: 0.45rem;">',
             unsafe_allow_html=True
         )
         st.latex(
@@ -613,6 +607,16 @@ with module1:
             rf"={current_A:.4f}"
         )
         st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown(
+            '<div class="formula-box" style="text-align:center; padding: 1.0rem 1rem; margin-top: 0; margin-bottom: 0;">',
+            unsafe_allow_html=True
+        )
+        st.latex(
+            rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
+            rf"={current_Z:.4f}"
+        )
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
     # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
     if x1 >= domain_left:
@@ -701,6 +705,7 @@ with module1:
         st.pyplot(fig12, use_container_width=True)
 
     with chart_col_right:
+        st.markdown('<div style="height: 195px;"></div>', unsafe_allow_html=True)
         fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
@@ -778,7 +783,7 @@ with module1:
                 else:
                     y_mid_z = 0.38 * min(y_min_common, -1.0)
 
-            z_mid = z1 + 0.58 * (a - z1)
+            z_mid = z1 + 0.42 * (a - z1)
             ax11.text(
                 z_mid,
                 y_mid_z,
