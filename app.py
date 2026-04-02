@@ -303,24 +303,59 @@ with st.sidebar:
     )
 
     if function_choice == "自訂函數":
+        st.markdown(
+            """
+            <div style="font-size:0.95rem; color:#5a6f84; line-height:1.75; margin-bottom:0.35rem;">
+            請用 Python 形式輸入函數。<br>
+            次方請寫成 <code>**</code>，例如 <code>x**2</code>。
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         custom_expr_text = st.text_input(
             "請輸入 f(x)",
             value=st.session_state.get("custom_expr_text", "sin(x)+x/2"),
-            placeholder="例如：x**2、sin(x)、exp(x)、log(x+2)",
-            help="請用 Python 形式輸入，例如 x**2、sin(x)、exp(x)、log(x+2)。",
+            placeholder="例如：x、x**2、sin(x)、exp(x)、log(x+2)",
+            help="請用 Python 形式輸入，例如 x、x**2、sin(x)、exp(x)、log(x+2)。",
             key="custom_expr_text",
         )
 
-        normalized_expr_text = custom_expr_text.replace("^", "**").replace("ln(", "log(")
-        try:
-            custom_expr, custom_func = build_custom_function(normalized_expr_text)
-            fname = str(custom_expr)
-            f = lambda x: np.array(custom_func(x), dtype=float)
-            st.success(f"自訂函數已載入：f(x) = {normalized_expr_text}")
-        except Exception:
+        st.markdown(
+            """
+            <div style="font-size:0.93rem; color:#61778d; line-height:1.8; margin:0.2rem 0 0.45rem 0;">
+            <b>常用範例</b><br>
+            • x<br>
+            • x**2<br>
+            • x**3<br>
+            • sin(x)<br>
+            • cos(x)<br>
+            • exp(x)<br>
+            • log(x+2)<br>
+            • sqrt(x+3)<br>
+            • Abs(x)<br>
+            • sin(x)+x/2
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        normalized_expr_text = custom_expr_text.strip().replace("^", "**").replace("ln(", "log(")
+
+        if normalized_expr_text == "":
             fname = "x"
             f = function_factory(fname)
-            st.error("自訂函數格式有誤，已暫時改用 f(x)=x。請確認有使用 ** 表示次方。")
+            st.info("請先輸入函數式，例如：x、x**2、sin(x)")
+        else:
+            try:
+                custom_expr, custom_func = build_custom_function(normalized_expr_text)
+                fname = str(custom_expr)
+                f = lambda x: np.array(custom_func(x), dtype=float)
+                st.success(f"目前使用：f(x) = {normalized_expr_text}")
+            except Exception:
+                fname = "x"
+                f = function_factory(fname)
+                st.warning("目前輸入尚未完成或格式不正確，暫時先用 f(x)=x 顯示。")
     else:
         fname = function_choice
         f = function_factory(fname)
@@ -458,14 +493,19 @@ with module1:
 
     if show_formula:
         st.markdown(
-            '<div style="text-align:center; padding: 0.6rem 0 0.9rem 0;">',
+            '<div class="formula-box" style="text-align:center; padding: 1.8rem 1rem; width: 100%; max-width: 1200px; margin: 0 auto 1rem auto;">',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div style="display:flex; justify-content:center; align-items:center; min-height:110px;">',
             unsafe_allow_html=True
         )
         st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt")
-    
+        st.markdown('</div></div>', unsafe_allow_html=True)
+
     st.markdown(
         """
-        <div style="font-size:1.02rem; color:#38506a; line-height:1.8; margin: 0.2rem 0 0.9rem 0;">
+        <div class="big-note">
         觀察重點：圖形只顯示固定點 a 右邊的部分。當你把 x 往右拖時，從固定點 a 到 x 的面積會持續累積，
         而下方的 <b>A(x)</b> 也會跟著改變。
         </div>
@@ -473,46 +513,41 @@ with module1:
         unsafe_allow_html=True,
     )
 
-    top_formula_col, top_control_col = st.columns([1.05, 0.95], gap="large")
-
-    with top_control_col:
-        st.markdown(
-            '<div style="font-size:0.98rem; color:#60758c; margin:0.15rem 0 0.35rem 0;"><b>控制區</b></div>',
-            unsafe_allow_html=True
-        )
-        a = st.slider(
-            "固定點 a",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
-            step=0.05,
-            key="m1a",
-        )
-        if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
-            st.session_state["m1x_raw"] = float(a)
-        x1 = st.slider(
-            "向右拖動x",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
-            step=0.05,
-            key="m1x_raw",
-            on_change=enforce_m1x_not_below_a,
-        )
-        x1 = float(max(x1, a))
-        if st.session_state.get("m1z_raw", (domain_left + domain_right) / 2) > a:
-            st.session_state["m1z_raw"] = float(a)
-        z1 = st.slider(
-            "向左拖動x",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m1z_raw", min((domain_left + domain_right) / 2, float(a)))),
-            step=0.05,
-            key="m1z_raw",
-            on_change=enforce_m1z_not_above_a,
-        )
-        z1 = float(min(z1, a))
-        show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
+    st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
+    a = st.slider(
+        "固定點 a",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
+        step=0.05,
+        key="m1a",
+    )
+    if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
+        st.session_state["m1x_raw"] = float(a)
+    x1 = st.slider(
+        "向右拖動x",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
+        step=0.05,
+        key="m1x_raw",
+        on_change=enforce_m1x_not_below_a,
+    )
+    x1 = float(max(x1, a))
+    if st.session_state.get("m1z_raw", (domain_left + domain_right) / 2) > a:
+        st.session_state["m1z_raw"] = float(a)
+    z1 = st.slider(
+        "向左拖動x",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1z_raw", min((domain_left + domain_right) / 2, float(a)))),
+        step=0.05,
+        key="m1z_raw",
+        on_change=enforce_m1z_not_above_a,
+    )
+    z1 = float(min(z1, a))
+    show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     components.html(
         """
@@ -564,11 +599,16 @@ with module1:
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
     mask_z = (xs >= min(z1, a)) & (xs <= max(z1, a))
 
-    with top_formula_col:
-        st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
-        st.latex(
-            rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
-            rf"={current_Z:.4f}"
+    chart_col_left, chart_col_right = st.columns(2, gap="large")
+
+    with chart_col_left:
+        st.markdown(
+            '<div style="background:#f3f5f7; border:1px solid #d9dee7; border-radius:16px; padding:0.6rem 0.7rem; margin-top:0.9rem; margin-bottom:0.5rem;">',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div class="formula-box" style="text-align:center; padding: 1.0rem 1rem; margin-top: 0; margin-bottom: 0.45rem;">',
+            unsafe_allow_html=True
         )
         st.latex(
             rf"A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
@@ -576,7 +616,15 @@ with module1:
         )
         st.markdown('</div>', unsafe_allow_html=True)
 
-    chart_col_left, chart_col_right = st.columns(2, gap="large")
+        st.markdown(
+            '<div class="formula-box" style="text-align:center; padding: 1.0rem 1rem; margin-top: 0; margin-bottom: 0;">',
+            unsafe_allow_html=True
+        )
+        st.latex(
+            rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
+            rf"={current_Z:.4f}"
+        )
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
     # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
     if x1 >= domain_left:
@@ -595,16 +643,6 @@ with module1:
             ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
             ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
-        offset_a_left = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
-        ax12.text(
-            a,
-            0 + offset_a_left,
-            f"{a:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            color="red"
-        )
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
         draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
         # 顯示 x 的數值（左圖綠色線與 x 軸交點）
@@ -675,19 +713,10 @@ with module1:
         st.pyplot(fig12, use_container_width=True)
 
     with chart_col_right:
+        st.markdown('<div style="height: 195px;"></div>', unsafe_allow_html=True)
         fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
-        offset_a_right = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
-        ax11.text(
-            a,
-            0 + offset_a_right,
-            f"{a:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            color="red"
-        )
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
         draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
         # 顯示 x 的數值（綠色線與 x 軸交點）
@@ -762,7 +791,7 @@ with module1:
                 else:
                     y_mid_z = 0.38 * min(y_min_common, -1.0)
 
-            z_mid = z1 + 0.28 * (a - z1)
+            z_mid = z1 + 0.42 * (a - z1)
             ax11.text(
                 z_mid,
                 y_mid_z,
@@ -791,7 +820,7 @@ with module1:
 
     st.markdown(
         f"""
-        <div style="margin-top:0.65rem; font-size:1rem; line-height:1.85; color:#42586f;">
+        <div class="panel">
         <b>你現在應該看到什麼</b><br>
         1. 當你拖動 x 時，左圖的 A(x) 曲線會逐步長出來。<br>
         2. 右圖的陰影面積會跟著改變，代表新的累積量來源。<br>
