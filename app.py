@@ -389,6 +389,8 @@ if "m4a" not in st.session_state:
     st.session_state["m4a"] = float(min(max(0.0, domain_left), domain_right))
 if "m1x_raw" not in st.session_state:
     st.session_state["m1x_raw"] = float((domain_left + domain_right) / 2)
+if "m1z_raw" not in st.session_state:
+    st.session_state["m1z_raw"] = float((domain_left + domain_right) / 2)
 if "m4b_raw" not in st.session_state:
     st.session_state["m4b_raw"] = float(min(domain_right, 2.0))
 
@@ -440,6 +442,12 @@ def enforce_m1x_not_below_a():
     raw_val = float(st.session_state.get("m1x_raw", a_val))
     if raw_val < a_val:
         st.session_state["m1x_raw"] = a_val
+
+def enforce_m1z_not_above_a():
+    a_val = float(st.session_state.get("m1a", domain_left))
+    raw_val = float(st.session_state.get("m1z_raw", a_val))
+    if raw_val > a_val:
+        st.session_state["m1z_raw"] = a_val
 
 def enforce_m4b_not_below_a():
     a_val = float(st.session_state.get("m4a", domain_left))
@@ -509,7 +517,7 @@ with module1:
     if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
         st.session_state["m1x_raw"] = float(a)
     x1 = st.slider(
-        "向右",
+        "向右拖動x",
         min_value=float(domain_left),
         max_value=float(domain_right),
         value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
@@ -518,6 +526,18 @@ with module1:
         on_change=enforce_m1x_not_below_a,
     )
     x1 = float(max(x1, a))
+    if st.session_state.get("m1z_raw", (domain_left + domain_right) / 2) > a:
+        st.session_state["m1z_raw"] = float(a)
+    z1 = st.slider(
+        "向左拖動x",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1z_raw", min((domain_left + domain_right) / 2, float(a)))),
+        step=0.05,
+        key="m1z_raw",
+        on_change=enforce_m1z_not_above_a,
+    )
+    z1 = float(min(z1, a))
     show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -566,7 +586,10 @@ with module1:
     Axs = cumulative_integral(f, a, xs)
     current_A = np.interp(x1, xs, Axs)
     current_f = f(np.array([x1]))[0]
+    current_Z = np.interp(z1, xs, Axs)
+    current_fz = f(np.array([z1]))[0]
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
+    mask_z = (xs >= min(z1, a)) & (xs <= max(z1, a))
 
     st.markdown(
         '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem; margin-top: 0.9rem;">',
@@ -595,12 +618,22 @@ with module1:
         ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
+        draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
         # 顯示 x 的數值（左圖綠色線與 x 軸交點）
         offset_left = -0.35 if abs(x1 - x_max_common) < 0.3 or abs(x1 - x_min_common) < 0.3 else -0.15
         ax12.text(
             x1,
             0 + offset_left,
             f"{x1:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13
+        )
+        offset_left_z = -0.35 if abs(z1 - x_max_common) < 0.3 or abs(z1 - x_min_common) < 0.3 else -0.15
+        ax12.text(
+            z1,
+            0 + offset_left_z,
+            f"{z1:.2f}",
             ha="center",
             va="top",
             fontsize=13
@@ -612,6 +645,25 @@ with module1:
             f"({x1:.2f}, {current_A:.2f})",
             xy=(x1, current_A),
             xytext=(offset_x, offset_y),
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.5,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.24,rounding_size=0.18",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
+        offset_zx = 14 if z1 <= (x_min_common + x_max_common) / 2 else -96
+        offset_zy = 14 if current_Z <= (y_min_common + y_max_common) / 2 else -24
+        ax12.annotate(
+            f"({z1:.2f}, {current_Z:.2f})",
+            xy=(z1, current_Z),
+            xytext=(offset_zx, offset_zy),
             textcoords="offset points",
             color="#2f6f4f",
             fontsize=13.5,
@@ -639,6 +691,7 @@ with module1:
         ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
+        draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
         # 顯示 x 的數值（綠色線與 x 軸交點）
         offset = -0.35 if abs(x1 - x_max_common) < 0.3 or abs(x1 - x_min_common) < 0.3 else -0.15
         ax11.text(
@@ -649,12 +702,58 @@ with module1:
             va="top",
             fontsize=13
         )
-
-
-
+        offset_z = -0.35 if abs(z1 - x_max_common) < 0.3 or abs(z1 - x_min_common) < 0.3 else -0.15
+        ax11.text(
+            z1,
+            0 + offset_z,
+            f"{z1:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13
+        )
+        offset_fx_x = 14 if x1 <= (x_min_common + x_max_common) / 2 else -96
+        offset_fx_y = 14 if current_f <= (y_min_common + y_max_common) / 2 else -24
+        ax11.annotate(
+            f"({x1:.2f}, {current_f:.2f})",
+            xy=(x1, current_f),
+            xytext=(offset_fx_x, offset_fx_y),
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.5,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.24,rounding_size=0.18",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
+        offset_fz_x = 14 if z1 <= (x_min_common + x_max_common) / 2 else -96
+        offset_fz_y = 14 if current_fz <= (y_min_common + y_max_common) / 2 else -24
+        ax11.annotate(
+            f"({z1:.2f}, {current_fz:.2f})",
+            xy=(z1, current_fz),
+            xytext=(offset_fz_x, offset_fz_y),
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.5,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.24,rounding_size=0.18",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
 
         if x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
+        if z1 <= a:
+            fill_area_by_sign(ax11, xs[mask_z], ys[mask_z], fill_pos_color, fill_neg_color, alpha=0.40)
             x_mid = (a + x1) / 2
             ys_mask = ys[mask]
             positive_part = ys_mask[ys_mask >= 0]
