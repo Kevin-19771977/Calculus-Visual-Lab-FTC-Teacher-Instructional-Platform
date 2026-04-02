@@ -135,29 +135,6 @@ div[data-testid="stMetric"] {
         min-width: 0;
     }
 
-    .module-toolbar {
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        margin: 0;
-    }
-    .formula-box {
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        margin: 0;
-    }
-    .center-soft-control-box {
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-    }
-
     </style>
     """,
     unsafe_allow_html=True,
@@ -496,8 +473,11 @@ with module1:
 
     st.markdown(
         """
-        <div style="font-size:0.98rem; color:#56708a; margin:0.25rem 0 0.85rem 0; line-height:1.8;">
-            步驟 1：選函數　·　步驟 2：拖動 x　·　步驟 3：看面積變化　·　步驟 4：對照 A(x) 上的點
+        <div class="module-toolbar">
+            <div class="module-chip">步驟 1：選函數</div>
+            <div class="module-chip">步驟 2：拖動 x</div>
+            <div class="module-chip">步驟 3：看面積變化</div>
+            <div class="module-chip">步驟 4：對照 A(x) 上的點</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -505,11 +485,10 @@ with module1:
 
     if show_formula:
         st.markdown(
-            '<div style="text-align:center; padding: 0.25rem 0 0.7rem 0;">',
+            '<div style="text-align:center; padding: 0.6rem 0 0.9rem 0;">',
             unsafe_allow_html=True
         )
         st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt")
-        st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown(
         """
@@ -521,10 +500,6 @@ with module1:
         unsafe_allow_html=True,
     )
 
-    st.markdown(
-        '<div style="font-size:0.98rem; color:#60758c; margin:0.2rem 0 0.35rem 0;"><b>控制區</b></div>',
-        unsafe_allow_html=True
-    )
     a = st.slider(
         "固定點 a",
         min_value=float(domain_left),
@@ -558,6 +533,7 @@ with module1:
     )
     z1 = float(min(z1, a))
     show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     components.html(
         """
@@ -612,7 +588,7 @@ with module1:
     formula_col_left, formula_col_right = st.columns(2, gap="large")
 
     with formula_col_left:
-        st.markdown('<div style="padding: 0.1rem 0 0.15rem 0;">', unsafe_allow_html=True)
+        st.markdown('<div style="padding: 0.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
         st.latex(
             rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
             rf"={current_Z:.4f}"
@@ -624,7 +600,7 @@ with module1:
         st.markdown('</div>', unsafe_allow_html=True)
 
     with formula_col_right:
-        st.markdown('<div style="height: 98px;"></div>', unsafe_allow_html=True)
+        st.markdown('<div style="height: 112px;"></div>', unsafe_allow_html=True)
 
     chart_col_left, chart_col_right = st.columns(2, gap="large")
 
@@ -841,7 +817,7 @@ with module1:
 
     st.markdown(
         f"""
-        <div style="margin-top:0.55rem; font-size:0.99rem; line-height:1.85; color:#4d6278;">
+        <div style="margin-top:0.65rem; font-size:1rem; line-height:1.85; color:#42586f;">
         <b>你現在應該看到什麼</b><br>
         1. 當你拖動 x 時，左圖的 A(x) 曲線會逐步長出來。<br>
         2. 右圖的陰影面積會跟著改變，代表新的累積量來源。<br>
