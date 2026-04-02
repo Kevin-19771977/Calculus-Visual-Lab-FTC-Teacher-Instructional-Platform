@@ -294,47 +294,16 @@ with colC:
 # -----------------------------
 with st.sidebar:
     st.header("操作設定")
-    function_mode = st.radio("函數來源", ["使用內建函數", "自行輸入函數"], index=0)
 
-    if function_mode == "使用內建函數":
-        fname = st.selectbox(
-            "選擇原函數 f(x)",
-            ["3", "x", "x**2", "x**3"],
-        )
-        f = function_factory(fname)
-    else:
-        st.markdown(
-            """
-            <div class="panel" style="margin-top:0.35rem;">
-            <b>自訂函數輸入區</b><br>
-            請直接輸入 <b>Python 形式</b> 的函數，例如：<code>x**2</code>、<code>sin(x)</code>、<code>exp(x)</code>。<br>
-            注意：次方要用 <code>**</code>，不要用 <code>^</code>。
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    function_choice = st.selectbox(
+        "原函數 f(x)",
+        ["自訂函數", "x", "x**2", "x**3"],
+        index=0,
+    )
 
-        if st.button("顯示常用函數輸入示範", use_container_width=True):
-            st.session_state["show_function_examples"] = not st.session_state.get("show_function_examples", False)
-
-        if st.session_state.get("show_function_examples", False):
-            st.info(
-                "可直接複製這些格式：\n"
-                "• 3\n"
-                "• x\n"
-                "• x**2\n"
-                "• x**3\n"
-                "• sin(x)\n"
-                "• cos(x)\n"
-                "• exp(x)\n"
-                "• log(x+2)\n"
-                "• sqrt(x+3)\n"
-                "• Abs(x)\n"
-                "• sin(x) + x/2"
-            )
-
+    if function_choice == "自訂函數":
         custom_expr_text = st.text_input(
-            "自行輸入 f(x)",
+            "請輸入 f(x)",
             value=st.session_state.get("custom_expr_text", "sin(x)+x/2"),
             placeholder="例如：x**2、sin(x)、exp(x)、log(x+2)",
             help="請用 Python 形式輸入，例如 x**2、sin(x)、exp(x)、log(x+2)。",
@@ -351,6 +320,9 @@ with st.sidebar:
             fname = "x"
             f = function_factory(fname)
             st.error("自訂函數格式有誤，已暫時改用 f(x)=x。請確認有使用 ** 表示次方。")
+    else:
+        fname = function_choice
+        f = function_factory(fname)
 
     st.markdown("---")
     left_input_col, right_input_col = st.columns(2)
