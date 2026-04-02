@@ -591,20 +591,21 @@ with module1:
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
     mask_z = (xs >= min(z1, a)) & (xs <= max(z1, a))
 
-    formula_left, formula_right = st.columns(2, gap="large")
-    with formula_left:
+    chart_col_left, chart_col_right = st.columns(2, gap="large")
+
+    with chart_col_left:
         st.markdown(
-            '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem; margin-top: 0.9rem;">',
+            '<div class="formula-box" style="text-align:center; padding: 1.0rem 1rem; margin-top: 0.9rem;">',
             unsafe_allow_html=True
         )
         st.latex(
-            rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{green}}{{{z1:.2f}}}}}^{{\color{{red}}{{{a:.2f}}}}} f(t)\,dt"
+            rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
             rf"={current_Z:.4f}"
         )
         st.markdown('</div>', unsafe_allow_html=True)
-    with formula_right:
+
         st.markdown(
-            '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem; margin-top: 0.9rem;">',
+            '<div class="formula-box" style="text-align:center; padding: 1.0rem 1rem; margin-top: 0.4rem; margin-bottom: 0.5rem;">',
             unsafe_allow_html=True
         )
         st.latex(
@@ -612,8 +613,6 @@ with module1:
             rf"={current_A:.4f}"
         )
         st.markdown('</div>', unsafe_allow_html=True)
-
-    chart_col_left, chart_col_right = st.columns(2, gap="large")
 
     # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
     if x1 >= domain_left:
@@ -779,6 +778,7 @@ with module1:
                 else:
                     y_mid_z = 0.38 * min(y_min_common, -1.0)
 
+            z_mid = z1 + 0.58 * (a - z1)
             ax11.text(
                 z_mid,
                 y_mid_z,
