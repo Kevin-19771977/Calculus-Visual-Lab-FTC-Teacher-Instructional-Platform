@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 import streamlit.components.v1 as components
+import sympy as sp
 
 st.set_page_config(
     page_title="FTC 學生互動學習平台",
