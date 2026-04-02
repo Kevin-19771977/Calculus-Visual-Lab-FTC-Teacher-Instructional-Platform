@@ -500,40 +500,46 @@ with module1:
         unsafe_allow_html=True,
     )
 
-    a = st.slider(
-        "固定點 a",
-        min_value=float(domain_left),
-        max_value=float(domain_right),
-        value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
-        step=0.05,
-        key="m1a",
-    )
-    if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
-        st.session_state["m1x_raw"] = float(a)
-    x1 = st.slider(
-        "向右拖動x",
-        min_value=float(domain_left),
-        max_value=float(domain_right),
-        value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
-        step=0.05,
-        key="m1x_raw",
-        on_change=enforce_m1x_not_below_a,
-    )
-    x1 = float(max(x1, a))
-    if st.session_state.get("m1z_raw", (domain_left + domain_right) / 2) > a:
-        st.session_state["m1z_raw"] = float(a)
-    z1 = st.slider(
-        "向左拖動x",
-        min_value=float(domain_left),
-        max_value=float(domain_right),
-        value=float(st.session_state.get("m1z_raw", min((domain_left + domain_right) / 2, float(a)))),
-        step=0.05,
-        key="m1z_raw",
-        on_change=enforce_m1z_not_above_a,
-    )
-    z1 = float(min(z1, a))
-    show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
-    st.markdown('</div>', unsafe_allow_html=True)
+    top_formula_col, top_control_col = st.columns([1.05, 0.95], gap="large")
+
+    with top_control_col:
+        st.markdown(
+            '<div style="font-size:0.98rem; color:#60758c; margin:0.15rem 0 0.35rem 0;"><b>控制區</b></div>',
+            unsafe_allow_html=True
+        )
+        a = st.slider(
+            "固定點 a",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
+            step=0.05,
+            key="m1a",
+        )
+        if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
+            st.session_state["m1x_raw"] = float(a)
+        x1 = st.slider(
+            "向右拖動x",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
+            step=0.05,
+            key="m1x_raw",
+            on_change=enforce_m1x_not_below_a,
+        )
+        x1 = float(max(x1, a))
+        if st.session_state.get("m1z_raw", (domain_left + domain_right) / 2) > a:
+            st.session_state["m1z_raw"] = float(a)
+        z1 = st.slider(
+            "向左拖動x",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m1z_raw", min((domain_left + domain_right) / 2, float(a)))),
+            step=0.05,
+            key="m1z_raw",
+            on_change=enforce_m1z_not_above_a,
+        )
+        z1 = float(min(z1, a))
+        show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
 
     components.html(
         """
