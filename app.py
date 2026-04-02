@@ -475,27 +475,27 @@ with module1:
         unsafe_allow_html=True,
     )
 
-    top_left, top_right = st.columns([1.55, 1.0])
-    with top_left:
-        if show_formula:
-            st.markdown(
-                '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem;">',
-                unsafe_allow_html=True
-            )
-            st.latex(r"A(x)=\int_a^x f(t)\,dt")
-            st.markdown('</div>', unsafe_allow_html=True)
+    if show_formula:
         st.markdown(
-            """
-            <div class="big-note">
-            觀察重點：圖形只顯示固定點 a 右邊的部分。當你把 x 往右拖時，從固定點 a 到 x 的面積會持續累積，
-            而下方的 <b>A(x)</b> 也會跟著改變。
-            </div>
-            """,
-            unsafe_allow_html=True,
+            '<div class="formula-box" style="text-align:center; padding: 1.8rem 1rem; width: 100%; max-width: 1200px; margin: 0 auto 1rem auto;">',
+            unsafe_allow_html=True
         )
+        st.markdown(
+            '<div style="display:flex; justify-content:center; align-items:center; min-height:110px;">',
+            unsafe_allow_html=True
+        )
+        st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt")
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
-    with top_right:
-        st.empty()
+    st.markdown(
+        """
+        <div class="big-note">
+        觀察重點：圖形只顯示固定點 a 右邊的部分。當你把 x 往右拖時，從固定點 a 到 x 的面積會持續累積，
+        而下方的 <b>A(x)</b> 也會跟著改變。
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown('<div class="center-soft-control-box">', unsafe_allow_html=True)
     a = st.slider(
@@ -941,17 +941,5 @@ with module4:
             """,
             unsafe_allow_html=True,
         )
-
-st.divider()
-st.subheader("教師／研究者下一步可加的功能")
-st.markdown(
-    """
-    - 加入學生姓名、學號、班級欄位。  
-    - 每個模組後面放 2–3 題概念題。  
-    - 把答案、自評、操作時間存成 CSV。  
-    - 分成學生版與教師版。  
-    - 接上前測、後測、問卷頁面。  
-    """
-)
 
 st.info("執行方式：python -m streamlit run ftc_teaching_tool_web_clear.py")
