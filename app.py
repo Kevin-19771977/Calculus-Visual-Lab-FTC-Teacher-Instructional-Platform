@@ -591,15 +591,27 @@ with module1:
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
     mask_z = (xs >= min(z1, a)) & (xs <= max(z1, a))
 
-    st.markdown(
-        '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem; margin-top: 0.9rem;">',
-        unsafe_allow_html=True
-    )
-    st.latex(
-        rf"A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
-        rf"={current_A:.4f}"
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
+    formula_left, formula_right = st.columns(2, gap="large")
+    with formula_left:
+        st.markdown(
+            '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem; margin-top: 0.9rem;">',
+            unsafe_allow_html=True
+        )
+        st.latex(
+            rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{green}}{{{z1:.2f}}}}}^{{\color{{red}}{{{a:.2f}}}}} f(t)\,dt"
+            rf"={current_Z:.4f}"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+    with formula_right:
+        st.markdown(
+            '<div class="formula-box" style="text-align:center; padding: 1.2rem 1rem; margin-top: 0.9rem;">',
+            unsafe_allow_html=True
+        )
+        st.latex(
+            rf"A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
+            rf"={current_A:.4f}"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
 
     chart_col_left, chart_col_right = st.columns(2, gap="large")
 
@@ -613,9 +625,12 @@ with module1:
         fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         if show_full_A_curve:
             mask_A_display = np.full_like(xs, True, dtype=bool)
+            ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         else:
             mask_A_display = (xs >= a) & mask_A
-        ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
+            mask_Z_display = (xs >= z1) & (xs <= a)
+            ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
+            ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
         draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
@@ -711,49 +726,8 @@ with module1:
             va="top",
             fontsize=13
         )
-        offset_fx_x = 14 if x1 <= (x_min_common + x_max_common) / 2 else -96
-        offset_fx_y = 14 if current_f <= (y_min_common + y_max_common) / 2 else -24
-        ax11.annotate(
-            f"({x1:.2f}, {current_f:.2f})",
-            xy=(x1, current_f),
-            xytext=(offset_fx_x, offset_fx_y),
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.5,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
-        offset_fz_x = 14 if z1 <= (x_min_common + x_max_common) / 2 else -96
-        offset_fz_y = 14 if current_fz <= (y_min_common + y_max_common) / 2 else -24
-        ax11.annotate(
-            f"({z1:.2f}, {current_fz:.2f})",
-            xy=(z1, current_fz),
-            xytext=(offset_fz_x, offset_fz_y),
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.5,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
-
         if x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
-        if z1 <= a:
-            fill_area_by_sign(ax11, xs[mask_z], ys[mask_z], fill_pos_color, fill_neg_color, alpha=0.40)
             x_mid = (a + x1) / 2
             ys_mask = ys[mask]
             positive_part = ys_mask[ys_mask >= 0]
@@ -774,6 +748,41 @@ with module1:
                 x_mid,
                 y_mid,
                 f"{current_A:.2f}",
+                ha="center",
+                va="center",
+                fontsize=14,
+                fontweight="semibold",
+                color="#2f2f2f",
+                bbox=dict(
+                    boxstyle="round,pad=0.28,rounding_size=0.16",
+                    fc="white",
+                    ec="#c9d2de",
+                    lw=1.0,
+                    alpha=0.94,
+                ),
+            )
+        if z1 <= a:
+            fill_area_by_sign(ax11, xs[mask_z], ys[mask_z], fill_pos_color, fill_neg_color, alpha=0.40)
+            z_mid = (z1 + a) / 2
+            ys_mask_z = ys[mask_z]
+            positive_part_z = ys_mask_z[ys_mask_z >= 0]
+            negative_part_z = ys_mask_z[ys_mask_z < 0]
+
+            if current_Z >= 0:
+                if len(positive_part_z) > 0:
+                    y_mid_z = 0.52 * np.max(positive_part_z)
+                else:
+                    y_mid_z = 0.38 * max(y_max_common, 1.0)
+            else:
+                if len(negative_part_z) > 0:
+                    y_mid_z = 0.52 * np.min(negative_part_z)
+                else:
+                    y_mid_z = 0.38 * min(y_min_common, -1.0)
+
+            ax11.text(
+                z_mid,
+                y_mid_z,
+                f"{current_Z:.2f}",
                 ha="center",
                 va="center",
                 fontsize=14,
