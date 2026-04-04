@@ -408,6 +408,8 @@ if "m1z_raw" not in st.session_state:
     st.session_state["m1z_raw"] = float((domain_left + domain_right) / 2)
 if "m4b_raw" not in st.session_state:
     st.session_state["m4b_raw"] = float(min(domain_right, 2.0))
+if "m1_saved_a_curves" not in st.session_state:
+    st.session_state["m1_saved_a_curves"] = []
 
 show_help = True
 show_formula = True
@@ -554,6 +556,16 @@ with module1:
             on_change=enforce_m1z_not_above_a,
         )
         z1 = float(min(z1, a))
+        if st.button("留下固定點a的累積函數圖形", key="m1_save_a_curve", use_container_width=True):
+            saved_curve = cumulative_integral(f, a, xs)
+            st.session_state["m1_saved_a_curves"].append(
+                {
+                    "a": float(a),
+                    "curve": np.array(saved_curve, dtype=float),
+                }
+            )
+        if st.button("清除留下的圖形", key="m1_clear_saved_curves", use_container_width=True):
+            st.session_state["m1_saved_a_curves"] = []
         show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
 
     components.html(
@@ -628,6 +640,14 @@ with module1:
 
     with chart_col_left:
         fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+
+        for saved_item in st.session_state.get("m1_saved_a_curves", []):
+            saved_a = float(saved_item["a"])
+            saved_curve = np.array(saved_item["curve"], dtype=float)
+            ax12.plot(xs, saved_curve, linewidth=2.1, color="#9fd8b3", alpha=0.55)
+            saved_y_at_a = np.interp(saved_a, xs, saved_curve)
+            draw_to_x_axis(ax12, saved_a, saved_y_at_a, "#9fd8b3", linewidth=1.1, marker_size=28)
+
         if show_full_A_curve:
             mask_A_display = np.full_like(xs, True, dtype=bool)
             ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
