@@ -556,19 +556,16 @@ with module1:
             on_change=enforce_m1z_not_above_a,
         )
         z1 = float(min(z1, a))
-        button_col_left, button_col_right = st.columns(2, gap="small")
-        with button_col_left:
-            if st.button("留下固定點a的累積函數圖形", key="m1_save_a_curve", use_container_width=True):
-                saved_curve = cumulative_integral(f, a, xs)
-                st.session_state["m1_saved_a_curves"].append(
-                    {
-                        "a": float(a),
-                        "curve": np.array(saved_curve, dtype=float),
-                    }
-                )
-        with button_col_right:
-            if st.button("清除留下的圖形", key="m1_clear_saved_curves", use_container_width=True):
-                st.session_state["m1_saved_a_curves"] = []
+        if st.button("留下固定點a的累積函數圖形", key="m1_save_a_curve", use_container_width=True):
+            saved_curve = cumulative_integral(f, a, xs)
+            st.session_state["m1_saved_a_curves"].append(
+                {
+                    "a": float(a),
+                    "curve": np.array(saved_curve, dtype=float),
+                }
+            )
+        if st.button("清除留下的圖形", key="m1_clear_saved_curves", use_container_width=True):
+            st.session_state["m1_saved_a_curves"] = []
         show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
 
     components.html(
