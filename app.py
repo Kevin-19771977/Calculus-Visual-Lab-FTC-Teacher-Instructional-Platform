@@ -663,12 +663,20 @@ with module1:
         offset_a_left = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
         ax12.text(
             a,
-            0 + offset_a_left,
+            0 + offset_a_left - 0.02,
             f"{a:.2f}",
             ha="center",
             va="top",
-            fontsize=13,
-            color="red"
+            fontsize=13.5,
+            fontweight="bold",
+            color="#d84a4a",
+            bbox=dict(
+                boxstyle="round,pad=0.16,rounding_size=0.12",
+                fc="white",
+                ec="#f2b3b3",
+                lw=0.9,
+                alpha=0.96,
+            ),
         )
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
         draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
@@ -746,12 +754,20 @@ with module1:
         offset_a_right = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
         ax11.text(
             a,
-            0 + offset_a_right,
+            0 + offset_a_right - 0.02,
             f"{a:.2f}",
             ha="center",
             va="top",
-            fontsize=13,
-            color="red"
+            fontsize=13.5,
+            fontweight="bold",
+            color="#d84a4a",
+            bbox=dict(
+                boxstyle="round,pad=0.16,rounding_size=0.12",
+                fc="white",
+                ec="#f2b3b3",
+                lw=0.9,
+                alpha=0.96,
+            ),
         )
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
         draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
@@ -954,6 +970,24 @@ with module2:
         fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
         draw_to_x_axis(ax22, a2, np.interp(a2, xs, Axs_m2), "#f2a3c7", linewidth=1.6, marker_size=45)
+        offset_a_m2_left = -0.35 if abs(a2 - x_max_common) < 0.3 or abs(a2 - x_min_common) < 0.3 else -0.15
+        ax22.text(
+            a2,
+            0 + offset_a_m2_left - 0.02,
+            f"{a2:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13.5,
+            fontweight="bold",
+            color="#d84a4a",
+            bbox=dict(
+                boxstyle="round,pad=0.16,rounding_size=0.12",
+                fc="white",
+                ec="#f2b3b3",
+                lw=0.9,
+                alpha=0.96,
+            ),
+        )
         draw_to_x_axis(ax22, x2, current_A2, "#9bd18b", linewidth=1.6, marker_size=55)
 
         tangent_half_width = 0.60
@@ -977,6 +1011,24 @@ with module2:
         fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax2.plot(xs, ys, linewidth=3.4, label="f(x)", color="#8bbce9")
         draw_to_x_axis(ax2, a2, f(np.array([a2]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
+        offset_a_m2_right = -0.35 if abs(a2 - x_max_common) < 0.3 or abs(a2 - x_min_common) < 0.3 else -0.15
+        ax2.text(
+            a2,
+            0 + offset_a_m2_right - 0.02,
+            f"{a2:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13.5,
+            fontweight="bold",
+            color="#d84a4a",
+            bbox=dict(
+                boxstyle="round,pad=0.16,rounding_size=0.12",
+                fc="white",
+                ec="#f2b3b3",
+                lw=0.9,
+                alpha=0.96,
+            ),
+        )
         draw_to_x_axis(ax2, x2, current_f2, "#9bd18b", linewidth=1.6, marker_size=55)
         ax2.set_title("函數 f(x)", fontsize=14)
         ax2.set_xlabel("x")
@@ -1056,6 +1108,24 @@ with module4:
         fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
         draw_to_x_axis(ax42, a, Fa, "#f2a3c7", linewidth=1.6, marker_size=45)
+        offset_a_m4_left = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
+        ax42.text(
+            a,
+            0 + offset_a_m4_left - 0.02,
+            f"{a:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13.5,
+            fontweight="bold",
+            color="#d84a4a",
+            bbox=dict(
+                boxstyle="round,pad=0.16,rounding_size=0.12",
+                fc="white",
+                ec="#f2b3b3",
+                lw=0.9,
+                alpha=0.96,
+            ),
+        )
         draw_to_x_axis(ax42, b4_display, Fb, "#9bd18b", linewidth=1.6, marker_size=55)
         ax42.set_title("原函數的總改變量", fontsize=14)
         ax42.set_xlabel("x")
@@ -1069,6 +1139,24 @@ with module4:
         fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
         draw_to_x_axis(ax4, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
+        offset_a_m4_right = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
+        ax4.text(
+            a,
+            0 + offset_a_m4_right - 0.02,
+            f"{a:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13.5,
+            fontweight="bold",
+            color="#d84a4a",
+            bbox=dict(
+                boxstyle="round,pad=0.16,rounding_size=0.12",
+                fc="white",
+                ec="#f2b3b3",
+                lw=0.9,
+                alpha=0.96,
+            ),
+        )
         draw_to_x_axis(ax4, b4_display, f(np.array([b4_display]))[0], "#9bd18b", linewidth=1.6, marker_size=55)
         mask4 = (xs >= a) & (xs <= b4_display)
         fill_area_by_sign(ax4, xs[mask4], ys[mask4], fill_pos_color, fill_neg_color, alpha=0.30)
