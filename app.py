@@ -272,6 +272,84 @@ def add_common_style(ax):
         ax.spines[spine].set_visible(False)
 
 
+RAINBOW_COLORS = [
+    "#e74c3c",
+    "#f39c12",
+    "#f1c40f",
+    "#2ecc71",
+    "#3498db",
+    "#5b6ee1",
+    "#9b59b6",
+]
+
+
+def get_axis_label_levels(values, threshold=0.42):
+    values = [float(v) for v in values]
+    order = np.argsort(values)
+    levels = [0] * len(values)
+    active = []
+    for idx in order:
+        x = values[idx]
+        active = [(px, lvl) for px, lvl in active if abs(x - px) < threshold]
+        used = {lvl for px, lvl in active if abs(x - px) < threshold}
+        lvl = 0
+        while lvl in used:
+            lvl += 1
+        levels[idx] = lvl
+        active.append((x, lvl))
+    return levels
+
+
+def pretty_a_label_kwargs():
+    return dict(
+        ha="center",
+        va="top",
+        fontsize=13.5,
+        fontweight="bold",
+        color="#d84a4a",
+        bbox=dict(
+            boxstyle="round,pad=0.16,rounding_size=0.12",
+            fc="#fff6bf",
+            ec="#f2d97c",
+            lw=0.9,
+            alpha=0.98,
+        ),
+    )
+
+
+def smart_point_xytext(x, y, x_min, x_max, y_min, y_max, other_points=None):
+    x_mid = (x_min + x_max) / 2
+    y_mid = (y_min + y_max) / 2
+    candidates = [
+        (14 if x <= x_mid else -98, 14 if y <= y_mid else -26),
+        (14 if x <= x_mid else -98, -30 if y <= y_mid else 18),
+        (-100 if x <= x_mid else 18, 14 if y <= y_mid else -26),
+        (-100 if x <= x_mid else 18, -30 if y <= y_mid else 18),
+        (18, 26),
+        (-104, -34),
+    ]
+    other_points = other_points or []
+    x_thr = 0.10 * max(x_max - x_min, 1e-6)
+    y_thr = 0.10 * max(y_max - y_min, 1e-6)
+    close_count = sum(abs(x - ox) < x_thr and abs(y - oy) < y_thr for ox, oy in other_points)
+    choice = min(close_count, len(candidates) - 1)
+    return candidates[choice]
+
+
+def smart_value_bbox():
+    return dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92)
+
+
+def smart_area_bbox():
+    return dict(
+        boxstyle="round,pad=0.28,rounding_size=0.16",
+        fc="white",
+        ec="#c9d2de",
+        lw=1.0,
+        alpha=0.94,
+    )
+
+
 # -----------------------------
 # Header
 # -----------------------------
@@ -410,6 +488,8 @@ if "m4b_raw" not in st.session_state:
     st.session_state["m4b_raw"] = float(min(domain_right, 2.0))
 if "m1_saved_a_curves" not in st.session_state:
     st.session_state["m1_saved_a_curves"] = []
+if "m1_saved_curve_color_idx" not in st.session_state:
+    st.session_state["m1_saved_curve_color_idx"] = 0
 
 show_help = True
 show_formula = True
@@ -560,15 +640,20 @@ with module1:
         with button_col_left:
             if st.button("留下固定點a的累積函數圖形", key="m1_save_a_curve", use_container_width=True):
                 saved_curve = cumulative_integral(f, a, xs)
+                color_idx = int(st.session_state.get("m1_saved_curve_color_idx", 0))
+                curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
+                st.session_state["m1_saved_curve_color_idx"] = color_idx + 1
                 st.session_state["m1_saved_a_curves"].append(
                     {
                         "a": float(a),
                         "curve": np.array(saved_curve, dtype=float),
+                        "color": curve_color,
                     }
                 )
         with button_col_right:
             if st.button("清除留下的圖形", key="m1_clear_saved_curves", use_container_width=True):
                 st.session_state["m1_saved_a_curves"] = []
+                st.session_state["m1_saved_curve_color_idx"] = 0
         show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
 
     components.html(
@@ -620,6 +705,9 @@ with module1:
     current_fz = f(np.array([z1]))[0]
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
     mask_z = (xs >= min(z1, a)) & (xs <= max(z1, a))
+    m1_axis_positions = [a, x1, z1]
+    m1_axis_levels = get_axis_label_levels(m1_axis_positions, threshold=0.45)
+    m1_axis_y_offsets = [-0.15 - 0.32 * lvl for lvl in m1_axis_levels]
 
     with top_formula_col:
         st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
@@ -647,9 +735,10 @@ with module1:
         for saved_item in st.session_state.get("m1_saved_a_curves", []):
             saved_a = float(saved_item["a"])
             saved_curve = np.array(saved_item["curve"], dtype=float)
-            ax12.plot(xs, saved_curve, linewidth=2.1, color="#9fd8b3", alpha=0.55)
+            saved_color = saved_item.get("color", "#9fd8b3")
+            ax12.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
             saved_y_at_a = np.interp(saved_a, xs, saved_curve)
-            draw_to_x_axis(ax12, saved_a, saved_y_at_a, "#9fd8b3", linewidth=1.1, marker_size=28)
+            ax12.scatter([saved_a], [saved_y_at_a], s=34, color="#d84a4a", zorder=7)
 
         if show_full_A_curve:
             mask_A_display = np.full_like(xs, True, dtype=bool)
@@ -660,52 +749,41 @@ with module1:
             ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
             ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
-        offset_a_left = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
         ax12.text(
             a,
-            0 + offset_a_left - 0.02,
+            0 + m1_axis_y_offsets[0] - 0.02,
             f"{a:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13.5,
-            fontweight="bold",
-            color="#d84a4a",
-            bbox=dict(
-                boxstyle="round,pad=0.16,rounding_size=0.12",
-                fc="white",
-                ec="#f2b3b3",
-                lw=0.9,
-                alpha=0.96,
-            ),
+            **pretty_a_label_kwargs(),
         )
         draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
         draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
         # 顯示 x 的數值（左圖綠色線與 x 軸交點）
-        offset_left = -0.35 if abs(x1 - x_max_common) < 0.3 or abs(x1 - x_min_common) < 0.3 else -0.15
         ax12.text(
             x1,
-            0 + offset_left,
+            0 + m1_axis_y_offsets[1],
             f"{x1:.2f}",
             ha="center",
             va="top",
-            fontsize=13
+            fontsize=13,
+            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
         )
-        offset_left_z = -0.35 if abs(z1 - x_max_common) < 0.3 or abs(z1 - x_min_common) < 0.3 else -0.15
         ax12.text(
             z1,
-            0 + offset_left_z,
+            0 + m1_axis_y_offsets[2],
             f"{z1:.2f}",
             ha="center",
             va="top",
-            fontsize=13
+            fontsize=13,
+            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
         )
 
-        offset_x = 14 if x1 <= (x_min_common + x_max_common) / 2 else -96
-        offset_y = 14 if current_A <= (y_min_common + y_max_common) / 2 else -24
+        x_xytext = smart_point_xytext(
+            x1, current_A, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(z1, current_Z)]
+        )
         ax12.annotate(
             f"({x1:.2f}, {current_A:.2f})",
             xy=(x1, current_A),
-            xytext=(offset_x, offset_y),
+            xytext=x_xytext,
             textcoords="offset points",
             color="#2f6f4f",
             fontsize=13.5,
@@ -719,12 +797,13 @@ with module1:
             ),
             arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
         )
-        offset_zx = 14 if z1 <= (x_min_common + x_max_common) / 2 else -96
-        offset_zy = 14 if current_Z <= (y_min_common + y_max_common) / 2 else -24
+        z_xytext = smart_point_xytext(
+            z1, current_Z, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(x1, current_A)]
+        )
         ax12.annotate(
             f"({z1:.2f}, {current_Z:.2f})",
             xy=(z1, current_Z),
-            xytext=(offset_zx, offset_zy),
+            xytext=z_xytext,
             textcoords="offset points",
             color="#2f6f4f",
             fontsize=13.5,
@@ -751,48 +830,38 @@ with module1:
         fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
-        offset_a_right = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
         ax11.text(
             a,
-            0 + offset_a_right - 0.02,
+            0 + m1_axis_y_offsets[0] - 0.02,
             f"{a:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13.5,
-            fontweight="bold",
-            color="#d84a4a",
-            bbox=dict(
-                boxstyle="round,pad=0.16,rounding_size=0.12",
-                fc="white",
-                ec="#f2b3b3",
-                lw=0.9,
-                alpha=0.96,
-            ),
+            **pretty_a_label_kwargs(),
         )
         draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
         draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
         # 顯示 x 的數值（綠色線與 x 軸交點）
-        offset = -0.35 if abs(x1 - x_max_common) < 0.3 or abs(x1 - x_min_common) < 0.3 else -0.15
         ax11.text(
             x1,
-            0 + offset,
+            0 + m1_axis_y_offsets[1],
             f"{x1:.2f}",
             ha="center",
             va="top",
-            fontsize=13
+            fontsize=13,
+            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
         )
-        offset_z = -0.35 if abs(z1 - x_max_common) < 0.3 or abs(z1 - x_min_common) < 0.3 else -0.15
         ax11.text(
             z1,
-            0 + offset_z,
+            0 + m1_axis_y_offsets[2],
             f"{z1:.2f}",
             ha="center",
             va="top",
-            fontsize=13
+            fontsize=13,
+            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
         )
         if x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
             x_mid = (a + x1) / 2
+            if abs(x1 - z1) < 0.90:
+                x_mid = a + 0.72 * (x1 - a)
             ys_mask = ys[mask]
             positive_part = ys_mask[ys_mask >= 0]
             negative_part = ys_mask[ys_mask < 0]
@@ -843,7 +912,9 @@ with module1:
                 else:
                     y_mid_z = 0.38 * min(y_min_common, -1.0)
 
-            z_mid = z1 + 0.28 * (a - z1)
+            z_mid = z1 + 0.22 * (a - z1)
+            if abs(x1 - z1) < 0.90:
+                z_mid = z1 + 0.12 * (a - z1)
             ax11.text(
                 z_mid,
                 y_mid_z,
@@ -935,6 +1006,9 @@ with module2:
         current_A2 = np.interp(x2, xs, Axs_m2)
         current_f2 = f(np.array([x2]))[0]
         current_Ap2 = np.interp(x2, xs, Aprime_m2)
+        m2_axis_positions = [a2, x2]
+        m2_axis_levels = get_axis_label_levels(m2_axis_positions, threshold=0.45)
+        m2_axis_y_offsets = [-0.17 - 0.32 * lvl for lvl in m2_axis_levels]
 
         if current_f2 > 1e-3:
             trend = "A(x) 正在上升"
@@ -970,25 +1044,42 @@ with module2:
         fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
         draw_to_x_axis(ax22, a2, np.interp(a2, xs, Axs_m2), "#f2a3c7", linewidth=1.6, marker_size=45)
-        offset_a_m2_left = -0.35 if abs(a2 - x_max_common) < 0.3 or abs(a2 - x_min_common) < 0.3 else -0.15
         ax22.text(
             a2,
-            0 + offset_a_m2_left - 0.02,
+            0 + m2_axis_y_offsets[0],
             f"{a2:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13.5,
-            fontweight="bold",
-            color="#d84a4a",
-            bbox=dict(
-                boxstyle="round,pad=0.16,rounding_size=0.12",
-                fc="white",
-                ec="#f2b3b3",
-                lw=0.9,
-                alpha=0.96,
-            ),
+            **pretty_a_label_kwargs(),
         )
         draw_to_x_axis(ax22, x2, current_A2, "#9bd18b", linewidth=1.6, marker_size=55)
+        ax22.text(
+            x2,
+            0 + m2_axis_y_offsets[1],
+            f"{x2:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13,
+            bbox=smart_value_bbox(),
+        )
+        m2_left_xytext = smart_point_xytext(
+            x2, current_A2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, np.interp(a2, xs, Axs_m2))]
+        )
+        ax22.annotate(
+            f"({x2:.2f}, {current_A2:.2f})",
+            xy=(x2, current_A2),
+            xytext=m2_left_xytext,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.2,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.24,rounding_size=0.18",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
 
         tangent_half_width = 0.60
         tangent_x = np.linspace(
@@ -1011,25 +1102,42 @@ with module2:
         fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax2.plot(xs, ys, linewidth=3.4, label="f(x)", color="#8bbce9")
         draw_to_x_axis(ax2, a2, f(np.array([a2]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
-        offset_a_m2_right = -0.35 if abs(a2 - x_max_common) < 0.3 or abs(a2 - x_min_common) < 0.3 else -0.15
         ax2.text(
             a2,
-            0 + offset_a_m2_right - 0.02,
+            0 + m2_axis_y_offsets[0],
             f"{a2:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13.5,
-            fontweight="bold",
-            color="#d84a4a",
-            bbox=dict(
-                boxstyle="round,pad=0.16,rounding_size=0.12",
-                fc="white",
-                ec="#f2b3b3",
-                lw=0.9,
-                alpha=0.96,
-            ),
+            **pretty_a_label_kwargs(),
         )
         draw_to_x_axis(ax2, x2, current_f2, "#9bd18b", linewidth=1.6, marker_size=55)
+        ax2.text(
+            x2,
+            0 + m2_axis_y_offsets[1],
+            f"{x2:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13,
+            bbox=smart_value_bbox(),
+        )
+        m2_right_xytext = smart_point_xytext(
+            x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
+        )
+        ax2.annotate(
+            f"({x2:.2f}, {current_f2:.2f})",
+            xy=(x2, current_f2),
+            xytext=m2_right_xytext,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.2,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.24,rounding_size=0.18",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
         ax2.set_title("函數 f(x)", fontsize=14)
         ax2.set_xlabel("x")
         ax2.set_ylabel("f(x)")
@@ -1096,6 +1204,9 @@ with module4:
     exact_area = (F_m4(np.array([b4_display])) - F_m4(np.array([a])))[0]
     Fa = F_m4(np.array([a]))[0]
     Fb = F_m4(np.array([b4_display]))[0]
+    m4_axis_positions = [a, b4_display]
+    m4_axis_levels = get_axis_label_levels(m4_axis_positions, threshold=0.45)
+    m4_axis_y_offsets = [-0.17 - 0.32 * lvl for lvl in m4_axis_levels]
 
     m4c1, m4c2, m4c3 = st.columns(3)
     m4c1.metric("F(a)", f"{Fa:.4f}")
@@ -1108,25 +1219,75 @@ with module4:
         fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
         draw_to_x_axis(ax42, a, Fa, "#f2a3c7", linewidth=1.6, marker_size=45)
-        offset_a_m4_left = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
         ax42.text(
             a,
-            0 + offset_a_m4_left - 0.02,
+            0 + m4_axis_y_offsets[0],
             f"{a:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13.5,
-            fontweight="bold",
-            color="#d84a4a",
-            bbox=dict(
-                boxstyle="round,pad=0.16,rounding_size=0.12",
-                fc="white",
-                ec="#f2b3b3",
-                lw=0.9,
-                alpha=0.96,
-            ),
+            **pretty_a_label_kwargs(),
         )
         draw_to_x_axis(ax42, b4_display, Fb, "#9bd18b", linewidth=1.6, marker_size=55)
+        ax42.text(
+            b4_display,
+            0 + m4_axis_y_offsets[1],
+            f"{b4_display:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13,
+            bbox=smart_value_bbox(),
+        )
+        m4_left_xytext_a = smart_point_xytext(
+            a, Fa, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(b4_display, Fb)]
+        )
+        ax42.annotate(
+            f"({a:.2f}, {Fa:.2f})",
+            xy=(a, Fa),
+            xytext=m4_left_xytext_a,
+            textcoords="offset points",
+            color="#c45a7a",
+            fontsize=13.0,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.22,rounding_size=0.16",
+                fc="white",
+                ec="#f2b3c8",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#f2b3c8", lw=1.0, alpha=0.9),
+        )
+        m4_left_xytext_b = smart_point_xytext(
+            b4_display, Fb, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a, Fa)]
+        )
+        ax42.annotate(
+            f"({b4_display:.2f}, {Fb:.2f})",
+            xy=(b4_display, Fb),
+            xytext=m4_left_xytext_b,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.0,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.22,rounding_size=0.16",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
+        delta_x = a + 0.55 * (b4_display - a)
+        delta_y = Fa + 0.62 * (Fb - Fa) + (0.18 if abs(Fb - Fa) < 0.8 else 0.0)
+        ax42.text(
+            delta_x,
+            delta_y,
+            f"ΔF = {exact_area:.2f}",
+            ha="center",
+            va="center",
+            fontsize=13.4,
+            fontweight="semibold",
+            color="#2f2f2f",
+            bbox=smart_area_bbox(),
+        )
         ax42.set_title("原函數的總改變量", fontsize=14)
         ax42.set_xlabel("x")
         ax42.set_ylabel("F(x)")
@@ -1138,28 +1299,92 @@ with module4:
     with right:
         fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
-        draw_to_x_axis(ax4, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
-        offset_a_m4_right = -0.35 if abs(a - x_max_common) < 0.3 or abs(a - x_min_common) < 0.3 else -0.15
+        fa4 = f(np.array([a]))[0]
+        fb4 = f(np.array([b4_display]))[0]
+        draw_to_x_axis(ax4, a, fa4, "#f2a3c7", linewidth=1.6, marker_size=45)
         ax4.text(
             a,
-            0 + offset_a_m4_right - 0.02,
+            0 + m4_axis_y_offsets[0],
             f"{a:.2f}",
+            **pretty_a_label_kwargs(),
+        )
+        draw_to_x_axis(ax4, b4_display, fb4, "#9bd18b", linewidth=1.6, marker_size=55)
+        ax4.text(
+            b4_display,
+            0 + m4_axis_y_offsets[1],
+            f"{b4_display:.2f}",
             ha="center",
             va="top",
-            fontsize=13.5,
-            fontweight="bold",
-            color="#d84a4a",
+            fontsize=13,
+            bbox=smart_value_bbox(),
+        )
+        m4_right_xytext_a = smart_point_xytext(
+            a, fa4, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(b4_display, fb4)]
+        )
+        ax4.annotate(
+            f"({a:.2f}, {fa4:.2f})",
+            xy=(a, fa4),
+            xytext=m4_right_xytext_a,
+            textcoords="offset points",
+            color="#c45a7a",
+            fontsize=13.0,
+            fontweight="semibold",
             bbox=dict(
-                boxstyle="round,pad=0.16,rounding_size=0.12",
+                boxstyle="round,pad=0.22,rounding_size=0.16",
                 fc="white",
-                ec="#f2b3b3",
-                lw=0.9,
+                ec="#f2b3c8",
+                lw=1.0,
                 alpha=0.96,
             ),
+            arrowprops=dict(arrowstyle="-", color="#f2b3c8", lw=1.0, alpha=0.9),
         )
-        draw_to_x_axis(ax4, b4_display, f(np.array([b4_display]))[0], "#9bd18b", linewidth=1.6, marker_size=55)
+        m4_right_xytext_b = smart_point_xytext(
+            b4_display, fb4, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a, fa4)]
+        )
+        ax4.annotate(
+            f"({b4_display:.2f}, {fb4:.2f})",
+            xy=(b4_display, fb4),
+            xytext=m4_right_xytext_b,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.0,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.22,rounding_size=0.16",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
         mask4 = (xs >= a) & (xs <= b4_display)
         fill_area_by_sign(ax4, xs[mask4], ys[mask4], fill_pos_color, fill_neg_color, alpha=0.30)
+        ys_mask4 = ys[mask4]
+        positive_part4 = ys_mask4[ys_mask4 >= 0]
+        negative_part4 = ys_mask4[ys_mask4 < 0]
+        area_x_mid4 = a + 0.58 * (b4_display - a)
+        if exact_area >= 0:
+            if len(positive_part4) > 0:
+                area_y_mid4 = 0.50 * np.max(positive_part4)
+            else:
+                area_y_mid4 = 0.35 * max(y_max_common, 1.0)
+        else:
+            if len(negative_part4) > 0:
+                area_y_mid4 = 0.50 * np.min(negative_part4)
+            else:
+                area_y_mid4 = 0.35 * min(y_min_common, -1.0)
+        ax4.text(
+            area_x_mid4,
+            area_y_mid4,
+            f"{exact_area:.2f}",
+            ha="center",
+            va="center",
+            fontsize=13.4,
+            fontweight="semibold",
+            color="#2f2f2f",
+            bbox=smart_area_bbox(),
+        )
         ax4.set_title("陰影面積：定積分", fontsize=14)
         ax4.set_xlabel("x")
         ax4.set_ylabel("f(x)")
