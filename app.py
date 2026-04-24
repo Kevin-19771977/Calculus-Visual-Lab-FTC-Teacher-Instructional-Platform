@@ -1,3 +1,4 @@
+import re
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
@@ -212,28 +213,74 @@ def function_factory(name: str):
 
 
 
-def build_custom_function(expr_text: str):
-    allowed = {
-        "sin": np.sin,
-        "cos": np.cos,
-        "tan": np.tan,
-        "exp": np.exp,
-        "log": np.log,
-        "sqrt": np.sqrt,
-        "Abs": np.abs,
-        "abs": np.abs,
-        "pi": np.pi,
-        "E": np.e,
-        "np": np,
+def convert_absolute_bars(expr: str) -> str:
+    """Convert paired |...| into abs(...)."""
+    result = []
+    open_bar = True
+    for ch in expr:
+        if ch == '|':
+            if open_bar:
+                result.append('abs(')
+            else:
+                result.append(')')
+            open_bar = not open_bar
+        else:
+            result.append(ch)
+    if not open_bar:
+        raise ValueError('絕對值符號 | | 未成對出現')
+    return ''.join(result)
+
+
+def normalize_function_input(func_str: str) -> str:
+    s = func_str.strip()
+    s = convert_absolute_bars(s)
+    s = s.replace('^', '**')
+    s = re.sub(r"\s+", "", s)
+
+    s = re.sub(r"np\.log10(?=\()", "__NPLOGTEN__", s)
+    s = re.sub(r"np\.log2(?=\()", "__NPLOGTWO__", s)
+    s = re.sub(r"log10(?=\()", "__LOGTEN__", s)
+    s = re.sub(r"log2(?=\()", "__LOGTWO__", s)
+    s = re.sub(r"ln(?=\()", "__LOG__", s)
+
+    func_pattern = r"(?:__NPLOGTEN__|__NPLOGTWO__|__LOGTEN__|__LOGTWO__|__LOG__|np\.(?:sin|cos|tan|exp|log|sqrt|abs)|sin|cos|tan|exp|log|sqrt|abs|pi|e)"
+
+    s = re.sub(rf"(?<=\d)(?=(?:x|\(|{func_pattern}))", "*", s)
+    s = re.sub(rf"(?<=x)(?=(?:\(|{func_pattern}|\d))", "*", s)
+    s = re.sub(rf"(?<=\))(?=(?:x|\(|{func_pattern}|\d))", "*", s)
+
+    s = s.replace("__NPLOGTEN__", "np.log10")
+    s = s.replace("__NPLOGTWO__", "np.log2")
+    s = s.replace("__LOGTEN__", "log10")
+    s = s.replace("__LOGTWO__", "log2")
+    s = s.replace("__LOG__", "log")
+
+    return s
+
+
+def parse_function(func_str: str):
+    allowed_names = {
+        'np': np,
+        'sin': np.sin,
+        'cos': np.cos,
+        'tan': np.tan,
+        'exp': np.exp,
+        'log': np.log,
+        'ln': np.log,
+        'log10': np.log10,
+        'log2': np.log2,
+        'sqrt': np.sqrt,
+        'abs': np.abs,
+        'pi': np.pi,
+        'e': np.e,
     }
 
-    def func(x):
-        x = np.array(x, dtype=float)
-        local_scope = dict(allowed)
-        local_scope["x"] = x
-        return eval(expr_text, {"__builtins__": {}}, local_scope)
+    normalized_func_str = normalize_function_input(func_str)
 
-    return expr_text, func
+    def f(x):
+        return eval(normalized_func_str, {'__builtins__': {}}, {'x': x, **allowed_names})
+
+    return f
 
 
 def g_factory(name: str):
@@ -350,6 +397,9 @@ def smart_area_bbox():
     )
 
 
+if "func_str" not in st.session_state:
+    st.session_state["func_str"] = "x^2-3x+5"
+
 # -----------------------------
 # Header
 # -----------------------------
@@ -380,70 +430,98 @@ with colC:
 with st.sidebar:
     st.header("操作設定")
 
-    function_choice = st.selectbox(
-        "原函數 f(x)",
-        ["自訂函數", "1", "x", "x**2", "x**3"],
-        index=0,
-    )
+    st.markdown("### 函數設定")
+    func_str = st.text_input("輸入原函數 f(x)", key="func_str")
+    with st.expander("輸入語法說明"):
+        st.markdown("""
+        <style>
+        .syntax-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+            margin-top: 0.2rem;
+        }
+        .syntax-table th, .syntax-table td {
+            border: 1px solid #e5e7eb;
+            padding: 8px 10px;
+            vertical-align: top;
+        }
+        .syntax-table th {
+            background: #f8fafc;
+            font-weight: 700;
+            text-align: left;
+        }
+        .syntax-group {
+            background: #fefce8;
+            font-weight: 700;
+            white-space: nowrap;
+            width: 28%;
+        }
+        </style>
 
-    if function_choice == "自訂函數":
-        st.markdown(
-            """
-            <div style="font-size:0.95rem; color:#5a6f84; line-height:1.75; margin-bottom:0.35rem;">
-            請用 Python 形式輸入函數。<br>
-            次方請寫成 <code>**</code>，例如 <code>x**2</code>。
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        custom_expr_text = st.text_input(
-            "請輸入 f(x)",
-            value=st.session_state.get("custom_expr_text", ""),
-            placeholder="例如：x、x**2、sin(x)、exp(x)、log(x+2)",
-            help="請用 Python 形式輸入，例如 x、x**2、sin(x)、exp(x)、log(x+2)。",
-            key="custom_expr_text",
-        )
-
-        st.markdown(
-            """
-            <div style="font-size:0.93rem; color:#61778d; line-height:1.8; margin:0.2rem 0 0.45rem 0;">
-            <b>常用範例</b><br>
-            • 1<br>
-            • x<br>
-            • x**2<br>
-            • x**3<br>
-            • sin(x)<br>
-            • cos(x)<br>
-            • exp(x)<br>
-            • log(x+2)<br>
-            • sqrt(x+3)<br>
-            • Abs(x)<br>
-            • sin(x)+x/2
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        normalized_expr_text = custom_expr_text.strip().replace("^", "**").replace("ln(", "log(")
-
-        if normalized_expr_text == "":
-            fname = "x"
-            f = function_factory(fname)
-            st.info("請先輸入函數式，例如：x、x**2、sin(x)")
-        else:
-            try:
-                custom_expr, custom_func = build_custom_function(normalized_expr_text)
-                fname = str(custom_expr)
-                f = lambda x: np.array(custom_func(x), dtype=float)
-                st.success(f"目前使用：f(x) = {normalized_expr_text}")
-            except Exception:
-                fname = "x"
-                f = function_factory(fname)
-                st.warning("目前輸入尚未完成或格式不正確，暫時先用 f(x)=x 顯示。")
-    else:
-        fname = function_choice
-        f = function_factory(fname)
+        <table class="syntax-table">
+            <thead>
+                <tr>
+                    <th>類別</th>
+                    <th>可輸入語法與說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="syntax-group">基本代數</td>
+                    <td>
+                        <code>x^2</code>：x 的平方<br>
+                        <code>x^3</code>：x 的立方<br>
+                        <code>|x|</code>：x 的絕對值<br>
+                        <code>2x</code>：<code>2*x</code><br>
+                        <code>(2x+1)(x-3)</code>：<code>(2x+1)*(x-3)</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="syntax-group">三角函數</td>
+                    <td>
+                        <code>sin(x)</code><br>
+                        <code>cos(x)</code><br>
+                        <code>tan(x)</code><br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="syntax-group">指數與根號</td>
+                    <td>
+                        <code>e^x</code>：e 的 x 次方<br>
+                        <code>sqrt(x)</code>：x 的平方根
+                    </td>
+                </tr>
+                <tr>
+                    <td class="syntax-group">對數函數</td>
+                    <td>
+                        <code>ln(x)</code>：以 e 為底的自然對數<br>
+                        <code>log10(x)</code>：以 10 為底的常用對數<br>
+                        <code>log2(x)</code>：以 2 為底的對數
+                    </td>
+                </tr>
+                <tr>
+                    <td class="syntax-group">常數</td>
+                    <td>
+                        <code>pi</code>：圓周率<br>
+                        <code>e</code>：自然常數
+                    </td>
+                </tr>
+                <tr>
+                    <td class="syntax-group">混合範例</td>
+                    <td>
+                        <code>x^2-3x+5</code><br>
+                        <code>2x^2+3x-1</code><br>
+                        <code>sin(x)+x^2</code><br>
+                        <code>e^(-x)+2sin(x)</code><br>
+                        <code>log(x)+x^2</code><br>
+                        <code>sqrt(x+1)+x</code><br>
+                        <code>|x-3|+2</code>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
     left_input_col, right_input_col = st.columns(2)
@@ -473,6 +551,20 @@ with st.sidebar:
 
     st.markdown("---")
 
+
+try:
+    f = parse_function(func_str)
+    fname = normalize_function_input(func_str)
+    test_x = np.linspace(domain_left, domain_right, 50)
+    test_y = np.asarray(f(test_x), dtype=float)
+
+    if not np.all(np.isfinite(test_y)):
+        st.error("函數在此區間內出現無效值，請調整函數或區間。若使用 ln(x)、log10(x)、log2(x)，請設定區間滿足 x > 0，例如 a = 1、b = 5。")
+        st.stop()
+
+except Exception:
+    st.error("函數輸入錯誤。可輸入例如：x^2、2x、3(x+1)、2sin(x)、|x|、sqrt(x+1)、ln(x)、log10(x)、log2(x)")
+    st.stop()
 
 if "m1a" not in st.session_state:
     st.session_state["m1a"] = float(min(max(0.0, domain_left), domain_right))
