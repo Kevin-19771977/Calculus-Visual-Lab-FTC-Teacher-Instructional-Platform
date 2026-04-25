@@ -570,6 +570,10 @@ if "m1_saved_a_curves" not in st.session_state:
     st.session_state["m1_saved_a_curves"] = []
 if "m1_saved_curve_color_idx" not in st.session_state:
     st.session_state["m1_saved_curve_color_idx"] = 0
+if "m2_saved_a_curves" not in st.session_state:
+    st.session_state["m2_saved_a_curves"] = []
+if "m2_saved_curve_color_idx" not in st.session_state:
+    st.session_state["m2_saved_curve_color_idx"] = 0
 
 show_help = False
 show_formula = True
@@ -1072,6 +1076,28 @@ with module2:
         current_A2 = np.interp(x2, xs, Axs_m2)
         current_f2 = f(np.array([x2]))[0]
         current_Ap2 = np.interp(x2, xs, Aprime_m2)
+
+        m2_button_col_left, m2_button_col_right = st.columns(2, gap="small")
+        with m2_button_col_left:
+            if st.button("留下固定點a的累積函數圖形", key="m2_save_a_curve", use_container_width=True):
+                color_idx = int(st.session_state.get("m2_saved_curve_color_idx", 0))
+                curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
+                st.session_state["m2_saved_curve_color_idx"] = color_idx + 1
+                st.session_state["m2_saved_a_curves"].append(
+                    {
+                        "a": float(a2),
+                        "curve": np.array(Axs_m2, dtype=float),
+                        "color": curve_color,
+                        "x": float(x2),
+                        "A": float(current_A2),
+                        "Aprime": float(current_Ap2),
+                    }
+                )
+        with m2_button_col_right:
+            if st.button("清除留下的圖形", key="m2_clear_saved_curves", use_container_width=True):
+                st.session_state["m2_saved_a_curves"] = []
+                st.session_state["m2_saved_curve_color_idx"] = 0
+
         m2_axis_positions = [a2, x2]
         m2_axis_levels = get_axis_label_levels(m2_axis_positions, threshold=0.45)
         m2_axis_y_offsets = [-0.17 - 0.32 * lvl for lvl in m2_axis_levels]
@@ -1092,6 +1118,26 @@ with module2:
     left, right = st.columns(2, gap="large")
     with left:
         fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+
+        for saved_item in st.session_state.get("m2_saved_a_curves", []):
+            saved_curve = np.array(saved_item["curve"], dtype=float)
+            saved_color = saved_item.get("color", "#9fd8b3")
+            saved_x = float(saved_item["x"])
+            saved_A = float(saved_item["A"])
+            saved_Aprime = float(saved_item["Aprime"])
+
+            ax22.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
+            ax22.scatter([saved_x], [saved_A], s=48, color="#9bd18b", zorder=7)
+
+            saved_tangent_half_width = 1.05
+            saved_tangent_x = np.linspace(
+                max(x_min_common, saved_x - saved_tangent_half_width),
+                min(x_max_common, saved_x + saved_tangent_half_width),
+                40,
+            )
+            saved_tangent_y = saved_A + saved_Aprime * (saved_tangent_x - saved_x)
+            ax22.plot(saved_tangent_x, saved_tangent_y, linewidth=2.6, color="#ffb347", alpha=0.72)
+
         ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
         draw_to_x_axis(ax22, a2, np.interp(a2, xs, Axs_m2), "#f2a3c7", linewidth=1.6, marker_size=45)
         ax22.text(
@@ -1110,7 +1156,7 @@ with module2:
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        tangent_half_width = 0.60
+        tangent_half_width = 1.05
         tangent_x = np.linspace(
             max(x_min_common, x2 - tangent_half_width),
             min(x_max_common, x2 + tangent_half_width),
