@@ -811,10 +811,7 @@ with module1:
                 rf"={current_Z:.4f}"
             )
         else:
-            st.markdown(
-                '<div style="font-size:1.35rem; font-weight:700; color:#52677c; padding:0.35rem 0 0.65rem 0;">向左累積</div>',
-                unsafe_allow_html=True
-            )
+            st.markdown('<div style="height: 2.2rem;"></div>', unsafe_allow_html=True)
 
         st.markdown('<div style="height: 0.9rem;"></div>', unsafe_allow_html=True)
 
@@ -825,10 +822,7 @@ with module1:
                 rf"={current_A:.4f}"
             )
         else:
-            st.markdown(
-                '<div style="font-size:1.35rem; font-weight:700; color:#52677c; padding:0.35rem 0 0.65rem 0;">向右累積</div>',
-                unsafe_allow_html=True
-            )
+            st.markdown('<div style="height: 2.2rem;"></div>', unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
