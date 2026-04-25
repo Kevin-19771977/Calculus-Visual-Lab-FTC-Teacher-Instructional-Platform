@@ -406,7 +406,7 @@ if "func_str" not in st.session_state:
 st.markdown(
     """
     <div class="hero">
-        <h1 style="margin-bottom:0.4rem;">📘 微積分視覺實驗室：微積分第一基本定理教學平台</h1>
+        <h1 style="margin-bottom:0.4rem;">📘 微積分第一基本定理教學平台</h1>
     </div>
     """,
     unsafe_allow_html=True,
@@ -636,8 +636,8 @@ def enforce_m4b_not_below_a():
 # Tabs
 # -----------------------------
 module1, module2, module4 = st.tabs([
-    "模組 1｜累積函數動態生成",
-    "模組 2｜導數與累積同步",
+    "模組 1｜原函數f(x)動態生成累積函數A(x)",
+    "模組 2｜累積函數 A(x) 的導函數等於原函數 f(x)",
     "模組 3｜FTC Part 2 幾何意義",
 ])
 
