@@ -1111,9 +1111,9 @@ with module2:
 
     m2c1, m2c2, m2c3, m2c4 = st.columns(4)
     m2c1.metric("x", f"{x2:.3f}")
-    m2c2.metric("f(x)", f"{current_f2:.4f}")
-    m2c3.metric("A(x)", f"{current_A2:.4f}")
-    m2c4.metric("A'(x) 近似", f"{current_Ap2:.4f}")
+    m2c2.metric("A'(x)", f"{current_Ap2:.4f}")
+    m2c3.metric("x", f"{x2:.3f}")
+    m2c4.metric("f(x)", f"{current_f2:.4f}")
 
     left, right = st.columns(2, gap="large")
     with left:
