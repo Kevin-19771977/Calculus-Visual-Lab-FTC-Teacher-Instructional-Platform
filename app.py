@@ -398,7 +398,7 @@ def smart_area_bbox():
 
 
 if "func_str" not in st.session_state:
-    st.session_state["func_str"] = "x^2-3x+5"
+    st.session_state["func_str"] = "x"
 
 # -----------------------------
 # Header
@@ -650,7 +650,7 @@ def enforce_m4b_not_below_a():
 module1, module2, module4 = st.tabs([
     "模組 1｜累積函數動態生成",
     "模組 2｜導數與累積同步",
-    "模組 4｜FTC Part 2 幾何意義",
+    "模組 3｜FTC Part 2 幾何意義",
 ])
 
 # -----------------------------
