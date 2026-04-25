@@ -545,7 +545,7 @@ with st.sidebar:
         y_min_input, y_max_input = -5.0, 5.0
 
     st.markdown("---")
-    st.subheader("模組 1 圖形樣式")
+    st.subheader("圖形樣式")
     fill_pos_color = st.color_picker("面積塗色（x軸上方）", "#f4b183")
     fill_neg_color = st.color_picker("面積塗色（x軸下方）", "#9cc2e5")
 
@@ -804,11 +804,11 @@ with module1:
     with top_formula_col:
         st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
         st.latex(
-            rf"A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
+            rf"\Large A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
             rf"={current_Z:.4f}"
         )
         st.latex(
-            rf"A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
+            rf"\Large A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
             rf"={current_A:.4f}"
         )
         st.markdown('</div>', unsafe_allow_html=True)
