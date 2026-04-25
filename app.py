@@ -406,7 +406,7 @@ if "func_str" not in st.session_state:
 st.markdown(
     """
     <div class="hero">
-        <h1 style="margin-bottom:0.4rem;">📘 微積分基本定理互動學習平台</h1>
+        <h1 style="margin-bottom:0.4rem;">📘 微積分視覺實驗室：微積分基本定理教學平台</h1>
         <div style="font-size:1.08rem; line-height:1.7;">
             這個版本專門設計給學生在網頁上操作。<br>
             你可以直接拖曳滑桿、切換函數、觀察圖形與公式之間的關係。
@@ -657,16 +657,14 @@ module1, module2, module4 = st.tabs([
 # Module 1
 # -----------------------------
 with module1:
-    st.subheader("模組 1：累積函數動態生成")
-    st.caption("看懂 A(x) 不是固定數字，而是會跟著 x 改變的累積函數。")
-
+    st.subheader("模組 1：原函數f(x)動態生成累積函數A(x)")
     st.markdown(
         """
         <div class="module-toolbar">
-            <div class="module-chip">步驟 1：選函數</div>
+            <div class="module-chip">步驟 1：輸入原函數f(x)</div>
             <div class="module-chip">步驟 2：拖動 x</div>
-            <div class="module-chip">步驟 3：看面積變化</div>
-            <div class="module-chip">步驟 4：對照 A(x) 上的點</div>
+            <div class="module-chip">步驟 3：觀察面積累積值</div>
+            <div class="module-chip">步驟 4：對照 A(x) 上的點坐標</div>
         </div>
         """,
         unsafe_allow_html=True,
