@@ -407,22 +407,10 @@ st.markdown(
     """
     <div class="hero">
         <h1 style="margin-bottom:0.4rem;">📘 微積分視覺實驗室：微積分基本定理教學平台</h1>
-        <div style="font-size:1.08rem; line-height:1.7;">
-            這個版本專門設計給學生在網頁上操作。<br>
-            你可以直接拖曳滑桿、切換函數、觀察圖形與公式之間的關係。
-        </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
-
-colA, colB, colC = st.columns([1.2, 1.2, 1.6])
-with colA:
-    st.empty()
-with colB:
-    st.markdown('<div class="panel goal-panel"><b>學習目標</b><br>看懂「面積累積 → 導數 → 定積分」的完整連結。</div>', unsafe_allow_html=True)
-with colC:
-    st.empty()
 
 # -----------------------------
 # Sidebar
@@ -583,7 +571,7 @@ if "m1_saved_a_curves" not in st.session_state:
 if "m1_saved_curve_color_idx" not in st.session_state:
     st.session_state["m1_saved_curve_color_idx"] = 0
 
-show_help = True
+show_help = False
 show_formula = True
 
 xs = np.linspace(domain_left, domain_right, 800)
@@ -662,9 +650,10 @@ with module1:
         """
         <div class="module-toolbar">
             <div class="module-chip">步驟 1：輸入原函數f(x)</div>
-            <div class="module-chip">步驟 2：拖動 x</div>
-            <div class="module-chip">步驟 3：觀察面積累積值</div>
-            <div class="module-chip">步驟 4：對照 A(x) 上的點坐標</div>
+            <div class="module-chip">步驟 2：設定固定點 a</div>
+            <div class="module-chip">步驟 3：拖動 x</div>
+            <div class="module-chip">步驟 4：觀察面積累積值</div>
+            <div class="module-chip">步驟 5：對照 A(x) 上的點坐標</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -677,16 +666,6 @@ with module1:
         )
         st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt")
     
-    st.markdown(
-        """
-        <div style="font-size:1.02rem; color:#38506a; line-height:1.8; margin: 0.2rem 0 0.9rem 0;">
-        觀察重點：圖形只顯示固定點 a 右邊的部分。當你把 x 往右拖時，從固定點 a 到 x 的面積會持續累積，
-        而下方的 <b>A(x)</b> 也會跟著改變。
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
     top_formula_col, top_control_col = st.columns([1.05, 0.95], gap="large")
 
     with top_control_col:
@@ -1045,13 +1024,12 @@ with module1:
         st.pyplot(fig11, use_container_width=True)
 
     st.markdown(
-        f"""
+        """
         <div style="margin-top:0.65rem; font-size:1rem; line-height:1.85; color:#42586f;">
-        <b>你現在應該看到什麼</b><br>
-        1. 當你拖動 x 時，左圖的 A(x) 曲線會逐步長出來。<br>
-        2. 右圖的陰影面積會跟著改變，代表新的累積量來源。<br>
-        3. 這表示積分可以看成「從固定點 a 開始，一路累積到 x」。<br><br>
-        目前：當 x = <b>{x1:.2f}</b> 時，f(x) ≈ <b>{current_f:.4f}</b>，A(x) ≈ <b>{current_A:.4f}</b>。
+        <b>觀察重點</b><br>
+        1. 當你拖動 x 時，右圖的 A(x) 曲線會逐步長出來。<br>
+        2. A(x) 不是一個固定的數字，它是一個會隨著 x 改變的面積累積量，所以 A(x) 是一個函數。<br>
+        3. 累積函數 A(x) 的函數值就是「從固定點 a 到 x 的面積累積量」。
         </div>
         """,
         unsafe_allow_html=True,
