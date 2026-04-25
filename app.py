@@ -406,7 +406,7 @@ if "func_str" not in st.session_state:
 st.markdown(
     """
     <div class="hero">
-        <h1 style="margin-bottom:0.4rem;">📘 微積分視覺實驗室：微積分基本定理教學平台</h1>
+        <h1 style="margin-bottom:0.4rem;">📘 微積分視覺實驗室：微積分第一基本定理教學平台</h1>
     </div>
     """,
     unsafe_allow_html=True,
@@ -1027,9 +1027,8 @@ with module1:
         """
         <div style="margin-top:0.65rem; font-size:1rem; line-height:1.85; color:#42586f;">
         <b>觀察重點</b><br>
-        1. 當你拖動 x 時，右圖的 A(x) 曲線會逐步長出來。<br>
-        2. A(x) 不是一個固定的數字，它是一個會隨著 x 改變的面積累積量，所以 A(x) 是一個函數。<br>
-        3. 累積函數 A(x) 的函數值就是「從固定點 a 到 x 的面積累積量」。
+        1. 當 x 改變時，A(x) 也跟著改變。<br>
+        2. A(x) 不是一個單一數值，而是一個會隨著 x 改變的新函數。
         </div>
         """,
         unsafe_allow_html=True,
@@ -1039,7 +1038,7 @@ with module1:
 # Module 2
 # -----------------------------
 with module2:
-    st.subheader("模組 2：導數與累積同步")
+    st.subheader("模組 2：累積函數 A(x) 的導函數等於原函數 f(x)")
     st.caption("觀察 A'(x) 為什麼會接近 f(x)，這就是 FTC 第一部分的核心。")
 
     if show_formula:
