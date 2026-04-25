@@ -1186,7 +1186,7 @@ with module2:
             ),
         )
 
-        ax22.set_title("累積函數 A(x)", fontsize=14)
+        ax22.set_title("y=A(x)", fontsize=14)
         ax22.set_xlabel("x")
         ax22.set_ylabel("A(x)")
         ax22.set_xlim(x_min_common, x_max_common)
@@ -1234,7 +1234,7 @@ with module2:
             ),
             arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
         )
-        ax2.set_title("函數 f(x)", fontsize=14)
+        ax2.set_title("y=f(x)", fontsize=14)
         ax2.set_xlabel("x")
         ax2.set_ylabel("f(x)")
         ax2.set_xlim(x_min_common, x_max_common)
