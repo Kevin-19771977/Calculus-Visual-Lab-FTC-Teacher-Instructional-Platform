@@ -803,14 +803,33 @@ with module1:
 
     with top_formula_col:
         st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
-        st.latex(
-            rf"\Large A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
-            rf"={current_Z:.4f}"
-        )
-        st.latex(
-            rf"\Large A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
-            rf"={current_A:.4f}"
-        )
+
+        show_left_formula = st.checkbox("顯示向左累積算式", value=False, key="m1_show_left_formula")
+        if show_left_formula:
+            st.latex(
+                rf"\Large A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
+                rf"={current_Z:.4f}"
+            )
+        else:
+            st.markdown(
+                '<div style="font-size:1.35rem; font-weight:700; color:#52677c; padding:0.35rem 0 0.65rem 0;">向左累積</div>',
+                unsafe_allow_html=True
+            )
+
+        st.markdown('<div style="height: 0.9rem;"></div>', unsafe_allow_html=True)
+
+        show_right_formula = st.checkbox("顯示向右累積算式", value=False, key="m1_show_right_formula")
+        if show_right_formula:
+            st.latex(
+                rf"\Large A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
+                rf"={current_A:.4f}"
+            )
+        else:
+            st.markdown(
+                '<div style="font-size:1.35rem; font-weight:700; color:#52677c; padding:0.35rem 0 0.65rem 0;">向右累積</div>',
+                unsafe_allow_html=True
+            )
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     chart_col_left, chart_col_right = st.columns(2, gap="large")
