@@ -1039,26 +1039,17 @@ with module1:
 # -----------------------------
 with module2:
     st.subheader("模組 2：累積函數 A(x) 的導函數等於原函數 f(x)")
-    st.caption("觀察 A'(x) 為什麼會接近 f(x)，這就是 FTC 第一部分的核心。")
 
     if show_formula:
-        st.markdown('<div class="formula-box">', unsafe_allow_html=True)
-    st.latex(r"A(x)=\int_a^x f(t)\,dt \quad \Rightarrow \quad A'(x)=f(x)")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown(
-        """
-        <div class="big-note">
-        觀察重點：當你拖動 x 時，左圖的 A(x) 會顯示目前位置與切線，
-        右圖的 f(x) 會同步顯示對應的函數值，幫助你理解 A'(x)=f(x)。
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        st.markdown(
+            '<div style="text-align:center; padding: 0.6rem 0 0.9rem 0;">',
+            unsafe_allow_html=True
+        )
+        st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt \quad \Rightarrow \quad A'(x)=f(x)")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     full_width_col = st.container()
     with full_width_col:
-        st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
         a2 = st.slider(
             "固定點 a",
             min_value=float(domain_left),
@@ -1075,11 +1066,6 @@ with module2:
             step=0.05,
             key="m2x",
         )
-        reset_default_m2 = float((domain_left + domain_right) / 3)
-        if st.button("把 x 回到中間位置", key="m2_reset_button", use_container_width=True):
-            st.session_state["m2x"] = reset_default_m2
-            x2 = reset_default_m2
-        st.markdown('</div>', unsafe_allow_html=True)
 
         Axs_m2 = cumulative_integral(f, a2, xs)
         Aprime_m2 = safe_gradient(Axs_m2, xs)
@@ -1096,22 +1082,6 @@ with module2:
             trend = "A(x) 正在下降"
         else:
             trend = "A(x) 在這附近斜率接近 0"
-
-    m2_info_left, m2_info_center, m2_info_right = st.columns([0.20, 0.60, 0.20])
-    with m2_info_center:
-        st.markdown(
-            f"""
-            <div class="panel" style="margin-top:0.55rem;">
-            <b>目前設定</b><br>
-            固定點：<b>a = {a2:.2f}</b><br>
-            x 範圍：<b>[{domain_left:.2f}, {domain_right:.2f}]</b><br>
-            y 範圍：<b>[{y_min_common:.2f}, {y_max_common:.2f}]</b><br>
-            左圖曲線 <span style="color:#8fc9a8;font-weight:700;">■</span>　
-            右圖曲線 <span style="color:#8bbce9;font-weight:700;">■</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
 
     m2c1, m2c2, m2c3, m2c4 = st.columns(4)
     m2c1.metric("x", f"{x2:.3f}")
@@ -1140,27 +1110,6 @@ with module2:
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        m2_left_xytext = smart_point_xytext(
-            x2, current_A2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, np.interp(a2, xs, Axs_m2))]
-        )
-        ax22.annotate(
-            f"({x2:.2f}, {current_A2:.2f})",
-            xy=(x2, current_A2),
-            xytext=m2_left_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.2,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
-
         tangent_half_width = 0.60
         tangent_x = np.linspace(
             max(x_min_common, x2 - tangent_half_width),
@@ -1169,6 +1118,27 @@ with module2:
         )
         tangent_y = current_A2 + current_Ap2 * (tangent_x - x2)
         ax22.plot(tangent_x, tangent_y, linewidth=3.0, color="#ffb347")
+
+        tangent_label_x = min(max(x2 + 0.35, x_min_common + 0.35), x_max_common - 0.35)
+        tangent_label_y = current_A2 + current_Ap2 * (tangent_label_x - x2)
+        tangent_label_y = min(max(tangent_label_y + 0.35, y_min_common + 0.45), y_max_common - 0.45)
+        ax22.text(
+            tangent_label_x,
+            tangent_label_y,
+            rf"$A'({x2:.2f})={current_Ap2:.4f}$",
+            ha="left",
+            va="center",
+            fontsize=14,
+            fontweight="semibold",
+            color="#b36b00",
+            bbox=dict(
+                boxstyle="round,pad=0.26,rounding_size=0.16",
+                fc="white",
+                ec="#ffb347",
+                lw=1.0,
+                alpha=0.95,
+            ),
+        )
 
         ax22.set_title("累積函數 A(x)", fontsize=14)
         ax22.set_xlabel("x")
