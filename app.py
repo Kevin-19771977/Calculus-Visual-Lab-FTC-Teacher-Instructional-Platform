@@ -1070,6 +1070,14 @@ with module2:
             step=0.05,
             key="m2x",
         )
+        dx2 = st.slider(
+            "Δx",
+            min_value=0.01,
+            max_value=1.0,
+            value=float(st.session_state.get("m2dx", 0.10)),
+            step=0.01,
+            key="m2dx",
+        )
 
         Axs_m2 = cumulative_integral(f, a2, xs)
         Aprime_m2 = safe_gradient(Axs_m2, xs)
