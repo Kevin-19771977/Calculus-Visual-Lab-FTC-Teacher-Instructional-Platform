@@ -1237,52 +1237,24 @@ with module2:
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
-    components.html(
-        """
-        <div style="width:100%; padding:0.15rem 0 0 0; background:transparent;">
-            <script>
-                window.MathJax = {
-                    tex: {
-                        inlineMath: [['\\(', '\\)']],
-                        displayMath: [['\\[', '\\]']]
-                    },
-                    svg: {fontCache: 'global'}
-                };
-            </script>
-            <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    st.markdown('<div style="padding:0.2rem 0 0 0.2rem;">', unsafe_allow_html=True)
 
-            <div style="
-                width:100%;
-                min-height:520px;
-                padding:0.1rem 0 0 0.4rem;
-                box-sizing:border-box;
-                text-align:left;
-                color:#000;
-            ">
-                <div style="font-size:42px; line-height:1.65; text-align:left;">
-                    <div style="margin-left:0px; margin-top:0px;">
-                        \[
-                        A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x
-                        \]
-                    </div>
+    left_formula_col, _ = st.columns([0.78, 0.22])
 
-                    <div style="margin-left:0px; margin-top:52px;">
-                        \[
-                        \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)
-                        \]
-                    </div>
+    with left_formula_col:
+        st.latex(r"\Huge A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
+        st.markdown('<div style="height:1.6rem;"></div>', unsafe_allow_html=True)
 
-                    <div style="margin-left:240px; margin-top:84px;">
-                        \[
-                        A'(x)\;=\;f(x)
-                        \]
-                    </div>
-                </div>
-            </div>
-        </div>
-        """,
-        height=560,
-    )
+        st.latex(r"\Huge \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
+        st.markdown('<div style="height:2.2rem;"></div>', unsafe_allow_html=True)
+
+        final_formula_left, final_formula_right = st.columns([0.42, 0.58])
+        with final_formula_left:
+            st.markdown("")
+        with final_formula_right:
+            st.latex(r"\Huge A'(x)\;=\;f(x)")
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # -----------------------------
 # Module 4
