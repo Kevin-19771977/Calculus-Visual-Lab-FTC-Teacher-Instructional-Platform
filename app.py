@@ -1074,7 +1074,7 @@ with module2:
             "Δx",
             min_value=0.01,
             max_value=1.0,
-            value=float(st.session_state.get("m2dx", 0.10)),
+            value=float(st.session_state.get("m2dx", 1.0)),
             step=0.01,
             key="m2dx",
         )
@@ -1084,6 +1084,8 @@ with module2:
         current_A2 = np.interp(x2, xs, Axs_m2)
         current_f2 = f(np.array([x2]))[0]
         current_Ap2 = np.interp(x2, xs, Aprime_m2)
+        x2_plus = float(min(x2 + dx2, x_max_common))
+        current_A2_plus = np.interp(x2_plus, xs, Axs_m2)
 
         m2_button_col_left, m2_button_col_right = st.columns(2, gap="small")
         with m2_button_col_left:
@@ -1157,6 +1159,14 @@ with module2:
             va="top",
             fontsize=13,
             bbox=smart_value_bbox(),
+        )
+        ax22.scatter([x2_plus], [current_A2_plus], s=36, color="#9bd18b", zorder=7)
+        ax22.plot(
+            [x2, x2_plus],
+            [current_A2, current_A2_plus],
+            linewidth=2.6,
+            color="#6f8fd6",
+            zorder=6,
         )
         tangent_half_width = 1.05
         tangent_x = np.linspace(
