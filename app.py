@@ -1237,13 +1237,13 @@ with module2:
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
-    st.markdown('<div style="padding:0.02rem 0 0 0.0rem;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding:0.02rem 0 0 0.0rem; margin-left:-0.6rem;">', unsafe_allow_html=True)
 
-    formula_left_col, formula_right_col = st.columns([0.74, 0.26], gap="small")
+    formula_left_col, formula_right_col = st.columns([0.80, 0.20], gap="small")
     with formula_left_col:
-        st.latex(r"""\begin{aligned}
-A(x+\Delta x)-A(x) &\approx f(x)\cdot \Delta x \\[1.0em]
-\frac{A(x+\Delta x)-A(x)}{\Delta x} &\approx f(x) \\[1.5em]
+        st.latex(r"""\Large\begin{aligned}
+A(x+\Delta x)-A(x) &\approx f(x)\cdot \Delta x \\[1.1em]
+\frac{A(x+\Delta x)-A(x)}{\Delta x} &\approx f(x) \\[1.7em]
 A'(x) &= f(x)
 \end{aligned}""")
     with formula_right_col:
