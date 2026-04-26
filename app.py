@@ -1237,32 +1237,22 @@ with module2:
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
-    st.markdown('<div style="padding:0.1rem 0 0 0.05rem;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding:0.05rem 0 0 0.0rem;">', unsafe_allow_html=True)
 
-    left_formula_col, _ = st.columns([0.88, 0.12])
-
-    with left_formula_col:
-        formula_line_1_left, formula_line_1_right = st.columns([0.73, 0.27], gap="small")
-        with formula_line_1_left:
-            st.latex(r"\LARGE A(x+\Delta x)-A(x)")
-        with formula_line_1_right:
-            st.latex(r"\LARGE \approx\; f(x)\cdot \Delta x")
-
-        st.markdown('<div style="height:1.0rem;"></div>', unsafe_allow_html=True)
-
-        formula_line_2_left, formula_line_2_right = st.columns([0.73, 0.27], gap="small")
-        with formula_line_2_left:
-            st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}")
-        with formula_line_2_right:
-            st.latex(r"\LARGE \approx\; f(x)")
-
-        st.markdown('<div style="height:1.4rem;"></div>', unsafe_allow_html=True)
-
-        formula_line_3_left, formula_line_3_right = st.columns([0.73, 0.27], gap="small")
-        with formula_line_3_left:
-            st.markdown("")
-        with formula_line_3_right:
-            st.latex(r"\LARGE A'(x)\;=\;f(x)")
+    formula_left_col, formula_right_col = st.columns([0.72, 0.28], gap="small")
+    with formula_left_col:
+        st.latex(
+            r"""
+            \Large
+            egin{aligned}
+            A(x+\Delta x)-A(x) &pprox f(x)\cdot\Delta x \[1.2em]
+            rac{A(x+\Delta x)-A(x)}{\Delta x} &pprox f(x) \[1.9em]
+            A'(x) &= f(x)
+            \end{aligned}
+            """
+        )
+    with formula_right_col:
+        st.markdown("")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
