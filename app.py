@@ -1109,12 +1109,6 @@ with module2:
         else:
             trend = "A(x) 在這附近斜率接近 0"
 
-    m2c1, m2c2, m2c3, m2c4 = st.columns(4)
-    m2c1.metric("x", f"{x2:.3f}")
-    m2c2.metric("A'(x)", f"{current_Ap2:.4f}")
-    m2c3.metric("x", f"{x2:.3f}")
-    m2c4.metric("f(x)", f"{current_f2:.4f}")
-
     left, right = st.columns(2, gap="large")
     with left:
         fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
@@ -1243,17 +1237,51 @@ with module2:
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
-    st.markdown(
-        f"""
-        <div class="panel">
-        <b>你現在應該看到什麼</b><br>
-        - 當 f(x) &gt; 0，A(x) 會往上走。<br>
-        - 當 f(x) &lt; 0，A(x) 會往下走。<br>
-        - 當 f(x) 接近 0，A(x) 的斜率也會接近 0。<br><br>
-        目前這個位置的判讀：<b>{trend}</b>。
+    components.html(
+        """
+        <div style="width:100%; padding:0.15rem 0 0 0; background:transparent;">
+            <script>
+                window.MathJax = {
+                    tex: {
+                        inlineMath: [['\\(', '\\)']],
+                        displayMath: [['\\[', '\\]']]
+                    },
+                    svg: {fontCache: 'global'}
+                };
+            </script>
+            <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+            <div style="
+                width:100%;
+                min-height:520px;
+                padding:0.1rem 0 0 0.4rem;
+                box-sizing:border-box;
+                text-align:left;
+                color:#000;
+            ">
+                <div style="font-size:42px; line-height:1.65; text-align:left;">
+                    <div style="margin-left:0px; margin-top:0px;">
+                        \[
+                        A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x
+                        \]
+                    </div>
+
+                    <div style="margin-left:0px; margin-top:52px;">
+                        \[
+                        \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)
+                        \]
+                    </div>
+
+                    <div style="margin-left:240px; margin-top:84px;">
+                        \[
+                        A'(x)\;=\;f(x)
+                        \]
+                    </div>
+                </div>
+            </div>
         </div>
         """,
-        unsafe_allow_html=True,
+        height=560,
     )
 
 # -----------------------------
