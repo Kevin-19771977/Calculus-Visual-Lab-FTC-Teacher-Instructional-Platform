@@ -1237,22 +1237,32 @@ with module2:
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
-    st.markdown('<div style="padding:0.2rem 0 0 0.2rem;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding:0.1rem 0 0 0.05rem;">', unsafe_allow_html=True)
 
-    left_formula_col, _ = st.columns([0.78, 0.22])
+    left_formula_col, _ = st.columns([0.88, 0.12])
 
     with left_formula_col:
-        st.latex(r"\Huge A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
-        st.markdown('<div style="height:1.6rem;"></div>', unsafe_allow_html=True)
+        formula_line_1_left, formula_line_1_right = st.columns([0.73, 0.27], gap="small")
+        with formula_line_1_left:
+            st.latex(r"\LARGE A(x+\Delta x)-A(x)")
+        with formula_line_1_right:
+            st.latex(r"\LARGE \approx\; f(x)\cdot \Delta x")
 
-        st.latex(r"\Huge \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
-        st.markdown('<div style="height:2.2rem;"></div>', unsafe_allow_html=True)
+        st.markdown('<div style="height:1.0rem;"></div>', unsafe_allow_html=True)
 
-        final_formula_left, final_formula_right = st.columns([0.42, 0.58])
-        with final_formula_left:
+        formula_line_2_left, formula_line_2_right = st.columns([0.73, 0.27], gap="small")
+        with formula_line_2_left:
+            st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}")
+        with formula_line_2_right:
+            st.latex(r"\LARGE \approx\; f(x)")
+
+        st.markdown('<div style="height:1.4rem;"></div>', unsafe_allow_html=True)
+
+        formula_line_3_left, formula_line_3_right = st.columns([0.73, 0.27], gap="small")
+        with formula_line_3_left:
             st.markdown("")
-        with final_formula_right:
-            st.latex(r"\Huge A'(x)\;=\;f(x)")
+        with formula_line_3_right:
+            st.latex(r"\LARGE A'(x)\;=\;f(x)")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
