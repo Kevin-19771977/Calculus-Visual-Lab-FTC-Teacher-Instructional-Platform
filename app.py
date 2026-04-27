@@ -1302,18 +1302,15 @@ with module2:
         st.latex(r"\LARGE A'(x)\;=\;f(x)")
 
     with formula_right_col:
-        st.latex(
-            rf"\LARGE A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}"
-        )
-        st.markdown('<div style="height:0.55rem;"></div>', unsafe_allow_html=True)
-
-        st.latex(
-            rf"\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})"
-        )
-        st.markdown('<div style="height:0.95rem;"></div>', unsafe_allow_html=True)
-
-        st.latex(
-            rf"\LARGE A'({x2:.2f})\;=\;f({x2:.2f})"
+        st.markdown(
+            rf"""
+            <div style="font-size:1.55rem; line-height:1.95; padding-top:0.1rem;">
+            $A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$<br><br>
+            $\frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$<br><br>
+            $A'({x2:.2f})\;=\;f({x2:.2f})$
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
     st.markdown('</div>', unsafe_allow_html=True)
