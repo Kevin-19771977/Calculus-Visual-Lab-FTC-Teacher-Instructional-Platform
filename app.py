@@ -1303,13 +1303,13 @@ with module2:
 
     with formula_right_col:
         st.markdown(
-            rf"$$A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
+            rf"$$\LARGE A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
         )
         st.markdown(
-            rf"$$\frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
+            rf"$$\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
         )
         st.markdown(
-            rf"$$A'({x2:.2f})\;=\;f({x2:.2f})$$"
+            rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
         )
 
     st.markdown('</div>', unsafe_allow_html=True)
