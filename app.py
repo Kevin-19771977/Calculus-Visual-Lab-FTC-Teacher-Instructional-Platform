@@ -1305,6 +1305,132 @@ with module2:
         st.markdown(
             rf"$$\LARGE A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
         )
+
+        compare_col_left, compare_col_right = st.columns(2, gap="small")
+
+        mini_x_min = min(x2, x2_plus)
+        mini_x_max = max(x2, x2_plus)
+        if abs(mini_x_max - mini_x_min) < 1e-9:
+            mini_x_max = mini_x_min + 1e-3
+
+        mask_mini = (xs >= mini_x_min) & (xs <= mini_x_max)
+        xs_mini = xs[mask_mini]
+        ys_mini = ys[mask_mini]
+
+        if len(xs_mini) < 2:
+            xs_mini = np.linspace(mini_x_min, mini_x_max, 50)
+            ys_mini = np.array(f(xs_mini), dtype=float)
+
+        delta_A_value = current_A2_plus - current_A2
+        rect_area_value = current_f2 * dx2
+
+        y_candidates = [0.0, float(current_f2)]
+        if len(ys_mini) > 0:
+            y_candidates.extend([float(np.min(ys_mini)), float(np.max(ys_mini))])
+
+        mini_y_min = min(y_candidates)
+        mini_y_max = max(y_candidates)
+        mini_y_range = mini_y_max - mini_y_min
+        if mini_y_range < 1e-6:
+            mini_y_range = 1.0
+        mini_y_pad = 0.15 * mini_y_range
+        mini_y_min -= mini_y_pad
+        mini_y_max += mini_y_pad
+
+        with compare_col_left:
+            fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
+            ax_mini_left.plot(xs_mini, ys_mini, linewidth=2.2, color="#8bbce9")
+            fill_area_by_sign(
+                ax_mini_left,
+                xs_mini,
+                ys_mini,
+                fill_pos_color,
+                fill_neg_color,
+                alpha=0.45,
+            )
+            ax_mini_left.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
+            area_text_x = 0.5 * (mini_x_min + mini_x_max)
+            if delta_A_value >= 0:
+                positive_part = ys_mini[ys_mini >= 0]
+                if len(positive_part) > 0:
+                    area_text_y = 0.52 * np.max(positive_part)
+                else:
+                    area_text_y = mini_y_max * 0.35
+            else:
+                negative_part = ys_mini[ys_mini < 0]
+                if len(negative_part) > 0:
+                    area_text_y = 0.52 * np.min(negative_part)
+                else:
+                    area_text_y = mini_y_min * 0.35
+
+            ax_mini_left.text(
+                area_text_x,
+                area_text_y,
+                f"{delta_A_value:.4f}",
+                ha="center",
+                va="center",
+                fontsize=11.5,
+                fontweight="semibold",
+                color="#2f2f2f",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.14",
+                    fc="white",
+                    ec="#c9d2de",
+                    lw=0.9,
+                    alpha=0.94,
+                ),
+            )
+            ax_mini_left.set_xlim(mini_x_min, mini_x_max)
+            ax_mini_left.set_ylim(mini_y_min, mini_y_max)
+            ax_mini_left.grid(alpha=0.18)
+            for spine in ["top", "right"]:
+                ax_mini_left.spines[spine].set_visible(False)
+            ax_mini_left.tick_params(labelsize=8.5)
+            st.pyplot(fig_mini_left, use_container_width=True)
+
+        with compare_col_right:
+            fig_mini_right, ax_mini_right = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
+            x_rect = np.linspace(mini_x_min, mini_x_max, 50)
+            y_rect = np.full_like(x_rect, float(current_f2))
+            ax_mini_right.fill_between(
+                x_rect,
+                0,
+                y_rect,
+                color="#f6b6c8",
+                alpha=0.75,
+            )
+            ax_mini_right.plot([mini_x_min, mini_x_max], [current_f2, current_f2], color="#d97a9a", linewidth=2.0)
+            ax_mini_right.plot([mini_x_min, mini_x_min], [0, current_f2], color="#d97a9a", linewidth=2.0)
+            ax_mini_right.plot([mini_x_max, mini_x_max], [0, current_f2], color="#d97a9a", linewidth=2.0)
+            ax_mini_right.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
+
+            rect_text_x = 0.5 * (mini_x_min + mini_x_max)
+            rect_text_y = current_f2 / 2.0 if abs(current_f2) > 1e-9 else 0.0
+            ax_mini_right.text(
+                rect_text_x,
+                rect_text_y,
+                f"{rect_area_value:.4f}",
+                ha="center",
+                va="center",
+                fontsize=11.5,
+                fontweight="semibold",
+                color="#2f2f2f",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.14",
+                    fc="white",
+                    ec="#dcb2bf",
+                    lw=0.9,
+                    alpha=0.94,
+                ),
+            )
+            ax_mini_right.set_xlim(mini_x_min, mini_x_max)
+            ax_mini_right.set_ylim(mini_y_min, mini_y_max)
+            ax_mini_right.grid(alpha=0.18)
+            for spine in ["top", "right"]:
+                ax_mini_right.spines[spine].set_visible(False)
+            ax_mini_right.tick_params(labelsize=8.5)
+            st.pyplot(fig_mini_right, use_container_width=True)
+
         st.markdown(
             rf"$$\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
         )
