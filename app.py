@@ -1264,7 +1264,7 @@ with module2:
             x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
         )
         ax2.annotate(
-            f"f(x)={current_f2:.2f}",
+            f"f({x2:.2f})={current_f2:.2f}",
             xy=(x2, current_f2),
             xytext=m2_right_xytext,
             textcoords="offset points",
