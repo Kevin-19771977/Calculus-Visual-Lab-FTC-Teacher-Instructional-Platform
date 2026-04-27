@@ -574,6 +574,10 @@ if "m2_saved_a_curves" not in st.session_state:
     st.session_state["m2_saved_a_curves"] = []
 if "m2_saved_curve_color_idx" not in st.session_state:
     st.session_state["m2_saved_curve_color_idx"] = 0
+if "m2_show_tangent" not in st.session_state:
+    st.session_state["m2_show_tangent"] = True
+if "m2_show_secant" not in st.session_state:
+    st.session_state["m2_show_secant"] = True
 
 show_help = False
 show_formula = True
@@ -1079,6 +1083,12 @@ with module2:
             key="m2dx",
         )
 
+        m2_toggle_col1, m2_toggle_col2 = st.columns(2, gap="small")
+        with m2_toggle_col1:
+            show_tangent_m2 = st.checkbox("顯示切線", key="m2_show_tangent")
+        with m2_toggle_col2:
+            show_secant_m2 = st.checkbox("顯示割線", key="m2_show_secant")
+
         Axs_m2 = cumulative_integral(f, a2, xs)
         Aprime_m2 = safe_gradient(Axs_m2, xs)
         current_A2 = np.interp(x2, xs, Axs_m2)
@@ -1134,14 +1144,15 @@ with module2:
             ax22.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
             ax22.scatter([saved_x], [saved_A], s=48, color="#9bd18b", zorder=7)
 
-            saved_tangent_half_width = 1.05
-            saved_tangent_x = np.linspace(
-                max(x_min_common, saved_x - saved_tangent_half_width),
-                min(x_max_common, saved_x + saved_tangent_half_width),
-                40,
-            )
-            saved_tangent_y = saved_A + saved_Aprime * (saved_tangent_x - saved_x)
-            ax22.plot(saved_tangent_x, saved_tangent_y, linewidth=2.6, color="#ffb347", alpha=0.72)
+            if show_tangent_m2:
+                saved_tangent_half_width = 1.05
+                saved_tangent_x = np.linspace(
+                    max(x_min_common, saved_x - saved_tangent_half_width),
+                    min(x_max_common, saved_x + saved_tangent_half_width),
+                    40,
+                )
+                saved_tangent_y = saved_A + saved_Aprime * (saved_tangent_x - saved_x)
+                ax22.plot(saved_tangent_x, saved_tangent_y, linewidth=2.6, color="#ffb347", alpha=0.72)
 
         ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
         draw_to_x_axis(ax22, a2, np.interp(a2, xs, Axs_m2), "#f2a3c7", linewidth=1.6, marker_size=45)
@@ -1161,49 +1172,51 @@ with module2:
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        ax22.scatter([x2_plus], [current_A2_plus], s=36, color="#9bd18b", zorder=7)
+        if show_secant_m2:
+            ax22.scatter([x2_plus], [current_A2_plus], s=36, color="#9bd18b", zorder=7)
 
-        secant_slope = (current_A2_plus - current_A2) / max(x2_plus - x2, 1e-9)
-        secant_half_width = 1.05
-        secant_center_x = 0.5 * (x2 + x2_plus)
-        secant_center_y = 0.5 * (current_A2 + current_A2_plus)
-        secant_x = np.linspace(
-            max(x_min_common, secant_center_x - secant_half_width),
-            min(x_max_common, secant_center_x + secant_half_width),
-            40,
-        )
-        secant_y = secant_center_y + secant_slope * (secant_x - secant_center_x)
-        ax22.plot(secant_x, secant_y, linewidth=3.0, color="#ffb347", zorder=6)
+            secant_slope = (current_A2_plus - current_A2) / max(x2_plus - x2, 1e-9)
+            secant_half_width = 1.05
+            secant_center_x = 0.5 * (x2 + x2_plus)
+            secant_center_y = 0.5 * (current_A2 + current_A2_plus)
+            secant_x = np.linspace(
+                max(x_min_common, secant_center_x - secant_half_width),
+                min(x_max_common, secant_center_x + secant_half_width),
+                40,
+            )
+            secant_y = secant_center_y + secant_slope * (secant_x - secant_center_x)
+            ax22.plot(secant_x, secant_y, linewidth=3.0, color="#ffb347", zorder=6)
 
-        tangent_half_width = 1.05
-        tangent_x = np.linspace(
-            max(x_min_common, x2 - tangent_half_width),
-            min(x_max_common, x2 + tangent_half_width),
-            40,
-        )
-        tangent_y = current_A2 + current_Ap2 * (tangent_x - x2)
-        ax22.plot(tangent_x, tangent_y, linewidth=3.0, color="#ffb347")
+        if show_tangent_m2:
+            tangent_half_width = 1.05
+            tangent_x = np.linspace(
+                max(x_min_common, x2 - tangent_half_width),
+                min(x_max_common, x2 + tangent_half_width),
+                40,
+            )
+            tangent_y = current_A2 + current_Ap2 * (tangent_x - x2)
+            ax22.plot(tangent_x, tangent_y, linewidth=3.0, color="#ffb347")
 
-        tangent_label_x = min(max(x2 + 0.35, x_min_common + 0.35), x_max_common - 0.35)
-        tangent_label_y = current_A2 + current_Ap2 * (tangent_label_x - x2)
-        tangent_label_y = min(max(tangent_label_y + 0.35, y_min_common + 0.45), y_max_common - 0.45)
-        ax22.text(
-            tangent_label_x,
-            tangent_label_y,
-            rf"$A'({x2:.2f})={current_Ap2:.4f}$",
-            ha="left",
-            va="center",
-            fontsize=14,
-            fontweight="semibold",
-            color="#b36b00",
-            bbox=dict(
-                boxstyle="round,pad=0.26,rounding_size=0.16",
-                fc="white",
-                ec="#ffb347",
-                lw=1.0,
-                alpha=0.95,
-            ),
-        )
+            tangent_label_x = min(max(x2 + 0.35, x_min_common + 0.35), x_max_common - 0.35)
+            tangent_label_y = current_A2 + current_Ap2 * (tangent_label_x - x2)
+            tangent_label_y = min(max(tangent_label_y + 0.35, y_min_common + 0.45), y_max_common - 0.45)
+            ax22.text(
+                tangent_label_x,
+                tangent_label_y,
+                rf"$A'({x2:.2f})={current_Ap2:.4f}$",
+                ha="left",
+                va="center",
+                fontsize=14,
+                fontweight="semibold",
+                color="#b36b00",
+                bbox=dict(
+                    boxstyle="round,pad=0.26,rounding_size=0.16",
+                    fc="white",
+                    ec="#ffb347",
+                    lw=1.0,
+                    alpha=0.95,
+                ),
+            )
 
         ax22.set_title("y=A(x)", fontsize=14)
         ax22.set_xlabel("x")
@@ -1233,18 +1246,19 @@ with module2:
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        ax2.plot(
-            [x2_plus, x2_plus],
-            [0, current_f2_plus],
-            linestyle="--",
-            linewidth=1.6,
-            color="#9bd18b",
-            zorder=6,
-        )
-        ax2.scatter([x2_plus], [current_f2_plus], s=36, color="#9bd18b", zorder=7)
+        if show_secant_m2:
+            ax2.plot(
+                [x2_plus, x2_plus],
+                [0, current_f2_plus],
+                linestyle="--",
+                linewidth=1.6,
+                color="#9bd18b",
+                zorder=6,
+            )
+            ax2.scatter([x2_plus], [current_f2_plus], s=36, color="#9bd18b", zorder=7)
 
-        mask_m2_fill = (xs >= min(x2, x2_plus)) & (xs <= max(x2, x2_plus))
-        fill_area_by_sign(ax2, xs[mask_m2_fill], ys[mask_m2_fill], fill_pos_color, fill_neg_color, alpha=0.40)
+            mask_m2_fill = (xs >= min(x2, x2_plus)) & (xs <= max(x2, x2_plus))
+            fill_area_by_sign(ax2, xs[mask_m2_fill], ys[mask_m2_fill], fill_pos_color, fill_neg_color, alpha=0.40)
 
         m2_right_xytext = smart_point_xytext(
             x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
