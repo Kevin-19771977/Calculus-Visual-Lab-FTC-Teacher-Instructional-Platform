@@ -1291,7 +1291,7 @@ with module2:
 
     st.markdown('<div style="padding:0.02rem 0 0 0; margin-left:-2.35rem;">', unsafe_allow_html=True)
 
-    formula_left_col, formula_right_col = st.columns([0.68, 0.32], gap="small")
+    formula_left_col, formula_right_col = st.columns([0.50, 0.50], gap="large")
     with formula_left_col:
         st.latex(r"\LARGE A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
         st.markdown('<div style="height:0.55rem;"></div>', unsafe_allow_html=True)
@@ -1302,7 +1302,19 @@ with module2:
         st.latex(r"\LARGE A'(x)\;=\;f(x)")
 
     with formula_right_col:
-        st.markdown("")
+        st.latex(
+            rf"\LARGE A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}"
+        )
+        st.markdown('<div style="height:0.55rem;"></div>', unsafe_allow_html=True)
+
+        st.latex(
+            rf"\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})"
+        )
+        st.markdown('<div style="height:0.95rem;"></div>', unsafe_allow_html=True)
+
+        st.latex(
+            rf"\LARGE A'({x2:.2f})\;=\;f({x2:.2f})"
+        )
 
     st.markdown('</div>', unsafe_allow_html=True)
 
