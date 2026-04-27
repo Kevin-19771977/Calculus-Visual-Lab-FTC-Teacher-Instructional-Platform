@@ -1308,60 +1308,49 @@ with module2:
 
         compare_col_left, compare_col_right = st.columns(2, gap="small")
 
-        mini_x_min = min(x2, x2_plus)
-        mini_x_max = max(x2, x2_plus)
-        if abs(mini_x_max - mini_x_min) < 1e-9:
-            mini_x_max = mini_x_min + 1e-3
-
-        mask_mini = (xs >= mini_x_min) & (xs <= mini_x_max)
-        xs_mini = xs[mask_mini]
-        ys_mini = ys[mask_mini]
-
-        if len(xs_mini) < 2:
-            xs_mini = np.linspace(mini_x_min, mini_x_max, 50)
-            ys_mini = np.array(f(xs_mini), dtype=float)
-
         delta_A_value = current_A2_plus - current_A2
         rect_area_value = current_f2 * dx2
 
-        y_candidates = [0.0, float(current_f2)]
-        if len(ys_mini) > 0:
-            y_candidates.extend([float(np.min(ys_mini)), float(np.max(ys_mini))])
+        mini_dx_actual = max(x2_plus - x2, 1e-6)
+        mini_x_fixed_min = 0.0
+        mini_x_fixed_max = 1.0
+        mini_y_fixed_min = y_min_common
+        mini_y_fixed_max = y_max_common
 
-        mini_y_min = min(y_candidates)
-        mini_y_max = max(y_candidates)
-        mini_y_range = mini_y_max - mini_y_min
-        if mini_y_range < 1e-6:
-            mini_y_range = 1.0
-        mini_y_pad = 0.15 * mini_y_range
-        mini_y_min -= mini_y_pad
-        mini_y_max += mini_y_pad
+        xs_mini_global = xs[(xs >= x2) & (xs <= x2_plus)]
+        ys_mini = ys[(xs >= x2) & (xs <= x2_plus)]
+
+        if len(xs_mini_global) < 2:
+            xs_mini_global = np.linspace(x2, x2_plus, 50)
+            ys_mini = np.array(f(xs_mini_global), dtype=float)
+
+        xs_mini_local = xs_mini_global - x2
 
         with compare_col_left:
             fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
-            ax_mini_left.plot(xs_mini, ys_mini, linewidth=2.2, color="#8bbce9")
+            ax_mini_left.plot(xs_mini_local, ys_mini, linewidth=2.2, color="#8bbce9")
             fill_area_by_sign(
                 ax_mini_left,
-                xs_mini,
+                xs_mini_local,
                 ys_mini,
                 fill_pos_color,
                 fill_neg_color,
                 alpha=0.45,
             )
             ax_mini_left.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
-            area_text_x = 0.5 * (mini_x_min + mini_x_max)
+            area_text_x = 0.5 * mini_dx_actual
             if delta_A_value >= 0:
                 positive_part = ys_mini[ys_mini >= 0]
                 if len(positive_part) > 0:
                     area_text_y = 0.52 * np.max(positive_part)
                 else:
-                    area_text_y = mini_y_max * 0.35
+                    area_text_y = 0.35 * max(mini_y_fixed_max, 1.0)
             else:
                 negative_part = ys_mini[ys_mini < 0]
                 if len(negative_part) > 0:
                     area_text_y = 0.52 * np.min(negative_part)
                 else:
-                    area_text_y = mini_y_min * 0.35
+                    area_text_y = 0.35 * min(mini_y_fixed_min, -1.0)
 
             ax_mini_left.text(
                 area_text_x,
@@ -1380,8 +1369,8 @@ with module2:
                     alpha=0.94,
                 ),
             )
-            ax_mini_left.set_xlim(mini_x_min, mini_x_max)
-            ax_mini_left.set_ylim(mini_y_min, mini_y_max)
+            ax_mini_left.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
+            ax_mini_left.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
             ax_mini_left.grid(alpha=0.18)
             for spine in ["top", "right"]:
                 ax_mini_left.spines[spine].set_visible(False)
@@ -1390,7 +1379,7 @@ with module2:
 
         with compare_col_right:
             fig_mini_right, ax_mini_right = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
-            x_rect = np.linspace(mini_x_min, mini_x_max, 50)
+            x_rect = np.linspace(0.0, dx2, 50)
             y_rect = np.full_like(x_rect, float(current_f2))
             ax_mini_right.fill_between(
                 x_rect,
@@ -1399,12 +1388,12 @@ with module2:
                 color="#f6b6c8",
                 alpha=0.75,
             )
-            ax_mini_right.plot([mini_x_min, mini_x_max], [current_f2, current_f2], color="#d97a9a", linewidth=2.0)
-            ax_mini_right.plot([mini_x_min, mini_x_min], [0, current_f2], color="#d97a9a", linewidth=2.0)
-            ax_mini_right.plot([mini_x_max, mini_x_max], [0, current_f2], color="#d97a9a", linewidth=2.0)
+            ax_mini_right.plot([0.0, dx2], [current_f2, current_f2], color="#d97a9a", linewidth=2.0)
+            ax_mini_right.plot([0.0, 0.0], [0, current_f2], color="#d97a9a", linewidth=2.0)
+            ax_mini_right.plot([dx2, dx2], [0, current_f2], color="#d97a9a", linewidth=2.0)
             ax_mini_right.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
 
-            rect_text_x = 0.5 * (mini_x_min + mini_x_max)
+            rect_text_x = 0.5 * dx2
             rect_text_y = current_f2 / 2.0 if abs(current_f2) > 1e-9 else 0.0
             ax_mini_right.text(
                 rect_text_x,
@@ -1423,8 +1412,8 @@ with module2:
                     alpha=0.94,
                 ),
             )
-            ax_mini_right.set_xlim(mini_x_min, mini_x_max)
-            ax_mini_right.set_ylim(mini_y_min, mini_y_max)
+            ax_mini_right.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
+            ax_mini_right.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
             ax_mini_right.grid(alpha=0.18)
             for spine in ["top", "right"]:
                 ax_mini_right.spines[spine].set_visible(False)
