@@ -1290,42 +1290,48 @@ with module2:
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
-    st.markdown('<div style="padding:0.02rem 0 0 0; margin-left:-2.35rem;">', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="padding:0.35rem 0 0.25rem 0;">
+            <div style="font-size:1.18rem; font-weight:800; color:#38506a; margin-bottom:0.35rem;">
+                A'(x)=f(x) 的視覺化推導
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    formula_left_col, formula_right_col = st.columns([0.50, 0.50], gap="large")
-    with formula_left_col:
+    delta_A_value = current_A2_plus - current_A2
+    rect_area_value = current_f2 * dx2
+
+    mini_dx_actual = max(x2_plus - x2, 1e-6)
+    mini_x_fixed_min = 0.0
+    mini_x_fixed_max = 1.0
+    mini_y_fixed_min = y_min_common
+    mini_y_fixed_max = y_max_common
+
+    xs_mini_global = xs[(xs >= x2) & (xs <= x2_plus)]
+    ys_mini = ys[(xs >= x2) & (xs <= x2_plus)]
+
+    if len(xs_mini_global) < 2:
+        xs_mini_global = np.linspace(x2, x2_plus, 50)
+        ys_mini = np.array(f(xs_mini_global), dtype=float)
+
+    xs_mini_local = xs_mini_global - x2
+
+    formula_row1_left, formula_row1_right = st.columns([0.50, 0.50], gap="large")
+    with formula_row1_left:
         st.latex(r"\LARGE A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
-        st.markdown('<div style="height:15.8rem;"></div>', unsafe_allow_html=True)
-
-        st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
-        st.markdown('<div style="height:3.2rem;"></div>', unsafe_allow_html=True)
-
-        st.latex(r"\LARGE A'(x)\;=\;f(x)")
-
-    with formula_right_col:
+    with formula_row1_right:
         st.markdown(
             rf"$$\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
         )
 
+    graph_row_left, graph_row_right = st.columns([0.50, 0.50], gap="large")
+    with graph_row_left:
+        st.markdown('<div style="height:0.2rem;"></div>', unsafe_allow_html=True)
+    with graph_row_right:
         compare_col_left, compare_col_right = st.columns(2, gap="small")
-
-        delta_A_value = current_A2_plus - current_A2
-        rect_area_value = current_f2 * dx2
-
-        mini_dx_actual = max(x2_plus - x2, 1e-6)
-        mini_x_fixed_min = 0.0
-        mini_x_fixed_max = 1.0
-        mini_y_fixed_min = y_min_common
-        mini_y_fixed_max = y_max_common
-
-        xs_mini_global = xs[(xs >= x2) & (xs <= x2_plus)]
-        ys_mini = ys[(xs >= x2) & (xs <= x2_plus)]
-
-        if len(xs_mini_global) < 2:
-            xs_mini_global = np.linspace(x2, x2_plus, 50)
-            ys_mini = np.array(f(xs_mini_global), dtype=float)
-
-        xs_mini_local = xs_mini_global - x2
 
         with compare_col_left:
             fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
@@ -1421,10 +1427,20 @@ with module2:
             ax_mini_right.tick_params(labelsize=8.5)
             st.pyplot(fig_mini_right, use_container_width=True)
 
+    st.markdown('<div style="height:0.35rem;"></div>', unsafe_allow_html=True)
+
+    formula_row2_left, formula_row2_right = st.columns([0.50, 0.50], gap="large")
+    with formula_row2_left:
+        st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
+    with formula_row2_right:
         st.markdown(
             rf"$$\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
         )
 
+    value_row_left, value_row_right = st.columns([0.50, 0.50], gap="large")
+    with value_row_left:
+        st.markdown('<div style="height:0.2rem;"></div>', unsafe_allow_html=True)
+    with value_row_right:
         slope_value_m2 = (current_A2_plus - current_A2) / dx2
         slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
         with slope_value_col_left:
@@ -1446,12 +1462,15 @@ with module2:
                 unsafe_allow_html=True,
             )
 
-        st.markdown('<div style="height:0.6rem;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:0.45rem;"></div>', unsafe_allow_html=True)
+
+    formula_row3_left, formula_row3_right = st.columns([0.50, 0.50], gap="large")
+    with formula_row3_left:
+        st.latex(r"\LARGE A'(x)\;=\;f(x)")
+    with formula_row3_right:
         st.markdown(
             rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
         )
-
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # -----------------------------
