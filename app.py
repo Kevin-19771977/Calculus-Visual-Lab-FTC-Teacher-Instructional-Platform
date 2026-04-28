@@ -1058,36 +1058,35 @@ with module2:
 
     full_width_col = st.container()
     with full_width_col:
-        a2 = st.slider(
-            "固定點 a",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m2a", min(max(0.0, domain_left), domain_right))),
-            step=0.05,
-            key="m2a",
-        )
-        x2 = st.slider(
-            "拖動 x",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m2x", (domain_left + domain_right) / 3)),
-            step=0.05,
-            key="m2x",
-        )
-        dx2 = st.slider(
-            "Δx",
-            min_value=0.01,
-            max_value=1.0,
-            value=float(st.session_state.get("m2dx", 1.0)),
-            step=0.01,
-            key="m2dx",
-        )
+        m2_control_left, m2_control_middle, m2_control_right = st.columns([0.40, 0.24, 0.36], gap="large")
 
-        m2_toggle_col1, m2_toggle_col2 = st.columns(2, gap="small")
-        with m2_toggle_col1:
-            show_tangent_m2 = st.checkbox("顯示切線", key="m2_show_tangent")
-        with m2_toggle_col2:
-            show_secant_m2 = st.checkbox("顯示割線", key="m2_show_secant")
+        with m2_control_right:
+            st.markdown('<div style="max-width:330px; margin-left:auto;">', unsafe_allow_html=True)
+            a2 = st.slider(
+                "固定點 a",
+                min_value=float(domain_left),
+                max_value=float(domain_right),
+                value=float(st.session_state.get("m2a", min(max(0.0, domain_left), domain_right))),
+                step=0.05,
+                key="m2a",
+            )
+            x2 = st.slider(
+                "拖動 x",
+                min_value=float(domain_left),
+                max_value=float(domain_right),
+                value=float(st.session_state.get("m2x", (domain_left + domain_right) / 3)),
+                step=0.05,
+                key="m2x",
+            )
+            dx2 = st.slider(
+                "Δx",
+                min_value=0.01,
+                max_value=1.0,
+                value=float(st.session_state.get("m2dx", 1.0)),
+                step=0.01,
+                key="m2dx",
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
 
         Axs_m2 = cumulative_integral(f, a2, xs)
         Aprime_m2 = safe_gradient(Axs_m2, xs)
@@ -1098,26 +1097,33 @@ with module2:
         current_A2_plus = np.interp(x2_plus, xs, Axs_m2)
         current_f2_plus = f(np.array([x2_plus]))[0]
 
-        m2_button_col_left, m2_button_col_right = st.columns(2, gap="small")
-        with m2_button_col_left:
-            if st.button("留下固定點a的累積函數圖形", key="m2_save_a_curve", use_container_width=True):
-                color_idx = int(st.session_state.get("m2_saved_curve_color_idx", 0))
-                curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
-                st.session_state["m2_saved_curve_color_idx"] = color_idx + 1
-                st.session_state["m2_saved_a_curves"].append(
-                    {
-                        "a": float(a2),
-                        "curve": np.array(Axs_m2, dtype=float),
-                        "color": curve_color,
-                        "x": float(x2),
-                        "A": float(current_A2),
-                        "Aprime": float(current_Ap2),
-                    }
-                )
-        with m2_button_col_right:
-            if st.button("清除留下的圖形", key="m2_clear_saved_curves", use_container_width=True):
-                st.session_state["m2_saved_a_curves"] = []
-                st.session_state["m2_saved_curve_color_idx"] = 0
+        with m2_control_left:
+            m2_toggle_col1, m2_toggle_col2 = st.columns(2, gap="small")
+            with m2_toggle_col1:
+                show_tangent_m2 = st.checkbox("顯示切線", key="m2_show_tangent")
+            with m2_toggle_col2:
+                show_secant_m2 = st.checkbox("顯示割線", key="m2_show_secant")
+
+            m2_button_col_left, m2_button_col_right = st.columns(2, gap="small")
+            with m2_button_col_left:
+                if st.button("留下固定點a的累積函數圖形", key="m2_save_a_curve", use_container_width=True):
+                    color_idx = int(st.session_state.get("m2_saved_curve_color_idx", 0))
+                    curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
+                    st.session_state["m2_saved_curve_color_idx"] = color_idx + 1
+                    st.session_state["m2_saved_a_curves"].append(
+                        {
+                            "a": float(a2),
+                            "curve": np.array(Axs_m2, dtype=float),
+                            "color": curve_color,
+                            "x": float(x2),
+                            "A": float(current_A2),
+                            "Aprime": float(current_Ap2),
+                        }
+                    )
+            with m2_button_col_right:
+                if st.button("清除留下的圖形", key="m2_clear_saved_curves", use_container_width=True):
+                    st.session_state["m2_saved_a_curves"] = []
+                    st.session_state["m2_saved_curve_color_idx"] = 0
 
         m2_axis_positions = [a2, x2]
         m2_axis_levels = get_axis_label_levels(m2_axis_positions, threshold=0.45)
@@ -1129,6 +1135,7 @@ with module2:
             trend = "A(x) 正在下降"
         else:
             trend = "A(x) 在這附近斜率接近 0"
+
 
     left, right = st.columns(2, gap="large")
     with left:
@@ -1291,25 +1298,22 @@ with module2:
 
     st.markdown('<div style="padding:0.02rem 0 0 0; margin-left:-2.35rem;">', unsafe_allow_html=True)
 
-    formula_left_col, formula_right_col = st.columns([0.50, 0.50], gap="large")
-    with formula_left_col:
+    delta_A_value = current_A2_plus - current_A2
+    rect_area_value = current_f2 * dx2
+
+    formula_row1_left, formula_row1_right = st.columns([0.50, 0.50], gap="large")
+    with formula_row1_left:
         st.latex(r"\LARGE A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
-        st.markdown('<div style="height:0.55rem;"></div>', unsafe_allow_html=True)
-
-        st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
-        st.markdown('<div style="height:0.95rem;"></div>', unsafe_allow_html=True)
-
-        st.latex(r"\LARGE A'(x)\;=\;f(x)")
-
-    with formula_right_col:
+    with formula_row1_right:
         st.markdown(
-            rf"$$\LARGE A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
+            rf"$$\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
         )
 
+    formula_after_row1_left, formula_after_row1_right = st.columns([0.50, 0.50], gap="large")
+    with formula_after_row1_left:
+        st.markdown('<div style="height:17.4rem;"></div>', unsafe_allow_html=True)
+    with formula_after_row1_right:
         compare_col_left, compare_col_right = st.columns(2, gap="small")
-
-        delta_A_value = current_A2_plus - current_A2
-        rect_area_value = current_f2 * dx2
 
         mini_dx_actual = max(x2_plus - x2, 1e-6)
         mini_x_fixed_min = 0.0
@@ -1420,31 +1424,33 @@ with module2:
             ax_mini_right.tick_params(labelsize=8.5)
             st.pyplot(fig_mini_right, use_container_width=True)
 
+    st.markdown('<div style="height:1.15rem;"></div>', unsafe_allow_html=True)
+
+    formula_row2_left, formula_row2_right = st.columns([0.50, 0.50], gap="large")
+    with formula_row2_left:
+        st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
+    with formula_row2_right:
         st.markdown(
             rf"$$\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
         )
 
+    formula_after_row2_left, formula_after_row2_right = st.columns([0.50, 0.50], gap="large")
+    with formula_after_row2_left:
+        st.markdown('<div style="height:3.1rem;"></div>', unsafe_allow_html=True)
+    with formula_after_row2_right:
         slope_value_m2 = (current_A2_plus - current_A2) / dx2
         slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
         with slope_value_col_left:
-            st.markdown(
-                f"""
-                <div style="margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
-                    {slope_value_m2:.4f}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.markdown(rf"$$\Large {slope_value_m2:.4f}$$")
         with slope_value_col_right:
-            st.markdown(
-                f"""
-                <div style="margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
-                    {current_f2:.4f}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.markdown(rf"$$\Large {current_f2:.4f}$$")
 
+    st.markdown('<div style="height:1.35rem;"></div>', unsafe_allow_html=True)
+
+    formula_row3_left, formula_row3_right = st.columns([0.50, 0.50], gap="large")
+    with formula_row3_left:
+        st.latex(r"\LARGE A'(x)\;=\;f(x)")
+    with formula_row3_right:
         st.markdown(
             rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
         )
