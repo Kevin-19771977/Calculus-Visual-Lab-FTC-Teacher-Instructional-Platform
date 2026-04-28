@@ -1420,39 +1420,39 @@ with module2:
 
     row1_left_formula_img = latex_to_base64(
         r"$A(x+\Delta x)-A(x)\approx f(x)\cdot\Delta x$",
-        fontsize=25,
+        fontsize=31,
         width=8.0,
-        height=0.85,
+        height=1.05,
     )
     row1_right_formula_img = latex_to_base64(
         rf"$A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\approx f({x2:.2f})\cdot {dx2:.2f}$",
-        fontsize=25,
+        fontsize=31,
         width=9.2,
-        height=0.85,
+        height=1.05,
     )
     row2_left_formula_img = latex_to_base64(
         r"$\frac{A(x+\Delta x)-A(x)}{\Delta x}\approx f(x)$",
-        fontsize=30,
+        fontsize=36,
         width=7.6,
-        height=1.25,
+        height=1.45,
     )
     row2_right_formula_img = latex_to_base64(
         rf"$\frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\approx f({x2:.2f})$",
-        fontsize=30,
+        fontsize=36,
         width=9.2,
-        height=1.25,
+        height=1.45,
     )
     row3_left_formula_img = latex_to_base64(
         r"$A'(x)=f(x)$",
-        fontsize=30,
+        fontsize=36,
         width=5.4,
-        height=0.85,
+        height=1.05,
     )
     row3_right_formula_img = latex_to_base64(
         rf"$A'({x2:.2f})=f({x2:.2f})$",
-        fontsize=30,
+        fontsize=36,
         width=6.4,
-        height=0.85,
+        height=1.05,
     )
 
     fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
