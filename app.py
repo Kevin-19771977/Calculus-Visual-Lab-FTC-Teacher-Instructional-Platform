@@ -1427,9 +1427,15 @@ with module2:
         slope_value_m2 = (current_A2_plus - current_A2) / dx2
         slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
         with slope_value_col_left:
-            st.markdown(rf"$$\Large {slope_value_m2:.4f}$$")
+            st.markdown(
+                rf"<div style='margin-left:1.2rem; color:#1f77b4; font-size:1.45rem; font-weight:700;'>{slope_value_m2:.4f}</div>",
+                unsafe_allow_html=True,
+            )
         with slope_value_col_right:
-            st.markdown(rf"$$\Large {current_f2:.4f}$$")
+            st.markdown(
+                rf"<div style='margin-left:1.2rem; color:#d62728; font-size:1.45rem; font-weight:700;'>{current_f2:.4f}</div>",
+                unsafe_allow_html=True,
+            )
 
         st.markdown(
             rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
