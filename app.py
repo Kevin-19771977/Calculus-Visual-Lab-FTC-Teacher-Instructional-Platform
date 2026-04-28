@@ -1292,11 +1292,28 @@ with module2:
 
     st.markdown(
         """
-        <div style="padding:0.45rem 0 0.35rem 0; text-align:center;">
-            <div style="font-size:1.22rem; font-weight:800; color:#38506a; margin-bottom:0.25rem;">
-                A'(x)=f(x) 的視覺化推導
-            </div>
-        </div>
+        <style>
+        .m2-derivation-title {
+            font-size: 1.22rem;
+            font-weight: 800;
+            color: #38506a;
+            margin: 0.35rem 0 0.55rem 0;
+        }
+        .m2-table-header {
+            background: #f6f8fb;
+            border: 1px solid #dfe6ef;
+            border-radius: 12px;
+            padding: 0.55rem 0.8rem;
+            font-weight: 800;
+            color: #38506a;
+            text-align: center;
+            margin-bottom: 0.35rem;
+        }
+        .m2-row-gap {
+            height: 0.45rem;
+        }
+        </style>
+        <div class="m2-derivation-title">A'(x)=f(x) 的視覺化推導</div>
         """,
         unsafe_allow_html=True,
     )
@@ -1319,139 +1336,168 @@ with module2:
 
     xs_mini_local = xs_mini_global - x2
 
-    st.markdown('<div style="padding:0.15rem 0 0.2rem 0; text-align:center;">', unsafe_allow_html=True)
-    st.markdown(
-        rf"$$\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
+    header_left, header_right = st.columns([0.45, 0.55], gap="large")
+    with header_left:
+        st.markdown('<div class="m2-table-header">一般推導式</div>', unsafe_allow_html=True)
+    with header_right:
+        st.markdown('<div class="m2-table-header">當下數值化與視覺化對照</div>', unsafe_allow_html=True)
 
-    compare_col_left, compare_col_right = st.columns(2, gap="large")
+    row1_left, row1_right = st.columns([0.45, 0.55], gap="large")
+    with row1_left:
+        row1_left_card = st.container(border=True)
+        with row1_left_card:
+            st.latex(r"\LARGE A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
+    with row1_right:
+        row1_right_card = st.container(border=True)
+        with row1_right_card:
+            st.markdown(
+                rf"$$\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
+            )
 
-    with compare_col_left:
-        fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
-        ax_mini_left.plot(xs_mini_local, ys_mini, linewidth=2.2, color="#8bbce9")
-        fill_area_by_sign(
-            ax_mini_left,
-            xs_mini_local,
-            ys_mini,
-            fill_pos_color,
-            fill_neg_color,
-            alpha=0.45,
-        )
-        ax_mini_left.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
-        area_text_x = 0.5 * mini_dx_actual
-        if delta_A_value >= 0:
-            positive_part = ys_mini[ys_mini >= 0]
-            if len(positive_part) > 0:
-                area_text_y = 0.52 * np.max(positive_part)
-            else:
-                area_text_y = 0.35 * max(mini_y_fixed_max, 1.0)
-        else:
-            negative_part = ys_mini[ys_mini < 0]
-            if len(negative_part) > 0:
-                area_text_y = 0.52 * np.min(negative_part)
-            else:
-                area_text_y = 0.35 * min(mini_y_fixed_min, -1.0)
+            compare_col_left, compare_col_right = st.columns(2, gap="small")
 
-        ax_mini_left.text(
-            area_text_x,
-            area_text_y,
-            f"{delta_A_value:.4f}",
-            ha="center",
-            va="center",
-            fontsize=11.5,
-            fontweight="semibold",
-            color="#2f2f2f",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.14",
-                fc="white",
-                ec="#c9d2de",
-                lw=0.9,
-                alpha=0.94,
-            ),
-        )
-        ax_mini_left.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
-        ax_mini_left.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
-        ax_mini_left.grid(alpha=0.18)
-        for spine in ["top", "right"]:
-            ax_mini_left.spines[spine].set_visible(False)
-        ax_mini_left.tick_params(labelsize=8.5)
-        st.pyplot(fig_mini_left, use_container_width=True)
+            with compare_col_left:
+                fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
+                ax_mini_left.plot(xs_mini_local, ys_mini, linewidth=2.2, color="#8bbce9")
+                fill_area_by_sign(
+                    ax_mini_left,
+                    xs_mini_local,
+                    ys_mini,
+                    fill_pos_color,
+                    fill_neg_color,
+                    alpha=0.45,
+                )
+                ax_mini_left.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
+                area_text_x = 0.5 * mini_dx_actual
+                if delta_A_value >= 0:
+                    positive_part = ys_mini[ys_mini >= 0]
+                    if len(positive_part) > 0:
+                        area_text_y = 0.52 * np.max(positive_part)
+                    else:
+                        area_text_y = 0.35 * max(mini_y_fixed_max, 1.0)
+                else:
+                    negative_part = ys_mini[ys_mini < 0]
+                    if len(negative_part) > 0:
+                        area_text_y = 0.52 * np.min(negative_part)
+                    else:
+                        area_text_y = 0.35 * min(mini_y_fixed_min, -1.0)
 
-    with compare_col_right:
-        fig_mini_right, ax_mini_right = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
-        x_rect = np.linspace(0.0, dx2, 50)
-        y_rect = np.full_like(x_rect, float(current_f2))
-        ax_mini_right.fill_between(
-            x_rect,
-            0,
-            y_rect,
-            color="#f6b6c8",
-            alpha=0.75,
-        )
-        ax_mini_right.plot([0.0, dx2], [current_f2, current_f2], color="#d97a9a", linewidth=2.0)
-        ax_mini_right.plot([0.0, 0.0], [0, current_f2], color="#d97a9a", linewidth=2.0)
-        ax_mini_right.plot([dx2, dx2], [0, current_f2], color="#d97a9a", linewidth=2.0)
-        ax_mini_right.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
+                ax_mini_left.text(
+                    area_text_x,
+                    area_text_y,
+                    f"{delta_A_value:.4f}",
+                    ha="center",
+                    va="center",
+                    fontsize=11.5,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.14",
+                        fc="white",
+                        ec="#c9d2de",
+                        lw=0.9,
+                        alpha=0.94,
+                    ),
+                )
+                ax_mini_left.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
+                ax_mini_left.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
+                ax_mini_left.grid(alpha=0.18)
+                for spine in ["top", "right"]:
+                    ax_mini_left.spines[spine].set_visible(False)
+                ax_mini_left.tick_params(labelsize=8.5)
+                st.pyplot(fig_mini_left, use_container_width=True)
 
-        rect_text_x = 0.5 * dx2
-        rect_text_y = current_f2 / 2.0 if abs(current_f2) > 1e-9 else 0.0
-        ax_mini_right.text(
-            rect_text_x,
-            rect_text_y,
-            f"{rect_area_value:.4f}",
-            ha="center",
-            va="center",
-            fontsize=11.5,
-            fontweight="semibold",
-            color="#2f2f2f",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.14",
-                fc="white",
-                ec="#dcb2bf",
-                lw=0.9,
-                alpha=0.94,
-            ),
-        )
-        ax_mini_right.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
-        ax_mini_right.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
-        ax_mini_right.grid(alpha=0.18)
-        for spine in ["top", "right"]:
-            ax_mini_right.spines[spine].set_visible(False)
-        ax_mini_right.tick_params(labelsize=8.5)
-        st.pyplot(fig_mini_right, use_container_width=True)
+            with compare_col_right:
+                fig_mini_right, ax_mini_right = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
+                x_rect = np.linspace(0.0, dx2, 50)
+                y_rect = np.full_like(x_rect, float(current_f2))
+                ax_mini_right.fill_between(
+                    x_rect,
+                    0,
+                    y_rect,
+                    color="#f6b6c8",
+                    alpha=0.75,
+                )
+                ax_mini_right.plot([0.0, dx2], [current_f2, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.plot([0.0, 0.0], [0, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.plot([dx2, dx2], [0, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
 
-    st.markdown('<div style="height:0.45rem;"></div>', unsafe_allow_html=True)
-    st.markdown(
-        rf"$$\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
-    )
+                rect_text_x = 0.5 * dx2
+                rect_text_y = current_f2 / 2.0 if abs(current_f2) > 1e-9 else 0.0
+                ax_mini_right.text(
+                    rect_text_x,
+                    rect_text_y,
+                    f"{rect_area_value:.4f}",
+                    ha="center",
+                    va="center",
+                    fontsize=11.5,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.14",
+                        fc="white",
+                        ec="#dcb2bf",
+                        lw=0.9,
+                        alpha=0.94,
+                    ),
+                )
+                ax_mini_right.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
+                ax_mini_right.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
+                ax_mini_right.grid(alpha=0.18)
+                for spine in ["top", "right"]:
+                    ax_mini_right.spines[spine].set_visible(False)
+                ax_mini_right.tick_params(labelsize=8.5)
+                st.pyplot(fig_mini_right, use_container_width=True)
 
-    slope_value_m2 = (current_A2_plus - current_A2) / dx2
-    slope_value_col_left, slope_value_col_right = st.columns(2, gap="large")
-    with slope_value_col_left:
-        st.markdown(
-            f"""
-            <div style="text-align:center; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
-                {slope_value_m2:.4f}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with slope_value_col_right:
-        st.markdown(
-            f"""
-            <div style="text-align:center; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
-                {current_f2:.4f}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    st.markdown('<div class="m2-row-gap"></div>', unsafe_allow_html=True)
 
-    st.markdown('<div style="height:0.6rem;"></div>', unsafe_allow_html=True)
-    st.markdown(
-        rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
-    )
+    row2_left, row2_right = st.columns([0.45, 0.55], gap="large")
+    with row2_left:
+        row2_left_card = st.container(border=True)
+        with row2_left_card:
+            st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
+    with row2_right:
+        row2_right_card = st.container(border=True)
+        with row2_right_card:
+            st.markdown(
+                rf"$$\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
+            )
 
+            slope_value_m2 = (current_A2_plus - current_A2) / dx2
+            slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
+            with slope_value_col_left:
+                st.markdown(
+                    f"""
+                    <div style="margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                        {slope_value_m2:.4f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            with slope_value_col_right:
+                st.markdown(
+                    f"""
+                    <div style="margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
+                        {current_f2:.4f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+    st.markdown('<div class="m2-row-gap"></div>', unsafe_allow_html=True)
+
+    row3_left, row3_right = st.columns([0.45, 0.55], gap="large")
+    with row3_left:
+        row3_left_card = st.container(border=True)
+        with row3_left_card:
+            st.latex(r"\LARGE A'(x)\;=\;f(x)")
+    with row3_right:
+        row3_right_card = st.container(border=True)
+        with row3_right_card:
+            st.markdown(
+                rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
+            )
 
 
 # -----------------------------
