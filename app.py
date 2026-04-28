@@ -1312,6 +1312,10 @@ with module2:
         .m2-row-gap {
             height: 0.45rem;
         }
+        .m2-centered-formula {
+            text-align: center;
+            width: 100%;
+        }
         </style>
         <div class="m2-derivation-title">A'(x)=f(x) 的視覺化推導</div>
         """,
@@ -1346,7 +1350,9 @@ with module2:
     with row1_left:
         row1_left_card = st.container(border=True)
         with row1_left_card:
-            st.latex(r"\LARGE A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
+            st.markdown(
+                r"$$\Large A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x$$"
+            )
     with row1_right:
         row1_right_card = st.container(border=True)
         with row1_right_card:
@@ -1456,12 +1462,14 @@ with module2:
     with row2_left:
         row2_left_card = st.container(border=True)
         with row2_left_card:
-            st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
+            st.markdown(
+                r"$$\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)$$"
+            )
     with row2_right:
         row2_right_card = st.container(border=True)
         with row2_right_card:
             st.markdown(
-                rf"$$\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
+                rf"$$ {{\huge \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}}}\;\approx\;{{\LARGE f({x2:.2f})}} $$"
             )
 
             slope_value_m2 = (current_A2_plus - current_A2) / dx2
@@ -1469,7 +1477,7 @@ with module2:
             with slope_value_col_left:
                 st.markdown(
                     f"""
-                    <div style="margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                    <div style="margin-top:0.85rem; margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
                         {slope_value_m2:.4f}
                     </div>
                     """,
@@ -1478,7 +1486,7 @@ with module2:
             with slope_value_col_right:
                 st.markdown(
                     f"""
-                    <div style="margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
+                    <div style="margin-top:0.85rem; margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
                         {current_f2:.4f}
                     </div>
                     """,
@@ -1491,7 +1499,9 @@ with module2:
     with row3_left:
         row3_left_card = st.container(border=True)
         with row3_left_card:
-            st.latex(r"\LARGE A'(x)\;=\;f(x)")
+            st.markdown(
+                r"$$\LARGE A'(x)\;=\;f(x)$$"
+            )
     with row3_right:
         row3_right_card = st.container(border=True)
         with row3_right_card:
