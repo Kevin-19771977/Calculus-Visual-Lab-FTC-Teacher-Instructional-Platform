@@ -1428,12 +1428,20 @@ with module2:
         slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
         with slope_value_col_left:
             st.markdown(
-                rf"<div style='margin-left:1.2rem; color:#1f77b4; font-size:1.45rem; font-weight:700;'>{slope_value_m2:.4f}</div>",
+                f"""
+                <div style="margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                    {slope_value_m2:.4f}
+                </div>
+                """,
                 unsafe_allow_html=True,
             )
         with slope_value_col_right:
             st.markdown(
-                rf"<div style='margin-left:1.2rem; color:#d62728; font-size:1.45rem; font-weight:700;'>{current_f2:.4f}</div>",
+                f"""
+                <div style="margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
+                    {current_f2:.4f}
+                </div>
+                """,
                 unsafe_allow_html=True,
             )
 
