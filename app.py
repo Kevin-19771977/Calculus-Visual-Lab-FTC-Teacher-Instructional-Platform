@@ -1463,7 +1463,7 @@ with module2:
         row2_left_card = st.container(border=True)
         with row2_left_card:
             st.markdown(
-                r"$$\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)$$"
+                r"$$ {\huge \frac{A(x+\Delta x)-A(x)}{\Delta x}}\;\approx\;{\LARGE f(x)} $$"
             )
     with row2_right:
         row2_right_card = st.container(border=True)
