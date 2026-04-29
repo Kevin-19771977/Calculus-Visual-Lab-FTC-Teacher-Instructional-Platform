@@ -1173,8 +1173,60 @@ with module2:
             fontsize=13,
             bbox=smart_value_bbox(),
         )
+        m2_left_x_xytext = smart_point_xytext(
+            x2,
+            current_A2,
+            x_min_common,
+            x_max_common,
+            y_min_common,
+            y_max_common,
+            other_points=[(x2_plus, current_A2_plus)],
+        )
+        ax22.annotate(
+            f"A({x2:.2f})={current_A2:.4f}",
+            xy=(x2, current_A2),
+            xytext=m2_left_x_xytext,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.2,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.24,rounding_size=0.18",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
         if show_secant_m2:
-            ax22.scatter([x2_plus], [current_A2_plus], s=36, color="#9bd18b", zorder=7)
+            draw_to_x_axis(ax22, x2_plus, current_A2_plus, "#9bd18b", linewidth=1.6, marker_size=36)
+            m2_left_xplus_xytext = smart_point_xytext(
+                x2_plus,
+                current_A2_plus,
+                x_min_common,
+                x_max_common,
+                y_min_common,
+                y_max_common,
+                other_points=[(x2, current_A2)],
+            )
+            ax22.annotate(
+                f"A({x2_plus:.2f})={current_A2_plus:.4f}",
+                xy=(x2_plus, current_A2_plus),
+                xytext=m2_left_xplus_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.2,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.18",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
 
             secant_slope = (current_A2_plus - current_A2) / max(x2_plus - x2, 1e-9)
             secant_half_width = 1.05
@@ -1286,7 +1338,6 @@ with module2:
         ax2.set_ylabel("f(x)")
         ax2.set_xlim(x_min_common, x_max_common)
         ax2.set_ylim(y_min_common, y_max_common)
-        ax2.legend()
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
@@ -1359,6 +1410,7 @@ with module2:
             color: #1f77b4;
             line-height: 1.35;
             text-align: center;
+            transform: translateX(1.15rem);
         }
         .m2-red-value {
             font-size: 2.1rem;
@@ -1368,7 +1420,6 @@ with module2:
             text-align: center;
         }
         </style>
-        <div class="m2-derivation-title">A'(x)=f(x) 的視覺化推導</div>
         """,
         unsafe_allow_html=True,
     )
@@ -1554,7 +1605,7 @@ with module2:
         <table class="m2-derivation-table">
             <thead>
                 <tr>
-                    <th class="m2-left-cell">一般推導式</th>
+                    <th class="m2-left-cell">A'(x)=f(x) 的推導式</th>
                     <th class="m2-right-cell">當下數值化與視覺化對照</th>
                 </tr>
             </thead>
