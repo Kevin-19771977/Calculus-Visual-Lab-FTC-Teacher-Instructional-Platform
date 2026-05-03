@@ -572,7 +572,7 @@ except Exception:
     st.stop()
 
 if "m1a" not in st.session_state:
-    st.session_state["m1a"] = float(min(max(0.0, domain_left), domain_right))
+    st.session_state["m1a"] = float(min(max(1.0, domain_left), domain_right))
 if "m2a" not in st.session_state:
     st.session_state["m2a"] = float(min(max(0.0, domain_left), domain_right))
 if "m4a" not in st.session_state:
@@ -609,7 +609,7 @@ except Exception:
     st.error("目前函數無法在這個區間正常計算，請修改函數或調整顯示區間。")
     st.stop()
 
-a_default = float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right)))
+a_default = float(st.session_state.get("m1a", min(max(1.0, domain_left), domain_right)))
 Axs = cumulative_integral(f, a_default, xs)
 Aprime = safe_gradient(Axs, xs)
 
@@ -686,18 +686,14 @@ if selected_module_key == "module1":
         )
         st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt")
     
-    top_formula_col, top_control_col = st.columns([1.05, 0.95], gap="large")
+    top_control_col, top_formula_col = st.columns([0.95, 1.05], gap="large")
 
     with top_control_col:
-        st.markdown(
-            '<div style="font-size:0.98rem; color:#60758c; margin:0.15rem 0 0.35rem 0;"><b>控制區</b></div>',
-            unsafe_allow_html=True
-        )
         a = st.slider(
             "固定點 a",
             min_value=float(domain_left),
             max_value=float(domain_right),
-            value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
+            value=float(st.session_state.get("m1a", min(max(1.0, domain_left), domain_right))),
             step=0.05,
             key="m1a",
         )
@@ -727,7 +723,7 @@ if selected_module_key == "module1":
         z1 = float(min(z1, a))
         button_col_left, button_col_right = st.columns(2, gap="small")
         with button_col_left:
-            if st.button("留下固定點a的累積函數圖形", key="m1_save_a_curve", use_container_width=True):
+            if st.button("留下圖形", key="m1_save_a_curve", use_container_width=True):
                 saved_curve = cumulative_integral(f, a, xs)
                 color_idx = int(st.session_state.get("m1_saved_curve_color_idx", 0))
                 curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
@@ -740,10 +736,10 @@ if selected_module_key == "module1":
                     }
                 )
         with button_col_right:
-            if st.button("清除留下的圖形", key="m1_clear_saved_curves", use_container_width=True):
+            if st.button("清除圖形", key="m1_clear_saved_curves", use_container_width=True):
                 st.session_state["m1_saved_a_curves"] = []
                 st.session_state["m1_saved_curve_color_idx"] = 0
-        show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
+        show_full_A_curve = st.checkbox("顯示全部圖形", value=False, key="m1_show_full_curve")
 
     components.html(
         """
@@ -794,14 +790,10 @@ if selected_module_key == "module1":
     current_fz = f(np.array([z1]))[0]
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
     mask_z = (xs >= min(z1, a)) & (xs <= max(z1, a))
-    m1_axis_positions = [a, x1, z1]
-    m1_axis_levels = get_axis_label_levels(m1_axis_positions, threshold=0.45)
-    m1_axis_y_offsets = [-0.15 - 0.32 * lvl for lvl in m1_axis_levels]
-
     with top_formula_col:
         st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
 
-        show_left_formula = st.checkbox("顯示向左累積算式", value=False, key="m1_show_left_formula")
+        show_left_formula = st.checkbox("向左累積算式", value=False, key="m1_show_left_formula")
         if show_left_formula:
             st.latex(
                 rf"\Large A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
@@ -812,7 +804,7 @@ if selected_module_key == "module1":
 
         st.markdown('<div style="height: 0.9rem;"></div>', unsafe_allow_html=True)
 
-        show_right_formula = st.checkbox("顯示向右累積算式", value=False, key="m1_show_right_formula")
+        show_right_formula = st.checkbox("向右累積算式", value=False, key="m1_show_right_formula")
         if show_right_formula:
             st.latex(
                 rf"\Large A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
@@ -822,6 +814,20 @@ if selected_module_key == "module1":
             st.markdown('<div style="height: 2.2rem;"></div>', unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
+
+    m1_axis_positions = [a]
+    m1_axis_keys = ["a"]
+    if show_right_formula:
+        m1_axis_positions.append(x1)
+        m1_axis_keys.append("x")
+    if show_left_formula:
+        m1_axis_positions.append(z1)
+        m1_axis_keys.append("z")
+    m1_axis_levels = get_axis_label_levels(m1_axis_positions, threshold=0.45)
+    m1_axis_y_offsets = {
+        key: -0.15 - 0.32 * lvl
+        for key, lvl in zip(m1_axis_keys, m1_axis_levels)
+    }
 
     chart_col_left, chart_col_right = st.columns(2, gap="large")
 
@@ -846,79 +852,87 @@ if selected_module_key == "module1":
             mask_A_display = np.full_like(xs, True, dtype=bool)
             ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         else:
-            mask_A_display = (xs >= a) & mask_A
-            mask_Z_display = (xs >= z1) & (xs <= a)
-            ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
-            ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
+            if show_right_formula:
+                mask_A_display = (xs >= a) & mask_A
+                ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
+            if show_left_formula:
+                mask_Z_display = (xs >= z1) & (xs <= a)
+                ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         ax12.text(
             a,
-            0 + m1_axis_y_offsets[0] - 0.02,
+            0 + m1_axis_y_offsets["a"] - 0.02,
             f"{a:.2f}",
             **pretty_a_label_kwargs(),
         )
-        draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
-        draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
-        # 顯示 x 的數值（左圖綠色線與 x 軸交點）
-        ax12.text(
-            x1,
-            0 + m1_axis_y_offsets[1],
-            f"{x1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-        )
-        ax12.text(
-            z1,
-            0 + m1_axis_y_offsets[2],
-            f"{z1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-        )
+        if show_right_formula:
+            draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
+            # 顯示 x 的數值（左圖綠色線與 x 軸交點）
+            ax12.text(
+                x1,
+                0 + m1_axis_y_offsets["x"],
+                f"{x1:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            )
 
-        x_xytext = smart_point_xytext(
-            x1, current_A, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(z1, current_Z)]
-        )
-        ax12.annotate(
-            f"({x1:.2f}, {current_A:.2f})",
-            xy=(x1, current_A),
-            xytext=x_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.5,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
-        z_xytext = smart_point_xytext(
-            z1, current_Z, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(x1, current_A)]
-        )
-        ax12.annotate(
-            f"({z1:.2f}, {current_Z:.2f})",
-            xy=(z1, current_Z),
-            xytext=z_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.5,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
+            x_xytext = smart_point_xytext(
+                x1, current_A, x_min_common, x_max_common, y_min_common, y_max_common,
+                other_points=[(z1, current_Z)] if show_left_formula else []
+            )
+            ax12.annotate(
+                f"({x1:.2f}, {current_A:.2f})",
+                xy=(x1, current_A),
+                xytext=x_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.5,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.18",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
+
+        if show_left_formula:
+            draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax12.text(
+                z1,
+                0 + m1_axis_y_offsets["z"],
+                f"{z1:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            )
+
+            z_xytext = smart_point_xytext(
+                z1, current_Z, x_min_common, x_max_common, y_min_common, y_max_common,
+                other_points=[(x1, current_A)] if show_right_formula else []
+            )
+            ax12.annotate(
+                f"({z1:.2f}, {current_Z:.2f})",
+                xy=(z1, current_Z),
+                xytext=z_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.5,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.18",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
         ax12.set_title("y=A(x)", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
@@ -934,32 +948,34 @@ if selected_module_key == "module1":
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         ax11.text(
             a,
-            0 + m1_axis_y_offsets[0] - 0.02,
+            0 + m1_axis_y_offsets["a"] - 0.02,
             f"{a:.2f}",
             **pretty_a_label_kwargs(),
         )
-        draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
-        draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
-        # 顯示 x 的數值（綠色線與 x 軸交點）
-        ax11.text(
-            x1,
-            0 + m1_axis_y_offsets[1],
-            f"{x1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-        )
-        ax11.text(
-            z1,
-            0 + m1_axis_y_offsets[2],
-            f"{z1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-        )
-        if x1 >= a:
+        if show_right_formula:
+            draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
+            # 顯示 x 的數值（綠色線與 x 軸交點）
+            ax11.text(
+                x1,
+                0 + m1_axis_y_offsets["x"],
+                f"{x1:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            )
+        if show_left_formula:
+            draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax11.text(
+                z1,
+                0 + m1_axis_y_offsets["z"],
+                f"{z1:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            )
+        if show_right_formula and x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
             x_mid = (a + x1) / 2
             if abs(x1 - z1) < 0.90:
@@ -996,7 +1012,7 @@ if selected_module_key == "module1":
                     alpha=0.94,
                 ),
             )
-        if z1 <= a:
+        if show_left_formula and z1 <= a:
             fill_area_by_sign(ax11, xs[mask_z], ys[mask_z], fill_pos_color, fill_neg_color, alpha=0.40)
             z_mid = (z1 + a) / 2
             ys_mask_z = ys[mask_z]
