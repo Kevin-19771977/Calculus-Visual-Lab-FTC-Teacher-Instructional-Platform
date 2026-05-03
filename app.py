@@ -416,7 +416,23 @@ st.markdown(
 # Sidebar
 # -----------------------------
 with st.sidebar:
-    st.header("操作設定")
+    selected_module = st.radio(
+        "模組切換",
+        options=[
+            "模組 1｜原函數 f(x) 動態生成累積函數 A(x)",
+            "模組 2｜累積函數 A(x) 的導函數等於原函數 f(x)",
+            "模組 3｜修改中",
+        ],
+        index=0,
+        key="selected_module",
+    )
+
+    if selected_module.startswith("模組 1"):
+        selected_module_key = "module1"
+    elif selected_module.startswith("模組 2"):
+        selected_module_key = "module2"
+    else:
+        selected_module_key = "module3"
 
     st.markdown("### 函數設定")
     func_str = st.text_input("輸入原函數 f(x)", key="func_str")
@@ -512,11 +528,12 @@ with st.sidebar:
         """, unsafe_allow_html=True)
 
     st.markdown("---")
+    st.markdown("### 函數圖形顯示範圍")
     left_input_col, right_input_col = st.columns(2)
     with left_input_col:
-        domain_left = st.number_input("顯示區間左端點", value=-3.0, step=0.5, format="%.2f")
+        domain_left = st.number_input("x 軸顯示範圍：左端點", value=-3.0, step=0.5, format="%.2f")
     with right_input_col:
-        domain_right = st.number_input("顯示區間右端點", value=3.0, step=0.5, format="%.2f")
+        domain_right = st.number_input("x 軸顯示範圍：右端點", value=3.0, step=0.5, format="%.2f")
     if domain_right <= domain_left:
         st.warning("右端點必須大於左端點，已暫時使用預設區間 [-3, 3]。")
         domain_left, domain_right = -3.0, 3.0
@@ -524,9 +541,9 @@ with st.sidebar:
 
     y_input_col1, y_input_col2 = st.columns(2)
     with y_input_col1:
-        y_min_input = st.number_input("圖形下界", value=-5.0, step=0.5, format="%.2f")
+        y_min_input = st.number_input("y 軸顯示範圍：下界", value=-5.0, step=0.5, format="%.2f")
     with y_input_col2:
-        y_max_input = st.number_input("圖形上界", value=5.0, step=0.5, format="%.2f")
+        y_max_input = st.number_input("y 軸顯示範圍：上界", value=5.0, step=0.5, format="%.2f")
 
     if y_max_input <= y_min_input:
         st.warning("圖形上界必須大於圖形下界，已暫時使用預設範圍 [-5, 5]。")
@@ -641,18 +658,13 @@ def enforce_m4b_not_below_a():
         st.session_state["m4b_raw"] = a_val
 
 # -----------------------------
-# Tabs
+# Module display is selected from the sidebar
 # -----------------------------
-module1, module2, module4 = st.tabs([
-    "模組 1｜原函數f(x)動態生成累積函數A(x)",
-    "模組 2｜累積函數 A(x) 的導函數等於原函數 f(x)",
-    "模組 3｜FTC Part 2 幾何意義",
-])
 
 # -----------------------------
 # Module 1
 # -----------------------------
-with module1:
+if selected_module_key == "module1":
     st.subheader("模組 1：原函數f(x)動態生成累積函數A(x)")
     st.markdown(
         """
@@ -1045,7 +1057,7 @@ with module1:
 # -----------------------------
 # Module 2
 # -----------------------------
-with module2:
+if selected_module_key == "module2":
     st.subheader("模組 2：累積函數 A(x) 的導函數等於原函數 f(x)")
 
     if show_formula:
@@ -1173,60 +1185,8 @@ with module2:
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        m2_left_x_xytext = smart_point_xytext(
-            x2,
-            current_A2,
-            x_min_common,
-            x_max_common,
-            y_min_common,
-            y_max_common,
-            other_points=[(x2_plus, current_A2_plus)],
-        )
-        ax22.annotate(
-            f"A({x2:.2f})={current_A2:.4f}",
-            xy=(x2, current_A2),
-            xytext=m2_left_x_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.2,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
         if show_secant_m2:
-            draw_to_x_axis(ax22, x2_plus, current_A2_plus, "#9bd18b", linewidth=1.6, marker_size=36)
-            m2_left_xplus_xytext = smart_point_xytext(
-                x2_plus,
-                current_A2_plus,
-                x_min_common,
-                x_max_common,
-                y_min_common,
-                y_max_common,
-                other_points=[(x2, current_A2)],
-            )
-            ax22.annotate(
-                f"A({x2_plus:.2f})={current_A2_plus:.4f}",
-                xy=(x2_plus, current_A2_plus),
-                xytext=m2_left_xplus_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.2,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.24,rounding_size=0.18",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
+            ax22.scatter([x2_plus], [current_A2_plus], s=36, color="#9bd18b", zorder=7)
 
             secant_slope = (current_A2_plus - current_A2) / max(x2_plus - x2, 1e-9)
             secant_half_width = 1.05
@@ -1338,6 +1298,7 @@ with module2:
         ax2.set_ylabel("f(x)")
         ax2.set_xlim(x_min_common, x_max_common)
         ax2.set_ylim(y_min_common, y_max_common)
+        ax2.legend()
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
@@ -1350,76 +1311,25 @@ with module2:
             color: #38506a;
             margin: 0.35rem 0 0.55rem 0;
         }
-        .m2-derivation-table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            margin-top: 0.25rem;
-            font-size: 1rem;
-            background: #ffffff;
-        }
-        .m2-derivation-table th,
-        .m2-derivation-table td {
-            border: 1px solid #dfe6ef;
-            padding: 0.9rem 0.9rem;
-            vertical-align: middle;
-            text-align: center;
-        }
-        .m2-derivation-table th {
+        .m2-table-header {
             background: #f6f8fb;
+            border: 1px solid #dfe6ef;
+            border-radius: 12px;
+            padding: 0.55rem 0.8rem;
             font-weight: 800;
             color: #38506a;
+            text-align: center;
+            margin-bottom: 0.35rem;
         }
-        .m2-derivation-table td {
-            background: #ffffff;
+        .m2-row-gap {
+            height: 0.45rem;
         }
-        .m2-left-cell {
-            width: 45%;
-        }
-        .m2-right-cell {
-            width: 55%;
-        }
-        .m2-formula-img {
-            display: block;
-            max-width: 100%;
-            margin: 0.05rem auto 0.25rem auto;
-        }
-        .m2-mini-plot-wrap {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.6rem;
-            align-items: center;
-            margin-top: 0.55rem;
-        }
-        .m2-mini-plot-wrap img {
+        .m2-centered-formula {
+            text-align: center;
             width: 100%;
-            border: 1px solid #edf1f6;
-            border-radius: 8px;
-            background: #ffffff;
-        }
-        .m2-value-wrap {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.6rem;
-            align-items: center;
-            margin-top: 0.95rem;
-        }
-        .m2-blue-value {
-            font-size: 2.1rem;
-            font-weight: 800;
-            color: #1f77b4;
-            line-height: 1.35;
-            text-align: center;
-            transform: translateX(1.15rem);
-        }
-        .m2-red-value {
-            font-size: 2.1rem;
-            font-weight: 800;
-            color: #d62728;
-            line-height: 1.35;
-            text-align: center;
         }
         </style>
+        <div class="m2-derivation-title">A'(x)=f(x) 的視覺化推導</div>
         """,
         unsafe_allow_html=True,
     )
@@ -1442,217 +1352,180 @@ with module2:
 
     xs_mini_local = xs_mini_global - x2
 
-    import base64
-    import io
+    header_left, header_right = st.columns([0.45, 0.55], gap="large")
+    with header_left:
+        st.markdown('<div class="m2-table-header">一般推導式</div>', unsafe_allow_html=True)
+    with header_right:
+        st.markdown('<div class="m2-table-header">當下數值化與視覺化對照</div>', unsafe_allow_html=True)
 
-    def fig_to_base64(fig):
-        buffer = io.BytesIO()
-        fig.savefig(buffer, format="png", dpi=150, bbox_inches="tight", facecolor="white")
-        buffer.seek(0)
-        encoded = base64.b64encode(buffer.read()).decode("utf-8")
-        plt.close(fig)
-        return encoded
+    row1_left, row1_right = st.columns([0.45, 0.55], gap="large")
+    with row1_left:
+        row1_left_card = st.container(border=True)
+        with row1_left_card:
+            st.markdown(
+                r"$$\Large A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x$$"
+            )
+    with row1_right:
+        row1_right_card = st.container(border=True)
+        with row1_right_card:
+            st.markdown(
+                rf"$$\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
+            )
 
-    def latex_to_base64(math_text, fontsize=26, width=8.8, height=0.9):
-        fig_formula = plt.figure(figsize=(width, height))
-        fig_formula.patch.set_alpha(0)
-        ax_formula = fig_formula.add_axes([0, 0, 1, 1])
-        ax_formula.axis("off")
-        ax_formula.text(
-            0.5,
-            0.5,
-            math_text,
-            ha="center",
-            va="center",
-            fontsize=fontsize,
-            color="#111111",
-        )
-        return fig_to_base64(fig_formula)
+            compare_col_left, compare_col_right = st.columns(2, gap="small")
 
-    row1_left_formula_img = latex_to_base64(
-        r"$A(x+\Delta x)-A(x)\approx f(x)\cdot\Delta x$",
-        fontsize=31,
-        width=8.0,
-        height=1.05,
-    )
-    row1_right_formula_img = latex_to_base64(
-        rf"$A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\approx f({x2:.2f})\cdot {dx2:.2f}$",
-        fontsize=31,
-        width=9.2,
-        height=1.05,
-    )
-    row2_left_formula_img = latex_to_base64(
-        r"$\frac{A(x+\Delta x)-A(x)}{\Delta x}\approx f(x)$",
-        fontsize=36,
-        width=7.6,
-        height=1.45,
-    )
-    row2_right_formula_img = latex_to_base64(
-        rf"$\frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\approx f({x2:.2f})$",
-        fontsize=36,
-        width=9.2,
-        height=1.45,
-    )
-    row3_left_formula_img = latex_to_base64(
-        r"$A'(x)=f(x)$",
-        fontsize=36,
-        width=5.4,
-        height=1.05,
-    )
-    row3_right_formula_img = latex_to_base64(
-        rf"$A'({x2:.2f})=f({x2:.2f})$",
-        fontsize=36,
-        width=6.4,
-        height=1.05,
-    )
+            with compare_col_left:
+                fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
+                ax_mini_left.plot(xs_mini_local, ys_mini, linewidth=2.2, color="#8bbce9")
+                fill_area_by_sign(
+                    ax_mini_left,
+                    xs_mini_local,
+                    ys_mini,
+                    fill_pos_color,
+                    fill_neg_color,
+                    alpha=0.45,
+                )
+                ax_mini_left.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
+                area_text_x = 0.5 * mini_dx_actual
+                if delta_A_value >= 0:
+                    positive_part = ys_mini[ys_mini >= 0]
+                    if len(positive_part) > 0:
+                        area_text_y = 0.52 * np.max(positive_part)
+                    else:
+                        area_text_y = 0.35 * max(mini_y_fixed_max, 1.0)
+                else:
+                    negative_part = ys_mini[ys_mini < 0]
+                    if len(negative_part) > 0:
+                        area_text_y = 0.52 * np.min(negative_part)
+                    else:
+                        area_text_y = 0.35 * min(mini_y_fixed_min, -1.0)
 
-    fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
-    ax_mini_left.plot(xs_mini_local, ys_mini, linewidth=2.2, color="#8bbce9")
-    fill_area_by_sign(
-        ax_mini_left,
-        xs_mini_local,
-        ys_mini,
-        fill_pos_color,
-        fill_neg_color,
-        alpha=0.45,
-    )
-    ax_mini_left.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
-    area_text_x = 0.5 * mini_dx_actual
-    if delta_A_value >= 0:
-        positive_part = ys_mini[ys_mini >= 0]
-        if len(positive_part) > 0:
-            area_text_y = 0.52 * np.max(positive_part)
-        else:
-            area_text_y = 0.35 * max(mini_y_fixed_max, 1.0)
-    else:
-        negative_part = ys_mini[ys_mini < 0]
-        if len(negative_part) > 0:
-            area_text_y = 0.52 * np.min(negative_part)
-        else:
-            area_text_y = 0.35 * min(mini_y_fixed_min, -1.0)
+                ax_mini_left.text(
+                    area_text_x,
+                    area_text_y,
+                    f"{delta_A_value:.4f}",
+                    ha="center",
+                    va="center",
+                    fontsize=11.5,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.14",
+                        fc="white",
+                        ec="#c9d2de",
+                        lw=0.9,
+                        alpha=0.94,
+                    ),
+                )
+                ax_mini_left.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
+                ax_mini_left.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
+                ax_mini_left.grid(alpha=0.18)
+                for spine in ["top", "right"]:
+                    ax_mini_left.spines[spine].set_visible(False)
+                ax_mini_left.tick_params(labelsize=8.5)
+                st.pyplot(fig_mini_left, use_container_width=True)
 
-    ax_mini_left.text(
-        area_text_x,
-        area_text_y,
-        f"{delta_A_value:.4f}",
-        ha="center",
-        va="center",
-        fontsize=11.5,
-        fontweight="semibold",
-        color="#2f2f2f",
-        bbox=dict(
-            boxstyle="round,pad=0.24,rounding_size=0.14",
-            fc="white",
-            ec="#c9d2de",
-            lw=0.9,
-            alpha=0.94,
-        ),
-    )
-    ax_mini_left.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
-    ax_mini_left.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
-    ax_mini_left.grid(alpha=0.18)
-    for spine in ["top", "right"]:
-        ax_mini_left.spines[spine].set_visible(False)
-    ax_mini_left.tick_params(labelsize=8.5)
-    mini_left_img = fig_to_base64(fig_mini_left)
+            with compare_col_right:
+                fig_mini_right, ax_mini_right = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
+                x_rect = np.linspace(0.0, dx2, 50)
+                y_rect = np.full_like(x_rect, float(current_f2))
+                ax_mini_right.fill_between(
+                    x_rect,
+                    0,
+                    y_rect,
+                    color="#f6b6c8",
+                    alpha=0.75,
+                )
+                ax_mini_right.plot([0.0, dx2], [current_f2, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.plot([0.0, 0.0], [0, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.plot([dx2, dx2], [0, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
 
-    fig_mini_right, ax_mini_right = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
-    x_rect = np.linspace(0.0, dx2, 50)
-    y_rect = np.full_like(x_rect, float(current_f2))
-    ax_mini_right.fill_between(
-        x_rect,
-        0,
-        y_rect,
-        color="#f6b6c8",
-        alpha=0.75,
-    )
-    ax_mini_right.plot([0.0, dx2], [current_f2, current_f2], color="#d97a9a", linewidth=2.0)
-    ax_mini_right.plot([0.0, 0.0], [0, current_f2], color="#d97a9a", linewidth=2.0)
-    ax_mini_right.plot([dx2, dx2], [0, current_f2], color="#d97a9a", linewidth=2.0)
-    ax_mini_right.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
+                rect_text_x = 0.5 * dx2
+                rect_text_y = current_f2 / 2.0 if abs(current_f2) > 1e-9 else 0.0
+                ax_mini_right.text(
+                    rect_text_x,
+                    rect_text_y,
+                    f"{rect_area_value:.4f}",
+                    ha="center",
+                    va="center",
+                    fontsize=11.5,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.14",
+                        fc="white",
+                        ec="#dcb2bf",
+                        lw=0.9,
+                        alpha=0.94,
+                    ),
+                )
+                ax_mini_right.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
+                ax_mini_right.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
+                ax_mini_right.grid(alpha=0.18)
+                for spine in ["top", "right"]:
+                    ax_mini_right.spines[spine].set_visible(False)
+                ax_mini_right.tick_params(labelsize=8.5)
+                st.pyplot(fig_mini_right, use_container_width=True)
 
-    rect_text_x = 0.5 * dx2
-    rect_text_y = current_f2 / 2.0 if abs(current_f2) > 1e-9 else 0.0
-    ax_mini_right.text(
-        rect_text_x,
-        rect_text_y,
-        f"{rect_area_value:.4f}",
-        ha="center",
-        va="center",
-        fontsize=11.5,
-        fontweight="semibold",
-        color="#2f2f2f",
-        bbox=dict(
-            boxstyle="round,pad=0.24,rounding_size=0.14",
-            fc="white",
-            ec="#dcb2bf",
-            lw=0.9,
-            alpha=0.94,
-        ),
-    )
-    ax_mini_right.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
-    ax_mini_right.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
-    ax_mini_right.grid(alpha=0.18)
-    for spine in ["top", "right"]:
-        ax_mini_right.spines[spine].set_visible(False)
-    ax_mini_right.tick_params(labelsize=8.5)
-    mini_right_img = fig_to_base64(fig_mini_right)
+    st.markdown('<div class="m2-row-gap"></div>', unsafe_allow_html=True)
 
-    slope_value_m2 = (current_A2_plus - current_A2) / dx2
+    row2_left, row2_right = st.columns([0.45, 0.55], gap="large")
+    with row2_left:
+        row2_left_card = st.container(border=True)
+        with row2_left_card:
+            st.markdown(
+                r"$$ {\huge \frac{A(x+\Delta x)-A(x)}{\Delta x}}\;\approx\;{\LARGE f(x)} $$"
+            )
+    with row2_right:
+        row2_right_card = st.container(border=True)
+        with row2_right_card:
+            st.markdown(
+                rf"$$ {{\huge \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}}}\;\approx\;{{\LARGE f({x2:.2f})}} $$"
+            )
 
-    st.markdown(
-        f"""
-        <table class="m2-derivation-table">
-            <thead>
-                <tr>
-                    <th class="m2-left-cell">A'(x)=f(x) 的推導式</th>
-                    <th class="m2-right-cell">當下數值化與視覺化對照</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="m2-left-cell">
-                        <img class="m2-formula-img" src="data:image/png;base64,{row1_left_formula_img}" />
-                    </td>
-                    <td class="m2-right-cell">
-                        <img class="m2-formula-img" src="data:image/png;base64,{row1_right_formula_img}" />
-                        <div class="m2-mini-plot-wrap">
-                            <img src="data:image/png;base64,{mini_left_img}" />
-                            <img src="data:image/png;base64,{mini_right_img}" />
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="m2-left-cell">
-                        <img class="m2-formula-img" src="data:image/png;base64,{row2_left_formula_img}" />
-                    </td>
-                    <td class="m2-right-cell">
-                        <img class="m2-formula-img" src="data:image/png;base64,{row2_right_formula_img}" />
-                        <div class="m2-value-wrap">
-                            <div class="m2-blue-value">{slope_value_m2:.4f}</div>
-                            <div class="m2-red-value">{current_f2:.4f}</div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="m2-left-cell">
-                        <img class="m2-formula-img" src="data:image/png;base64,{row3_left_formula_img}" />
-                    </td>
-                    <td class="m2-right-cell">
-                        <img class="m2-formula-img" src="data:image/png;base64,{row3_right_formula_img}" />
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        """,
-        unsafe_allow_html=True,
-    )
+            slope_value_m2 = (current_A2_plus - current_A2) / dx2
+            slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
+            with slope_value_col_left:
+                st.markdown(
+                    f"""
+                    <div style="margin-top:0.85rem; margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                        {slope_value_m2:.4f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            with slope_value_col_right:
+                st.markdown(
+                    f"""
+                    <div style="margin-top:0.85rem; margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
+                        {current_f2:.4f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+    st.markdown('<div class="m2-row-gap"></div>', unsafe_allow_html=True)
+
+    row3_left, row3_right = st.columns([0.45, 0.55], gap="large")
+    with row3_left:
+        row3_left_card = st.container(border=True)
+        with row3_left_card:
+            st.markdown(
+                r"$$\LARGE A'(x)\;=\;f(x)$$"
+            )
+    with row3_right:
+        row3_right_card = st.container(border=True)
+        with row3_right_card:
+            st.markdown(
+                rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
+            )
 
 
 # -----------------------------
 # Module 4
 # -----------------------------
-with module4:
+if selected_module_key == "module3":
     st.subheader("模組 4：FTC Part 2 幾何意義")
     st.caption("把定積分看成原函數的總改變量，而不是一條要背的公式。")
 
