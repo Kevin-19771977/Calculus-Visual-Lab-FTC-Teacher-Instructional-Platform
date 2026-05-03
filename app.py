@@ -416,7 +416,23 @@ st.markdown(
 # Sidebar
 # -----------------------------
 with st.sidebar:
-    st.header("操作設定")
+    selected_module = st.radio(
+        "模組切換",
+        options=[
+            "模組 1｜原函數 f(x) 動態生成累積函數 A(x)",
+            "模組 2｜累積函數 A(x) 的導函數等於原函數 f(x)",
+            "模組 3｜修改中",
+        ],
+        index=0,
+        key="selected_module",
+    )
+
+    if selected_module.startswith("模組 1"):
+        selected_module_key = "module1"
+    elif selected_module.startswith("模組 2"):
+        selected_module_key = "module2"
+    else:
+        selected_module_key = "module3"
 
     st.markdown("### 函數設定")
     func_str = st.text_input("輸入原函數 f(x)", key="func_str")
@@ -512,11 +528,12 @@ with st.sidebar:
         """, unsafe_allow_html=True)
 
     st.markdown("---")
+    st.markdown("### 函數圖形顯示範圍")
     left_input_col, right_input_col = st.columns(2)
     with left_input_col:
-        domain_left = st.number_input("顯示區間左端點", value=-3.0, step=0.5, format="%.2f")
+        domain_left = st.number_input("x 軸顯示範圍：左端點", value=-3.0, step=0.5, format="%.2f")
     with right_input_col:
-        domain_right = st.number_input("顯示區間右端點", value=3.0, step=0.5, format="%.2f")
+        domain_right = st.number_input("x 軸顯示範圍：右端點", value=3.0, step=0.5, format="%.2f")
     if domain_right <= domain_left:
         st.warning("右端點必須大於左端點，已暫時使用預設區間 [-3, 3]。")
         domain_left, domain_right = -3.0, 3.0
@@ -524,9 +541,9 @@ with st.sidebar:
 
     y_input_col1, y_input_col2 = st.columns(2)
     with y_input_col1:
-        y_min_input = st.number_input("圖形下界", value=-5.0, step=0.5, format="%.2f")
+        y_min_input = st.number_input("y 軸顯示範圍：下界", value=-5.0, step=0.5, format="%.2f")
     with y_input_col2:
-        y_max_input = st.number_input("圖形上界", value=5.0, step=0.5, format="%.2f")
+        y_max_input = st.number_input("y 軸顯示範圍：上界", value=5.0, step=0.5, format="%.2f")
 
     if y_max_input <= y_min_input:
         st.warning("圖形上界必須大於圖形下界，已暫時使用預設範圍 [-5, 5]。")
@@ -555,7 +572,7 @@ except Exception:
     st.stop()
 
 if "m1a" not in st.session_state:
-    st.session_state["m1a"] = float(min(max(0.0, domain_left), domain_right))
+    st.session_state["m1a"] = float(min(max(1.0, domain_left), domain_right))
 if "m2a" not in st.session_state:
     st.session_state["m2a"] = float(min(max(0.0, domain_left), domain_right))
 if "m4a" not in st.session_state:
@@ -592,7 +609,7 @@ except Exception:
     st.error("目前函數無法在這個區間正常計算，請修改函數或調整顯示區間。")
     st.stop()
 
-a_default = float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right)))
+a_default = float(st.session_state.get("m1a", min(max(1.0, domain_left), domain_right)))
 Axs = cumulative_integral(f, a_default, xs)
 Aprime = safe_gradient(Axs, xs)
 
@@ -641,18 +658,13 @@ def enforce_m4b_not_below_a():
         st.session_state["m4b_raw"] = a_val
 
 # -----------------------------
-# Tabs
+# Module display is selected from the sidebar
 # -----------------------------
-module1, module2, module4 = st.tabs([
-    "模組 1｜原函數f(x)動態生成累積函數A(x)",
-    "模組 2｜累積函數 A(x) 的導函數等於原函數 f(x)",
-    "模組 3｜FTC Part 2 幾何意義",
-])
 
 # -----------------------------
 # Module 1
 # -----------------------------
-with module1:
+if selected_module_key == "module1":
     st.subheader("模組 1：原函數f(x)動態生成累積函數A(x)")
     st.markdown(
         """
@@ -674,40 +686,36 @@ with module1:
         )
         st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt")
     
-    top_formula_col, top_control_col = st.columns([1.05, 0.95], gap="large")
+    top_control_col, top_formula_col = st.columns([0.95, 1.05], gap="large")
 
     with top_control_col:
-        st.markdown(
-            '<div style="font-size:0.98rem; color:#60758c; margin:0.15rem 0 0.35rem 0;"><b>控制區</b></div>',
-            unsafe_allow_html=True
-        )
         a = st.slider(
             "固定點 a",
             min_value=float(domain_left),
             max_value=float(domain_right),
-            value=float(st.session_state.get("m1a", min(max(0.0, domain_left), domain_right))),
+            value=float(st.session_state.get("m1a", min(max(1.0, domain_left), domain_right))),
             step=0.05,
             key="m1a",
         )
-        if st.session_state.get("m1x_raw", min(max(1.0, domain_left), domain_right)) < a:
+        if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
             st.session_state["m1x_raw"] = float(a)
         x1 = st.slider(
             "向右拖動x",
             min_value=float(domain_left),
             max_value=float(domain_right),
-            value=float(st.session_state.get("m1x_raw", max(min(max(1.0, domain_left), domain_right), float(a)))),
+            value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
             step=0.05,
             key="m1x_raw",
             on_change=enforce_m1x_not_below_a,
         )
         x1 = float(max(x1, a))
-        if st.session_state.get("m1z_raw", min(max(1.0, domain_left), domain_right)) > a:
+        if st.session_state.get("m1z_raw", (domain_left + domain_right) / 2) > a:
             st.session_state["m1z_raw"] = float(a)
         z1 = st.slider(
             "向左拖動x",
             min_value=float(domain_left),
             max_value=float(domain_right),
-            value=float(st.session_state.get("m1z_raw", min(min(max(1.0, domain_left), domain_right), float(a)))),
+            value=float(st.session_state.get("m1z_raw", min((domain_left + domain_right) / 2, float(a)))),
             step=0.05,
             key="m1z_raw",
             on_change=enforce_m1z_not_above_a,
@@ -715,7 +723,7 @@ with module1:
         z1 = float(min(z1, a))
         button_col_left, button_col_right = st.columns(2, gap="small")
         with button_col_left:
-            if st.button("留下固定點a的累積函數圖形", key="m1_save_a_curve", use_container_width=True):
+            if st.button("留下圖形", key="m1_save_a_curve", use_container_width=True):
                 saved_curve = cumulative_integral(f, a, xs)
                 color_idx = int(st.session_state.get("m1_saved_curve_color_idx", 0))
                 curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
@@ -728,10 +736,10 @@ with module1:
                     }
                 )
         with button_col_right:
-            if st.button("清除留下的圖形", key="m1_clear_saved_curves", use_container_width=True):
+            if st.button("清除圖形", key="m1_clear_saved_curves", use_container_width=True):
                 st.session_state["m1_saved_a_curves"] = []
                 st.session_state["m1_saved_curve_color_idx"] = 0
-        show_full_A_curve = st.checkbox("顯示累積函數全部圖形", value=False, key="m1_show_full_curve")
+        show_full_A_curve = st.checkbox("顯示全部圖形", value=False, key="m1_show_full_curve")
 
     components.html(
         """
@@ -782,14 +790,10 @@ with module1:
     current_fz = f(np.array([z1]))[0]
     mask = (xs >= min(a, x1)) & (xs <= max(a, x1))
     mask_z = (xs >= min(z1, a)) & (xs <= max(z1, a))
-    m1_axis_positions = [a, x1, z1]
-    m1_axis_levels = get_axis_label_levels(m1_axis_positions, threshold=0.45)
-    m1_axis_y_offsets = [-0.15 - 0.32 * lvl for lvl in m1_axis_levels]
-
     with top_formula_col:
         st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
 
-        show_left_formula = st.checkbox("顯示向左累積算式", value=False, key="m1_show_left_formula")
+        show_left_formula = st.checkbox("向左累積算式", value=False, key="m1_show_left_formula")
         if show_left_formula:
             st.latex(
                 rf"\Large A({{\color{{green}}{{{z1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{z1:.2f}}}}} f(t)\,dt"
@@ -800,7 +804,7 @@ with module1:
 
         st.markdown('<div style="height: 0.9rem;"></div>', unsafe_allow_html=True)
 
-        show_right_formula = st.checkbox("顯示向右累積算式", value=False, key="m1_show_right_formula")
+        show_right_formula = st.checkbox("向右累積算式", value=False, key="m1_show_right_formula")
         if show_right_formula:
             st.latex(
                 rf"\Large A({{\color{{green}}{{{x1:.2f}}}}})=\int_{{\color{{red}}{{{a:.2f}}}}}^{{\color{{green}}{{{x1:.2f}}}}} f(t)\,dt"
@@ -810,6 +814,20 @@ with module1:
             st.markdown('<div style="height: 2.2rem;"></div>', unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
+
+    m1_axis_positions = [a]
+    m1_axis_keys = ["a"]
+    if show_right_formula:
+        m1_axis_positions.append(x1)
+        m1_axis_keys.append("x")
+    if show_left_formula:
+        m1_axis_positions.append(z1)
+        m1_axis_keys.append("z")
+    m1_axis_levels = get_axis_label_levels(m1_axis_positions, threshold=0.45)
+    m1_axis_y_offsets = {
+        key: -0.15 - 0.32 * lvl
+        for key, lvl in zip(m1_axis_keys, m1_axis_levels)
+    }
 
     chart_col_left, chart_col_right = st.columns(2, gap="large")
 
@@ -834,79 +852,87 @@ with module1:
             mask_A_display = np.full_like(xs, True, dtype=bool)
             ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
         else:
-            mask_A_display = (xs >= a) & mask_A
-            mask_Z_display = (xs >= z1) & (xs <= a)
-            ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
-            ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
+            if show_right_formula:
+                mask_A_display = (xs >= a) & mask_A
+                ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
+            if show_left_formula:
+                mask_Z_display = (xs >= z1) & (xs <= a)
+                ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
         draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
         ax12.text(
             a,
-            0 + m1_axis_y_offsets[0] - 0.02,
+            0 + m1_axis_y_offsets["a"] - 0.02,
             f"{a:.2f}",
             **pretty_a_label_kwargs(),
         )
-        draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
-        draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
-        # 顯示 x 的數值（左圖綠色線與 x 軸交點）
-        ax12.text(
-            x1,
-            0 + m1_axis_y_offsets[1],
-            f"{x1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-        )
-        ax12.text(
-            z1,
-            0 + m1_axis_y_offsets[2],
-            f"{z1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-        )
+        if show_right_formula:
+            draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
+            # 顯示 x 的數值（左圖綠色線與 x 軸交點）
+            ax12.text(
+                x1,
+                0 + m1_axis_y_offsets["x"],
+                f"{x1:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            )
 
-        x_xytext = smart_point_xytext(
-            x1, current_A, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(z1, current_Z)]
-        )
-        ax12.annotate(
-            f"({x1:.2f}, {current_A:.2f})",
-            xy=(x1, current_A),
-            xytext=x_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.5,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
-        z_xytext = smart_point_xytext(
-            z1, current_Z, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(x1, current_A)]
-        )
-        ax12.annotate(
-            f"({z1:.2f}, {current_Z:.2f})",
-            xy=(z1, current_Z),
-            xytext=z_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.5,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
+            x_xytext = smart_point_xytext(
+                x1, current_A, x_min_common, x_max_common, y_min_common, y_max_common,
+                other_points=[(z1, current_Z)] if show_left_formula else []
+            )
+            ax12.annotate(
+                f"({x1:.2f}, {current_A:.2f})",
+                xy=(x1, current_A),
+                xytext=x_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.5,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.18",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
+
+        if show_left_formula:
+            draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax12.text(
+                z1,
+                0 + m1_axis_y_offsets["z"],
+                f"{z1:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            )
+
+            z_xytext = smart_point_xytext(
+                z1, current_Z, x_min_common, x_max_common, y_min_common, y_max_common,
+                other_points=[(x1, current_A)] if show_right_formula else []
+            )
+            ax12.annotate(
+                f"({z1:.2f}, {current_Z:.2f})",
+                xy=(z1, current_Z),
+                xytext=z_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.5,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.18",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
         ax12.set_title("y=A(x)", fontsize=16, pad=14)
         ax12.set_xlabel("x", fontsize=12)
         ax12.set_ylabel("A(x)", fontsize=12)
@@ -922,32 +948,34 @@ with module1:
         draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         ax11.text(
             a,
-            0 + m1_axis_y_offsets[0] - 0.02,
+            0 + m1_axis_y_offsets["a"] - 0.02,
             f"{a:.2f}",
             **pretty_a_label_kwargs(),
         )
-        draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
-        draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
-        # 顯示 x 的數值（綠色線與 x 軸交點）
-        ax11.text(
-            x1,
-            0 + m1_axis_y_offsets[1],
-            f"{x1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-        )
-        ax11.text(
-            z1,
-            0 + m1_axis_y_offsets[2],
-            f"{z1:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-        )
-        if x1 >= a:
+        if show_right_formula:
+            draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
+            # 顯示 x 的數值（綠色線與 x 軸交點）
+            ax11.text(
+                x1,
+                0 + m1_axis_y_offsets["x"],
+                f"{x1:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            )
+        if show_left_formula:
+            draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax11.text(
+                z1,
+                0 + m1_axis_y_offsets["z"],
+                f"{z1:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            )
+        if show_right_formula and x1 >= a:
             fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
             x_mid = (a + x1) / 2
             if abs(x1 - z1) < 0.90:
@@ -984,7 +1012,7 @@ with module1:
                     alpha=0.94,
                 ),
             )
-        if z1 <= a:
+        if show_left_formula and z1 <= a:
             fill_area_by_sign(ax11, xs[mask_z], ys[mask_z], fill_pos_color, fill_neg_color, alpha=0.40)
             z_mid = (z1 + a) / 2
             ys_mask_z = ys[mask_z]
@@ -1045,7 +1073,7 @@ with module1:
 # -----------------------------
 # Module 2
 # -----------------------------
-with module2:
+if selected_module_key == "module2":
     st.subheader("模組 2：累積函數 A(x) 的導函數等於原函數 f(x)")
 
     if show_formula:
@@ -1058,36 +1086,33 @@ with module2:
 
     full_width_col = st.container()
     with full_width_col:
-        a2 = st.slider(
-            "固定點 a",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m2a", min(max(0.0, domain_left), domain_right))),
-            step=0.05,
-            key="m2a",
-        )
-        x2 = st.slider(
-            "拖動 x",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m2x", (domain_left + domain_right) / 3)),
-            step=0.05,
-            key="m2x",
-        )
-        dx2 = st.slider(
-            "Δx",
-            min_value=0.01,
-            max_value=1.0,
-            value=float(st.session_state.get("m2dx", 1.0)),
-            step=0.01,
-            key="m2dx",
-        )
+        m2_left_control_col, m2_right_slider_col = st.columns([0.45, 0.55], gap="large")
 
-        m2_toggle_col1, m2_toggle_col2 = st.columns(2, gap="small")
-        with m2_toggle_col1:
-            show_tangent_m2 = st.checkbox("顯示切線", key="m2_show_tangent")
-        with m2_toggle_col2:
-            show_secant_m2 = st.checkbox("顯示割線", key="m2_show_secant")
+        with m2_right_slider_col:
+            a2 = st.slider(
+                "固定點 a",
+                min_value=float(domain_left),
+                max_value=float(domain_right),
+                value=float(st.session_state.get("m2a", min(max(0.0, domain_left), domain_right))),
+                step=0.05,
+                key="m2a",
+            )
+            x2 = st.slider(
+                "拖動 x",
+                min_value=float(domain_left),
+                max_value=float(domain_right),
+                value=float(st.session_state.get("m2x", (domain_left + domain_right) / 3)),
+                step=0.05,
+                key="m2x",
+            )
+            dx2 = st.slider(
+                "Δx",
+                min_value=0.01,
+                max_value=1.0,
+                value=float(st.session_state.get("m2dx", 1.0)),
+                step=0.01,
+                key="m2dx",
+            )
 
         Axs_m2 = cumulative_integral(f, a2, xs)
         Aprime_m2 = safe_gradient(Axs_m2, xs)
@@ -1098,26 +1123,30 @@ with module2:
         current_A2_plus = np.interp(x2_plus, xs, Axs_m2)
         current_f2_plus = f(np.array([x2_plus]))[0]
 
-        m2_button_col_left, m2_button_col_right = st.columns(2, gap="small")
-        with m2_button_col_left:
-            if st.button("留下固定點a的累積函數圖形", key="m2_save_a_curve", use_container_width=True):
-                color_idx = int(st.session_state.get("m2_saved_curve_color_idx", 0))
-                curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
-                st.session_state["m2_saved_curve_color_idx"] = color_idx + 1
-                st.session_state["m2_saved_a_curves"].append(
-                    {
-                        "a": float(a2),
-                        "curve": np.array(Axs_m2, dtype=float),
-                        "color": curve_color,
-                        "x": float(x2),
-                        "A": float(current_A2),
-                        "Aprime": float(current_Ap2),
-                    }
-                )
-        with m2_button_col_right:
-            if st.button("清除留下的圖形", key="m2_clear_saved_curves", use_container_width=True):
-                st.session_state["m2_saved_a_curves"] = []
-                st.session_state["m2_saved_curve_color_idx"] = 0
+        with m2_left_control_col:
+            show_secant_m2 = st.checkbox("顯示割線", key="m2_show_secant")
+            show_tangent_m2 = st.checkbox("顯示切線", key="m2_show_tangent")
+
+            m2_button_col_left, m2_button_col_right = st.columns(2, gap="small")
+            with m2_button_col_left:
+                if st.button("留下固定點a的累積函數圖形", key="m2_save_a_curve", use_container_width=True):
+                    color_idx = int(st.session_state.get("m2_saved_curve_color_idx", 0))
+                    curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
+                    st.session_state["m2_saved_curve_color_idx"] = color_idx + 1
+                    st.session_state["m2_saved_a_curves"].append(
+                        {
+                            "a": float(a2),
+                            "curve": np.array(Axs_m2, dtype=float),
+                            "color": curve_color,
+                            "x": float(x2),
+                            "A": float(current_A2),
+                            "Aprime": float(current_Ap2),
+                        }
+                    )
+            with m2_button_col_right:
+                if st.button("清除留下的圖形", key="m2_clear_saved_curves", use_container_width=True):
+                    st.session_state["m2_saved_a_curves"] = []
+                    st.session_state["m2_saved_curve_color_idx"] = 0
 
         m2_axis_positions = [a2, x2]
         m2_axis_levels = get_axis_label_levels(m2_axis_positions, threshold=0.45)
@@ -1289,36 +1318,230 @@ with module2:
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
-    st.markdown('<div style="padding:0.02rem 0 0 0; margin-left:-2.35rem;">', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <style>
+        .m2-derivation-title {
+            font-size: 1.22rem;
+            font-weight: 800;
+            color: #38506a;
+            margin: 0.35rem 0 0.55rem 0;
+        }
+        .m2-table-header {
+            background: #f6f8fb;
+            border: 1px solid #dfe6ef;
+            border-radius: 12px;
+            padding: 0.55rem 0.8rem;
+            font-weight: 800;
+            color: #38506a;
+            text-align: center;
+            margin-bottom: 0.35rem;
+        }
+        .m2-row-gap {
+            height: 0.45rem;
+        }
+        .m2-centered-formula {
+            text-align: center;
+            width: 100%;
+        }
+        </style>
+        <div class="m2-derivation-title">A'(x)=f(x) 的視覺化推導</div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    formula_left_col, formula_right_col = st.columns([0.50, 0.50], gap="large")
-    with formula_left_col:
-        st.latex(r"\LARGE A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
-        st.markdown('<div style="height:0.55rem;"></div>', unsafe_allow_html=True)
+    delta_A_value = current_A2_plus - current_A2
+    rect_area_value = current_f2 * dx2
 
-        st.latex(r"\LARGE \frac{A(x+\Delta x)-A(x)}{\Delta x}\;\approx\; f(x)")
-        st.markdown('<div style="height:0.95rem;"></div>', unsafe_allow_html=True)
+    mini_dx_actual = max(x2_plus - x2, 1e-6)
+    mini_x_fixed_min = 0.0
+    mini_x_fixed_max = 1.0
+    mini_y_fixed_min = y_min_common
+    mini_y_fixed_max = y_max_common
 
-        st.latex(r"\LARGE A'(x)\;=\;f(x)")
+    xs_mini_global = xs[(xs >= x2) & (xs <= x2_plus)]
+    ys_mini = ys[(xs >= x2) & (xs <= x2_plus)]
 
-    with formula_right_col:
-        st.markdown(
-            rf"$$\LARGE A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
-        )
-        st.markdown(
-            rf"$$\LARGE \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}\;\approx\; f({x2:.2f})$$"
-        )
-        st.markdown(
-            rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
-        )
+    if len(xs_mini_global) < 2:
+        xs_mini_global = np.linspace(x2, x2_plus, 50)
+        ys_mini = np.array(f(xs_mini_global), dtype=float)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    xs_mini_local = xs_mini_global - x2
+
+    header_left, header_right = st.columns([0.45, 0.55], gap="large")
+    with header_left:
+        st.markdown('<div class="m2-table-header">一般推導式</div>', unsafe_allow_html=True)
+    with header_right:
+        st.markdown('<div class="m2-table-header">當下數值化與視覺化對照</div>', unsafe_allow_html=True)
+
+    row1_left, row1_right = st.columns([0.45, 0.55], gap="large")
+    with row1_left:
+        row1_left_card = st.container(border=True)
+        with row1_left_card:
+            st.markdown(
+                r"$$\Large A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x$$"
+            )
+    with row1_right:
+        row1_right_card = st.container(border=True)
+        with row1_right_card:
+            st.markdown(
+                rf"$$\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
+            )
+
+            compare_col_left, compare_col_right = st.columns(2, gap="small")
+
+            with compare_col_left:
+                fig_mini_left, ax_mini_left = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
+                ax_mini_left.plot(xs_mini_local, ys_mini, linewidth=2.2, color="#8bbce9")
+                fill_area_by_sign(
+                    ax_mini_left,
+                    xs_mini_local,
+                    ys_mini,
+                    fill_pos_color,
+                    fill_neg_color,
+                    alpha=0.45,
+                )
+                ax_mini_left.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
+                area_text_x = 0.5 * mini_dx_actual
+                if delta_A_value >= 0:
+                    positive_part = ys_mini[ys_mini >= 0]
+                    if len(positive_part) > 0:
+                        area_text_y = 0.52 * np.max(positive_part)
+                    else:
+                        area_text_y = 0.35 * max(mini_y_fixed_max, 1.0)
+                else:
+                    negative_part = ys_mini[ys_mini < 0]
+                    if len(negative_part) > 0:
+                        area_text_y = 0.52 * np.min(negative_part)
+                    else:
+                        area_text_y = 0.35 * min(mini_y_fixed_min, -1.0)
+
+                ax_mini_left.text(
+                    area_text_x,
+                    area_text_y,
+                    f"{delta_A_value:.4f}",
+                    ha="center",
+                    va="center",
+                    fontsize=11.5,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.14",
+                        fc="white",
+                        ec="#c9d2de",
+                        lw=0.9,
+                        alpha=0.94,
+                    ),
+                )
+                ax_mini_left.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
+                ax_mini_left.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
+                ax_mini_left.grid(alpha=0.18)
+                for spine in ["top", "right"]:
+                    ax_mini_left.spines[spine].set_visible(False)
+                ax_mini_left.tick_params(labelsize=8.5)
+                st.pyplot(fig_mini_left, use_container_width=True)
+
+            with compare_col_right:
+                fig_mini_right, ax_mini_right = plt.subplots(figsize=(3.2, 2.6), constrained_layout=True)
+                x_rect = np.linspace(0.0, dx2, 50)
+                y_rect = np.full_like(x_rect, float(current_f2))
+                ax_mini_right.fill_between(
+                    x_rect,
+                    0,
+                    y_rect,
+                    color="#f6b6c8",
+                    alpha=0.75,
+                )
+                ax_mini_right.plot([0.0, dx2], [current_f2, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.plot([0.0, 0.0], [0, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.plot([dx2, dx2], [0, current_f2], color="#d97a9a", linewidth=2.0)
+                ax_mini_right.axhline(0, linewidth=1.2, color="#b0b0b0", zorder=0)
+
+                rect_text_x = 0.5 * dx2
+                rect_text_y = current_f2 / 2.0 if abs(current_f2) > 1e-9 else 0.0
+                ax_mini_right.text(
+                    rect_text_x,
+                    rect_text_y,
+                    f"{rect_area_value:.4f}",
+                    ha="center",
+                    va="center",
+                    fontsize=11.5,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.14",
+                        fc="white",
+                        ec="#dcb2bf",
+                        lw=0.9,
+                        alpha=0.94,
+                    ),
+                )
+                ax_mini_right.set_xlim(mini_x_fixed_min, mini_x_fixed_max)
+                ax_mini_right.set_ylim(mini_y_fixed_min, mini_y_fixed_max)
+                ax_mini_right.grid(alpha=0.18)
+                for spine in ["top", "right"]:
+                    ax_mini_right.spines[spine].set_visible(False)
+                ax_mini_right.tick_params(labelsize=8.5)
+                st.pyplot(fig_mini_right, use_container_width=True)
+
+    st.markdown('<div class="m2-row-gap"></div>', unsafe_allow_html=True)
+
+    row2_left, row2_right = st.columns([0.45, 0.55], gap="large")
+    with row2_left:
+        row2_left_card = st.container(border=True)
+        with row2_left_card:
+            st.markdown(
+                r"$$ {\huge \frac{A(x+\Delta x)-A(x)}{\Delta x}}\;\approx\;{\LARGE f(x)} $$"
+            )
+    with row2_right:
+        row2_right_card = st.container(border=True)
+        with row2_right_card:
+            st.markdown(
+                rf"$$ {{\huge \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}}}\;\approx\;{{\LARGE f({x2:.2f})}} $$"
+            )
+
+            slope_value_m2 = (current_A2_plus - current_A2) / dx2
+            slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
+            with slope_value_col_left:
+                st.markdown(
+                    f"""
+                    <div style="margin-top:0.85rem; margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                        {slope_value_m2:.4f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            with slope_value_col_right:
+                st.markdown(
+                    f"""
+                    <div style="margin-top:0.85rem; margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
+                        {current_f2:.4f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+    st.markdown('<div class="m2-row-gap"></div>', unsafe_allow_html=True)
+
+    row3_left, row3_right = st.columns([0.45, 0.55], gap="large")
+    with row3_left:
+        row3_left_card = st.container(border=True)
+        with row3_left_card:
+            st.markdown(
+                r"$$\LARGE A'(x)\;=\;f(x)$$"
+            )
+    with row3_right:
+        row3_right_card = st.container(border=True)
+        with row3_right_card:
+            st.markdown(
+                rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
+            )
 
 
 # -----------------------------
 # Module 4
 # -----------------------------
-with module4:
+if selected_module_key == "module3":
     st.subheader("模組 4：FTC Part 2 幾何意義")
     st.caption("把定積分看成原函數的總改變量，而不是一條要背的公式。")
 
