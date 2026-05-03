@@ -571,16 +571,28 @@ except Exception:
     st.error("函數輸入錯誤。可輸入例如：x^2、2x、3(x+1)、2sin(x)、|x|、sqrt(x+1)、ln(x)、log10(x)、log2(x)")
     st.stop()
 
-if "m1a" not in st.session_state:
-    st.session_state["m1a"] = float(min(max(1.0, domain_left), domain_right))
+m1_initial_value = float(min(max(1.0, domain_left), domain_right))
+if "m1_defaults_initialized" not in st.session_state:
+    st.session_state["m1a"] = m1_initial_value
+    st.session_state["m1x_raw"] = m1_initial_value
+    st.session_state["m1z_raw"] = m1_initial_value
+    st.session_state["m1_defaults_initialized"] = True
+else:
+    if "m1a" not in st.session_state:
+        st.session_state["m1a"] = m1_initial_value
+    if "m1x_raw" not in st.session_state:
+        st.session_state["m1x_raw"] = m1_initial_value
+    if "m1z_raw" not in st.session_state:
+        st.session_state["m1z_raw"] = m1_initial_value
+
+st.session_state["m1a"] = float(min(max(st.session_state["m1a"], domain_left), domain_right))
+st.session_state["m1x_raw"] = float(min(max(st.session_state["m1x_raw"], domain_left), domain_right))
+st.session_state["m1z_raw"] = float(min(max(st.session_state["m1z_raw"], domain_left), domain_right))
+
 if "m2a" not in st.session_state:
     st.session_state["m2a"] = float(min(max(0.0, domain_left), domain_right))
 if "m4a" not in st.session_state:
     st.session_state["m4a"] = float(min(max(0.0, domain_left), domain_right))
-if "m1x_raw" not in st.session_state:
-    st.session_state["m1x_raw"] = float(min(max(1.0, domain_left), domain_right))
-if "m1z_raw" not in st.session_state:
-    st.session_state["m1z_raw"] = float(min(max(1.0, domain_left), domain_right))
 if "m4b_raw" not in st.session_state:
     st.session_state["m4b_raw"] = float(min(domain_right, 2.0))
 if "m1_saved_a_curves" not in st.session_state:
@@ -693,29 +705,29 @@ if selected_module_key == "module1":
             "固定點 a",
             min_value=float(domain_left),
             max_value=float(domain_right),
-            value=float(st.session_state.get("m1a", min(max(1.0, domain_left), domain_right))),
+            value=float(st.session_state.get("m1a", m1_initial_value)),
             step=0.05,
             key="m1a",
         )
-        if st.session_state.get("m1x_raw", (domain_left + domain_right) / 2) < a:
+        if st.session_state.get("m1x_raw", m1_initial_value) < a:
             st.session_state["m1x_raw"] = float(a)
         x1 = st.slider(
             "向右拖動x",
             min_value=float(domain_left),
             max_value=float(domain_right),
-            value=float(st.session_state.get("m1x_raw", max((domain_left + domain_right) / 2, float(a)))),
+            value=float(st.session_state.get("m1x_raw", max(m1_initial_value, float(a)))),
             step=0.05,
             key="m1x_raw",
             on_change=enforce_m1x_not_below_a,
         )
         x1 = float(max(x1, a))
-        if st.session_state.get("m1z_raw", (domain_left + domain_right) / 2) > a:
+        if st.session_state.get("m1z_raw", m1_initial_value) > a:
             st.session_state["m1z_raw"] = float(a)
         z1 = st.slider(
             "向左拖動x",
             min_value=float(domain_left),
             max_value=float(domain_right),
-            value=float(st.session_state.get("m1z_raw", min((domain_left + domain_right) / 2, float(a)))),
+            value=float(st.session_state.get("m1z_raw", min(m1_initial_value, float(a)))),
             step=0.05,
             key="m1z_raw",
             on_change=enforce_m1z_not_above_a,
