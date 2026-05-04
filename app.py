@@ -589,8 +589,27 @@ st.session_state["m1a"] = float(min(max(st.session_state["m1a"], domain_left), d
 st.session_state["m1x_raw"] = float(min(max(st.session_state["m1x_raw"], domain_left), domain_right))
 st.session_state["m1z_raw"] = float(min(max(st.session_state["m1z_raw"], domain_left), domain_right))
 
-if "m2a" not in st.session_state:
-    st.session_state["m2a"] = float(min(max(0.0, domain_left), domain_right))
+m2_initial_value = float(min(max(1.0, domain_left), domain_right))
+m2_dx_initial_value = 1.0
+if "m2_defaults_initialized" not in st.session_state:
+    st.session_state["m2a"] = m2_initial_value
+    st.session_state["m2x"] = m2_initial_value
+    st.session_state["m2dx"] = m2_dx_initial_value
+    st.session_state["m2_show_tangent"] = False
+    st.session_state["m2_show_secant"] = False
+    st.session_state["m2_defaults_initialized"] = True
+else:
+    if "m2a" not in st.session_state:
+        st.session_state["m2a"] = m2_initial_value
+    if "m2x" not in st.session_state:
+        st.session_state["m2x"] = m2_initial_value
+    if "m2dx" not in st.session_state:
+        st.session_state["m2dx"] = m2_dx_initial_value
+
+st.session_state["m2a"] = float(min(max(st.session_state["m2a"], domain_left), domain_right))
+st.session_state["m2x"] = float(min(max(st.session_state["m2x"], domain_left), domain_right))
+st.session_state["m2dx"] = float(min(max(st.session_state["m2dx"], 0.01), 1.0))
+
 if "m4a" not in st.session_state:
     st.session_state["m4a"] = float(min(max(0.0, domain_left), domain_right))
 if "m4b_raw" not in st.session_state:
@@ -604,9 +623,9 @@ if "m2_saved_a_curves" not in st.session_state:
 if "m2_saved_curve_color_idx" not in st.session_state:
     st.session_state["m2_saved_curve_color_idx"] = 0
 if "m2_show_tangent" not in st.session_state:
-    st.session_state["m2_show_tangent"] = True
+    st.session_state["m2_show_tangent"] = False
 if "m2_show_secant" not in st.session_state:
-    st.session_state["m2_show_secant"] = True
+    st.session_state["m2_show_secant"] = False
 
 show_help = False
 show_formula = True
@@ -1098,14 +1117,14 @@ if selected_module_key == "module2":
 
     full_width_col = st.container()
     with full_width_col:
-        m2_left_control_col, m2_right_slider_col = st.columns([0.45, 0.55], gap="large")
+        m2_left_slider_col, m2_right_control_col = st.columns([0.55, 0.45], gap="large")
 
-        with m2_right_slider_col:
+        with m2_left_slider_col:
             a2 = st.slider(
                 "固定點 a",
                 min_value=float(domain_left),
                 max_value=float(domain_right),
-                value=float(st.session_state.get("m2a", min(max(0.0, domain_left), domain_right))),
+                value=float(st.session_state.get("m2a", m2_initial_value)),
                 step=0.05,
                 key="m2a",
             )
@@ -1113,7 +1132,7 @@ if selected_module_key == "module2":
                 "拖動 x",
                 min_value=float(domain_left),
                 max_value=float(domain_right),
-                value=float(st.session_state.get("m2x", (domain_left + domain_right) / 3)),
+                value=float(st.session_state.get("m2x", m2_initial_value)),
                 step=0.05,
                 key="m2x",
             )
@@ -1121,10 +1140,51 @@ if selected_module_key == "module2":
                 "Δx",
                 min_value=0.01,
                 max_value=1.0,
-                value=float(st.session_state.get("m2dx", 1.0)),
+                value=float(st.session_state.get("m2dx", m2_dx_initial_value)),
                 step=0.01,
                 key="m2dx",
             )
+
+        components.html(
+            """
+            <script>
+            const repaintModule2Sliders = () => {
+                const doc = window.parent.document;
+                const sliders = doc.querySelectorAll('div[data-testid="stSlider"]');
+                sliders.forEach((slider) => {
+                    const trackBits = slider.querySelectorAll('div[data-baseweb="slider"] div');
+                    trackBits.forEach((el) => {
+                        const style = window.parent.getComputedStyle(el);
+                        const h = parseFloat(style.height || "0");
+                        const w = parseFloat(style.width || "0");
+                        const radius = parseFloat(style.borderTopLeftRadius || "0");
+
+                        const isThumbLike = h >= 12 && w >= 12 && Math.abs(h - w) <= 6 && radius >= 8;
+                        const isTrackLike = h > 0 && h <= 8 && w > 20;
+
+                        if (isTrackLike) {
+                            el.style.background = "#d9dee7";
+                            el.style.backgroundColor = "#d9dee7";
+                            el.style.borderColor = "#d9dee7";
+                            el.style.boxShadow = "none";
+                        }
+
+                        if (isThumbLike) {
+                            el.style.background = "#ff4b4b";
+                            el.style.backgroundColor = "#ff4b4b";
+                            el.style.borderColor = "#ff4b4b";
+                        }
+                    });
+                });
+            };
+
+            repaintModule2Sliders();
+            const module2SliderIntervalId = setInterval(repaintModule2Sliders, 500);
+            window.addEventListener("beforeunload", () => clearInterval(module2SliderIntervalId));
+            </script>
+            """,
+            height=0,
+        )
 
         Axs_m2 = cumulative_integral(f, a2, xs)
         Aprime_m2 = safe_gradient(Axs_m2, xs)
@@ -1135,13 +1195,10 @@ if selected_module_key == "module2":
         current_A2_plus = np.interp(x2_plus, xs, Axs_m2)
         current_f2_plus = f(np.array([x2_plus]))[0]
 
-        with m2_left_control_col:
-            show_secant_m2 = st.checkbox("顯示割線", key="m2_show_secant")
-            show_tangent_m2 = st.checkbox("顯示切線", key="m2_show_tangent")
-
+        with m2_right_control_col:
             m2_button_col_left, m2_button_col_right = st.columns(2, gap="small")
             with m2_button_col_left:
-                if st.button("留下固定點a的累積函數圖形", key="m2_save_a_curve", use_container_width=True):
+                if st.button("留下圖形", key="m2_save_a_curve", use_container_width=True):
                     color_idx = int(st.session_state.get("m2_saved_curve_color_idx", 0))
                     curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
                     st.session_state["m2_saved_curve_color_idx"] = color_idx + 1
@@ -1156,9 +1213,12 @@ if selected_module_key == "module2":
                         }
                     )
             with m2_button_col_right:
-                if st.button("清除留下的圖形", key="m2_clear_saved_curves", use_container_width=True):
+                if st.button("清除圖形", key="m2_clear_saved_curves", use_container_width=True):
                     st.session_state["m2_saved_a_curves"] = []
                     st.session_state["m2_saved_curve_color_idx"] = 0
+
+            show_secant_m2 = st.checkbox("割線", key="m2_show_secant")
+            show_tangent_m2 = st.checkbox("切線", key="m2_show_tangent")
 
         m2_axis_positions = [a2, x2]
         m2_axis_levels = get_axis_label_levels(m2_axis_positions, threshold=0.45)
@@ -1301,26 +1361,27 @@ if selected_module_key == "module2":
             mask_m2_fill = (xs >= min(x2, x2_plus)) & (xs <= max(x2, x2_plus))
             fill_area_by_sign(ax2, xs[mask_m2_fill], ys[mask_m2_fill], fill_pos_color, fill_neg_color, alpha=0.40)
 
-        m2_right_xytext = smart_point_xytext(
-            x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
-        )
-        ax2.annotate(
-            f"f({x2:.2f})={current_f2:.2f}",
-            xy=(x2, current_f2),
-            xytext=m2_right_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.2,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
+        if show_tangent_m2:
+            m2_right_xytext = smart_point_xytext(
+                x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
+            )
+            ax2.annotate(
+                f"f({x2:.2f})={current_f2:.2f}",
+                xy=(x2, current_f2),
+                xytext=m2_right_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.2,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.18",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
         ax2.set_title("y=f(x)", fontsize=14)
         ax2.set_xlabel("x")
         ax2.set_ylabel("f(x)")
