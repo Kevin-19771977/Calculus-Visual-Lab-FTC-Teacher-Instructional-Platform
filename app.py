@@ -529,21 +529,37 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### 函數圖形顯示範圍")
+    st.markdown(
+        """
+        <div style="text-align:center; color:#52667a; font-size:0.9rem; margin-bottom:0.15rem;">
+            y 軸上界
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    y_max_input = st.number_input("上", value=5.0, step=0.5, format="%.2f")
+
     left_input_col, right_input_col = st.columns(2)
     with left_input_col:
-        domain_left = st.number_input("x 軸顯示範圍：左端點", value=-3.0, step=0.5, format="%.2f")
+        st.markdown('<div style="text-align:center; color:#52667a; font-size:0.9rem; margin-bottom:0.15rem;">x 軸左端點</div>', unsafe_allow_html=True)
+        domain_left = st.number_input("左", value=-3.0, step=0.5, format="%.2f")
     with right_input_col:
-        domain_right = st.number_input("x 軸顯示範圍：右端點", value=3.0, step=0.5, format="%.2f")
+        st.markdown('<div style="text-align:center; color:#52667a; font-size:0.9rem; margin-bottom:0.15rem;">x 軸右端點</div>', unsafe_allow_html=True)
+        domain_right = st.number_input("右", value=3.0, step=0.5, format="%.2f")
+
+    st.markdown(
+        """
+        <div style="text-align:center; color:#52667a; font-size:0.9rem; margin:0.15rem 0;">
+            y 軸下界
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    y_min_input = st.number_input("下", value=-5.0, step=0.5, format="%.2f")
+
     if domain_right <= domain_left:
         st.warning("右端點必須大於左端點，已暫時使用預設區間 [-3, 3]。")
         domain_left, domain_right = -3.0, 3.0
-
-
-    y_input_col1, y_input_col2 = st.columns(2)
-    with y_input_col1:
-        y_min_input = st.number_input("y 軸顯示範圍：下界", value=-5.0, step=0.5, format="%.2f")
-    with y_input_col2:
-        y_max_input = st.number_input("y 軸顯示範圍：上界", value=5.0, step=0.5, format="%.2f")
 
     if y_max_input <= y_min_input:
         st.warning("圖形上界必須大於圖形下界，已暫時使用預設範圍 [-5, 5]。")
@@ -1196,6 +1212,12 @@ if selected_module_key == "module2":
         current_f2_plus = f(np.array([x2_plus]))[0]
 
         with m2_right_control_col:
+            m2_check_col_left, m2_check_col_right = st.columns(2, gap="small")
+            with m2_check_col_left:
+                show_secant_m2 = st.checkbox("割線", key="m2_show_secant")
+            with m2_check_col_right:
+                show_tangent_m2 = st.checkbox("切線", key="m2_show_tangent")
+
             m2_button_col_left, m2_button_col_right = st.columns(2, gap="small")
             with m2_button_col_left:
                 if st.button("留下圖形", key="m2_save_a_curve", use_container_width=True):
@@ -1216,9 +1238,6 @@ if selected_module_key == "module2":
                 if st.button("清除圖形", key="m2_clear_saved_curves", use_container_width=True):
                     st.session_state["m2_saved_a_curves"] = []
                     st.session_state["m2_saved_curve_color_idx"] = 0
-
-            show_secant_m2 = st.checkbox("割線", key="m2_show_secant")
-            show_tangent_m2 = st.checkbox("切線", key="m2_show_tangent")
 
         m2_axis_positions = [a2, x2]
         m2_axis_levels = get_axis_label_levels(m2_axis_positions, threshold=0.45)
@@ -1273,8 +1292,60 @@ if selected_module_key == "module2":
             fontsize=13,
             bbox=smart_value_bbox(),
         )
+        m2_left_x_xytext = smart_point_xytext(
+            x2,
+            current_A2,
+            x_min_common,
+            x_max_common,
+            y_min_common,
+            y_max_common,
+            other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2_plus, current_A2_plus)] if show_secant_m2 else [(a2, np.interp(a2, xs, Axs_m2))],
+        )
+        ax22.annotate(
+            f"A({x2:.2f})={current_A2:.4f}",
+            xy=(x2, current_A2),
+            xytext=m2_left_x_xytext,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.0,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.22,rounding_size=0.16",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
         if show_secant_m2:
-            ax22.scatter([x2_plus], [current_A2_plus], s=36, color="#9bd18b", zorder=7)
+            draw_to_x_axis(ax22, x2_plus, current_A2_plus, "#9bd18b", linewidth=1.6, marker_size=36)
+            m2_left_xplus_xytext = smart_point_xytext(
+                x2_plus,
+                current_A2_plus,
+                x_min_common,
+                x_max_common,
+                y_min_common,
+                y_max_common,
+                other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2, current_A2)],
+            )
+            ax22.annotate(
+                f"A({x2_plus:.2f})={current_A2_plus:.4f}",
+                xy=(x2_plus, current_A2_plus),
+                xytext=m2_left_xplus_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.0,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.22,rounding_size=0.16",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
 
             secant_slope = (current_A2_plus - current_A2) / max(x2_plus - x2, 1e-9)
             secant_half_width = 1.05
@@ -1329,7 +1400,7 @@ if selected_module_key == "module2":
 
     with right:
         fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax2.plot(xs, ys, linewidth=3.4, label="f(x)", color="#8bbce9")
+        ax2.plot(xs, ys, linewidth=3.4, color="#8bbce9")
         draw_to_x_axis(ax2, a2, f(np.array([a2]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         ax2.text(
             a2,
@@ -1387,7 +1458,6 @@ if selected_module_key == "module2":
         ax2.set_ylabel("f(x)")
         ax2.set_xlim(x_min_common, x_max_common)
         ax2.set_ylim(y_min_common, y_max_common)
-        ax2.legend()
         add_common_style(ax2)
         st.pyplot(fig2, use_container_width=True)
 
@@ -1578,7 +1648,7 @@ if selected_module_key == "module2":
             with slope_value_col_left:
                 st.markdown(
                     f"""
-                    <div style="margin-top:0.85rem; margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                    <div style="margin-top:0.85rem; margin-left:4.1rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
                         {slope_value_m2:.4f}
                     </div>
                     """,
