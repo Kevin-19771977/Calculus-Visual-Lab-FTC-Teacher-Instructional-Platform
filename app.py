@@ -421,7 +421,7 @@ with st.sidebar:
         options=[
             "模組 1｜原函數 f(x) 動態生成累積函數 A(x)",
             "模組 2｜累積函數 A(x) 的導函數等於原函數 f(x)",
-            "模組 3｜修改中",
+            "模組 3｜用累積函數 A(x) 的端點差求定積分",
         ],
         index=0,
         key="selected_module",
@@ -1232,6 +1232,10 @@ if selected_module_key == "module2":
                             "x": float(x2),
                             "A": float(current_A2),
                             "Aprime": float(current_Ap2),
+                            "show_secant": bool(show_secant_m2),
+                            "x_plus": float(x2_plus),
+                            "A_plus": float(current_A2_plus),
+                            "secant_slope": float((current_A2_plus - current_A2) / max(x2_plus - x2, 1e-9)),
                         }
                     )
             with m2_button_col_right:
@@ -1274,6 +1278,22 @@ if selected_module_key == "module2":
                 saved_tangent_y = saved_A + saved_Aprime * (saved_tangent_x - saved_x)
                 ax22.plot(saved_tangent_x, saved_tangent_y, linewidth=2.6, color="#ffb347", alpha=0.72)
 
+            if saved_item.get("show_secant", False):
+                saved_x_plus = float(saved_item.get("x_plus", saved_x))
+                saved_A_plus = float(saved_item.get("A_plus", saved_A))
+                saved_secant_slope = float(saved_item.get("secant_slope", 0.0))
+                ax22.scatter([saved_x_plus], [saved_A_plus], s=38, color="#9bd18b", zorder=7)
+                saved_secant_half_width = 1.05
+                saved_secant_center_x = 0.5 * (saved_x + saved_x_plus)
+                saved_secant_center_y = 0.5 * (saved_A + saved_A_plus)
+                saved_secant_x = np.linspace(
+                    max(x_min_common, saved_secant_center_x - saved_secant_half_width),
+                    min(x_max_common, saved_secant_center_x + saved_secant_half_width),
+                    40,
+                )
+                saved_secant_y = saved_secant_center_y + saved_secant_slope * (saved_secant_x - saved_secant_center_x)
+                ax22.plot(saved_secant_x, saved_secant_y, linewidth=2.6, color="#ffb347", alpha=0.72)
+
         ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
         draw_to_x_axis(ax22, a2, np.interp(a2, xs, Axs_m2), "#f2a3c7", linewidth=1.6, marker_size=45)
         ax22.text(
@@ -1292,33 +1312,32 @@ if selected_module_key == "module2":
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        if not show_tangent_m2:
-            m2_left_x_xytext = smart_point_xytext(
-                x2,
-                current_A2,
-                x_min_common,
-                x_max_common,
-                y_min_common,
-                y_max_common,
-                other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2_plus, current_A2_plus)] if show_secant_m2 else [(a2, np.interp(a2, xs, Axs_m2))],
-            )
-            ax22.annotate(
-                f"A({x2:.2f})={current_A2:.4f}",
-                xy=(x2, current_A2),
-                xytext=m2_left_x_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.0,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.22,rounding_size=0.16",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
+        m2_left_x_xytext = smart_point_xytext(
+            x2,
+            current_A2,
+            x_min_common,
+            x_max_common,
+            y_min_common,
+            y_max_common,
+            other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2_plus, current_A2_plus)] if show_secant_m2 else [(a2, np.interp(a2, xs, Axs_m2))],
+        )
+        ax22.annotate(
+            f"A({x2:.2f})={current_A2:.4f}",
+            xy=(x2, current_A2),
+            xytext=m2_left_x_xytext,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.0,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.22,rounding_size=0.16",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
         if show_secant_m2:
             draw_to_x_axis(ax22, x2_plus, current_A2_plus, "#9bd18b", linewidth=1.6, marker_size=36)
             m2_left_xplus_xytext = smart_point_xytext(
@@ -1433,26 +1452,27 @@ if selected_module_key == "module2":
             mask_m2_fill = (xs >= min(x2, x2_plus)) & (xs <= max(x2, x2_plus))
             fill_area_by_sign(ax2, xs[mask_m2_fill], ys[mask_m2_fill], fill_pos_color, fill_neg_color, alpha=0.40)
 
-        m2_right_xytext = smart_point_xytext(
-            x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
-        )
-        ax2.annotate(
-            f"f({x2:.2f})={current_f2:.2f}",
-            xy=(x2, current_f2),
-            xytext=m2_right_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.2,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.24,rounding_size=0.18",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
+        if show_tangent_m2:
+            m2_right_xytext = smart_point_xytext(
+                x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
+            )
+            ax2.annotate(
+                f"f({x2:.2f})={current_f2:.2f}",
+                xy=(x2, current_f2),
+                xytext=m2_right_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.2,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.24,rounding_size=0.18",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
         ax2.set_title("y=f(x)", fontsize=14)
         ax2.set_xlabel("x")
         ax2.set_ylabel("f(x)")
@@ -1521,11 +1541,15 @@ if selected_module_key == "module2":
     with row1_left:
         row1_left_card = st.container(border=True)
         with row1_left_card:
-            st.latex(r"\Large A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
+            st.markdown(
+                r"$$\Large A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x$$"
+            )
     with row1_right:
         row1_right_card = st.container(border=True)
         with row1_right_card:
-            st.latex(rf"\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}")
+            st.markdown(
+                rf"$$\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
+            )
 
             compare_col_left, compare_col_right = st.columns(2, gap="small")
 
@@ -1629,18 +1653,22 @@ if selected_module_key == "module2":
     with row2_left:
         row2_left_card = st.container(border=True)
         with row2_left_card:
-            st.latex(r"{\huge \frac{A(x+\Delta x)-A(x)}{\Delta x}}\;\approx\;{\LARGE f(x)}")
+            st.markdown(
+                r"$$ {\huge \frac{A(x+\Delta x)-A(x)}{\Delta x}}\;\approx\;{\LARGE f(x)} $$"
+            )
     with row2_right:
         row2_right_card = st.container(border=True)
         with row2_right_card:
-            st.latex(rf"{{\huge \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}}}\;\approx\;{{\LARGE f({x2:.2f})}}")
+            st.markdown(
+                rf"$$ {{\huge \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}}}\;\approx\;{{\LARGE f({x2:.2f})}} $$"
+            )
 
             slope_value_m2 = (current_A2_plus - current_A2) / dx2
-            slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
+            slope_value_col_left, slope_value_col_right = st.columns([0.70, 0.30], gap="small")
             with slope_value_col_left:
                 st.markdown(
                     f"""
-                    <div style="margin-top:0.85rem; margin-left:4.1rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                    <div style="margin-top:0.85rem; text-align:center; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
                         {slope_value_m2:.4f}
                     </div>
                     """,
@@ -1649,7 +1677,7 @@ if selected_module_key == "module2":
             with slope_value_col_right:
                 st.markdown(
                     f"""
-                    <div style="margin-top:0.85rem; margin-left:2.8rem; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
+                    <div style="margin-top:0.85rem; text-align:center; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
                         {current_f2:.4f}
                     </div>
                     """,
@@ -1662,23 +1690,26 @@ if selected_module_key == "module2":
     with row3_left:
         row3_left_card = st.container(border=True)
         with row3_left_card:
-            st.latex(r"\LARGE A'(x)\;=\;f(x)")
+            st.markdown(
+                r"$$\LARGE A'(x)\;=\;f(x)$$"
+            )
     with row3_right:
         row3_right_card = st.container(border=True)
         with row3_right_card:
-            st.latex(rf"\LARGE A'({x2:.2f})\;=\;f({x2:.2f})")
+            st.markdown(
+                rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
+            )
 
 
 # -----------------------------
-# Module 4
+# Module 3
 # -----------------------------
 if selected_module_key == "module3":
-    st.subheader("模組 4：FTC Part 2 幾何意義")
-    st.caption("把定積分看成原函數的總改變量，而不是一條要背的公式。")
+    st.subheader("模組 3：用累積函數 A(x) 的端點差求定積分")
 
     if show_formula:
         st.markdown('<div class="formula-box">', unsafe_allow_html=True)
-    st.latex(r"F'(x)=f(x) \quad \Rightarrow \quad \int_a^b f(x)\,dx = F(b)-F(a)")
+    st.latex(r"\int_a^b f(x)\,dx = A(b)-A(a)")
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="soft-control-box">', unsafe_allow_html=True)
@@ -1701,40 +1732,39 @@ if selected_module_key == "module3":
         key="m4b_raw",
         on_change=enforce_m4b_not_below_a,
     )
-    b4 = float(max(b4, a))
+    b4_display = float(max(b4, a))
     st.markdown('</div>', unsafe_allow_html=True)
 
     Axs_m4 = cumulative_integral(f, a, xs)
-    def F_m4(x):
-        arr = np.array(x, dtype=float)
-        return np.interp(arr, xs, Axs_m4)
+    Aa = float(np.interp(a, xs, Axs_m4))
+    Ab = float(np.interp(b4_display, xs, Axs_m4))
+    exact_area = Ab - Aa
+    fa4 = float(f(np.array([a]))[0])
+    fb4 = float(f(np.array([b4_display]))[0])
 
-    b4_display = max(b4, a)
-    exact_area = (F_m4(np.array([b4_display])) - F_m4(np.array([a])))[0]
-    Fa = F_m4(np.array([a]))[0]
-    Fb = F_m4(np.array([b4_display]))[0]
     m4_axis_positions = [a, b4_display]
     m4_axis_levels = get_axis_label_levels(m4_axis_positions, threshold=0.45)
     m4_axis_y_offsets = [-0.17 - 0.32 * lvl for lvl in m4_axis_levels]
 
     m4c1, m4c2, m4c3 = st.columns(3)
-    m4c1.metric("F(a)", f"{Fa:.4f}")
-    m4c2.metric("F(b)", f"{Fb:.4f}")
-    m4c3.metric("F(b)-F(a)", f"{exact_area:.4f}")
+    m4c1.metric("A(a)", f"{Aa:.4f}")
+    m4c2.metric("A(b)", f"{Ab:.4f}")
+    m4c3.metric("A(b)-A(a)", f"{exact_area:.4f}")
 
-    left, right = st.columns(2)
+    left, right = st.columns(2, gap="large")
     with left:
-        Fx = Axs_m4
         fig42, ax42 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax42.plot(xs, Fx, linewidth=3.4, color="#8bbce9")
-        draw_to_x_axis(ax42, a, Fa, "#f2a3c7", linewidth=1.6, marker_size=45)
+        ax42.plot(xs, Axs_m4, linewidth=3.4, color="#8fc9a8")
+
+        draw_to_x_axis(ax42, a, Aa, "#f2a3c7", linewidth=1.6, marker_size=45)
         ax42.text(
             a,
             0 + m4_axis_y_offsets[0],
             f"{a:.2f}",
             **pretty_a_label_kwargs(),
         )
-        draw_to_x_axis(ax42, b4_display, Fb, "#9bd18b", linewidth=1.6, marker_size=55)
+
+        draw_to_x_axis(ax42, b4_display, Ab, "#9bd18b", linewidth=1.6, marker_size=55)
         ax42.text(
             b4_display,
             0 + m4_axis_y_offsets[1],
@@ -1744,12 +1774,14 @@ if selected_module_key == "module3":
             fontsize=13,
             bbox=smart_value_bbox(),
         )
+
         m4_left_xytext_a = smart_point_xytext(
-            a, Fa, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(b4_display, Fb)]
+            a, Aa, x_min_common, x_max_common, y_min_common, y_max_common,
+            other_points=[(b4_display, Ab)],
         )
         ax42.annotate(
-            f"({a:.2f}, {Fa:.2f})",
-            xy=(a, Fa),
+            f"A({a:.2f})={Aa:.4f}",
+            xy=(a, Aa),
             xytext=m4_left_xytext_a,
             textcoords="offset points",
             color="#c45a7a",
@@ -1764,12 +1796,14 @@ if selected_module_key == "module3":
             ),
             arrowprops=dict(arrowstyle="-", color="#f2b3c8", lw=1.0, alpha=0.9),
         )
+
         m4_left_xytext_b = smart_point_xytext(
-            b4_display, Fb, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a, Fa)]
+            b4_display, Ab, x_min_common, x_max_common, y_min_common, y_max_common,
+            other_points=[(a, Aa)],
         )
         ax42.annotate(
-            f"({b4_display:.2f}, {Fb:.2f})",
-            xy=(b4_display, Fb),
+            f"A({b4_display:.2f})={Ab:.4f}",
+            xy=(b4_display, Ab),
             xytext=m4_left_xytext_b,
             textcoords="offset points",
             color="#2f6f4f",
@@ -1784,12 +1818,13 @@ if selected_module_key == "module3":
             ),
             arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
         )
+
         delta_x = a + 0.55 * (b4_display - a)
-        delta_y = Fa + 0.62 * (Fb - Fa) + (0.18 if abs(Fb - Fa) < 0.8 else 0.0)
+        delta_y = Aa + 0.62 * (Ab - Aa) + (0.18 if abs(Ab - Aa) < 0.8 else 0.0)
         ax42.text(
             delta_x,
             delta_y,
-            f"ΔF = {exact_area:.2f}",
+            f"A(b)-A(a) = {exact_area:.2f}",
             ha="center",
             va="center",
             fontsize=13.4,
@@ -1797,9 +1832,10 @@ if selected_module_key == "module3":
             color="#2f2f2f",
             bbox=smart_area_bbox(),
         )
-        ax42.set_title("原函數的總改變量", fontsize=14)
+
+        ax42.set_title("y=A(x)", fontsize=14)
         ax42.set_xlabel("x")
-        ax42.set_ylabel("F(x)")
+        ax42.set_ylabel("A(x)")
         ax42.set_xlim(x_min_common, x_max_common)
         ax42.set_ylim(y_min_common, y_max_common)
         add_common_style(ax42)
@@ -1807,9 +1843,8 @@ if selected_module_key == "module3":
 
     with right:
         fig4, ax4 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax4.plot(xs, ys, linewidth=3.4, color="#8fc9a8")
-        fa4 = f(np.array([a]))[0]
-        fb4 = f(np.array([b4_display]))[0]
+        ax4.plot(xs, ys, linewidth=3.4, color="#8bbce9")
+
         draw_to_x_axis(ax4, a, fa4, "#f2a3c7", linewidth=1.6, marker_size=45)
         ax4.text(
             a,
@@ -1817,6 +1852,7 @@ if selected_module_key == "module3":
             f"{a:.2f}",
             **pretty_a_label_kwargs(),
         )
+
         draw_to_x_axis(ax4, b4_display, fb4, "#9bd18b", linewidth=1.6, marker_size=55)
         ax4.text(
             b4_display,
@@ -1827,11 +1863,13 @@ if selected_module_key == "module3":
             fontsize=13,
             bbox=smart_value_bbox(),
         )
+
         m4_right_xytext_a = smart_point_xytext(
-            a, fa4, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(b4_display, fb4)]
+            a, fa4, x_min_common, x_max_common, y_min_common, y_max_common,
+            other_points=[(b4_display, fb4)],
         )
         ax4.annotate(
-            f"({a:.2f}, {fa4:.2f})",
+            f"f({a:.2f})={fa4:.4f}",
             xy=(a, fa4),
             xytext=m4_right_xytext_a,
             textcoords="offset points",
@@ -1847,11 +1885,13 @@ if selected_module_key == "module3":
             ),
             arrowprops=dict(arrowstyle="-", color="#f2b3c8", lw=1.0, alpha=0.9),
         )
+
         m4_right_xytext_b = smart_point_xytext(
-            b4_display, fb4, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a, fa4)]
+            b4_display, fb4, x_min_common, x_max_common, y_min_common, y_max_common,
+            other_points=[(a, fa4)],
         )
         ax4.annotate(
-            f"({b4_display:.2f}, {fb4:.2f})",
+            f"f({b4_display:.2f})={fb4:.4f}",
             xy=(b4_display, fb4),
             xytext=m4_right_xytext_b,
             textcoords="offset points",
@@ -1867,6 +1907,7 @@ if selected_module_key == "module3":
             ),
             arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
         )
+
         mask4 = (xs >= a) & (xs <= b4_display)
         fill_area_by_sign(ax4, xs[mask4], ys[mask4], fill_pos_color, fill_neg_color, alpha=0.30)
         ys_mask4 = ys[mask4]
@@ -1894,7 +1935,8 @@ if selected_module_key == "module3":
             color="#2f2f2f",
             bbox=smart_area_bbox(),
         )
-        ax4.set_title("陰影面積：定積分", fontsize=14)
+
+        ax4.set_title("y=f(x)", fontsize=14)
         ax4.set_xlabel("x")
         ax4.set_ylabel("f(x)")
         ax4.set_xlim(x_min_common, x_max_common)
@@ -1905,14 +1947,13 @@ if selected_module_key == "module3":
         st.markdown(
             f"""
             <div class="panel">
-            <b>你現在應該看到什麼</b><br>
-            左邊的陰影面積，對應到右邊原函數從 F(a) 走到 F(b) 的總改變量。<br>
-            這就是：<b>定積分 = 總改變量</b>。<br><br>
-            現在 a = <b>{a:.2f}</b>，b = <b>{b4:.2f}</b>，所以<br>
-            F(a) ≈ <b>{Fa:.4f}</b>，F(b) ≈ <b>{Fb:.4f}</b>，
-            因此定積分 ≈ <b>{exact_area:.4f}</b>。
+            <b>觀察重點</b><br>
+            左圖顯示累積函數的端點差：A(b)-A(a)。<br>
+            右圖顯示從 a 到 b 的定積分面積。<br><br>
+            現在 a = <b>{a:.2f}</b>，b = <b>{b4_display:.2f}</b>，所以<br>
+            A(a) ≈ <b>{Aa:.4f}</b>，A(b) ≈ <b>{Ab:.4f}</b>，<br>
+            因此定積分 ≈ A(b)-A(a) ≈ <b>{exact_area:.4f}</b>。
             </div>
             """,
             unsafe_allow_html=True,
         )
-
