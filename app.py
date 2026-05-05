@@ -537,15 +537,15 @@ with st.sidebar:
         """,
         unsafe_allow_html=True,
     )
-    y_max_input = st.number_input("上", value=5.0, step=0.5, format="%.2f")
+    y_max_input = st.number_input("y 軸顯示範圍：上界", value=5.0, step=0.5, format="%.2f", label_visibility="collapsed")
 
     left_input_col, right_input_col = st.columns(2)
     with left_input_col:
         st.markdown('<div style="text-align:center; color:#52667a; font-size:0.9rem; margin-bottom:0.15rem;">x 軸左端點</div>', unsafe_allow_html=True)
-        domain_left = st.number_input("左", value=-3.0, step=0.5, format="%.2f")
+        domain_left = st.number_input("x 軸顯示範圍：左端點", value=-3.0, step=0.5, format="%.2f", label_visibility="collapsed")
     with right_input_col:
         st.markdown('<div style="text-align:center; color:#52667a; font-size:0.9rem; margin-bottom:0.15rem;">x 軸右端點</div>', unsafe_allow_html=True)
-        domain_right = st.number_input("右", value=3.0, step=0.5, format="%.2f")
+        domain_right = st.number_input("x 軸顯示範圍：右端點", value=3.0, step=0.5, format="%.2f", label_visibility="collapsed")
 
     st.markdown(
         """
@@ -555,7 +555,7 @@ with st.sidebar:
         """,
         unsafe_allow_html=True,
     )
-    y_min_input = st.number_input("下", value=-5.0, step=0.5, format="%.2f")
+    y_min_input = st.number_input("y 軸顯示範圍：下界", value=-5.0, step=0.5, format="%.2f", label_visibility="collapsed")
 
     if domain_right <= domain_left:
         st.warning("右端點必須大於左端點，已暫時使用預設區間 [-3, 3]。")
@@ -733,7 +733,7 @@ if selected_module_key == "module1":
         )
         st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt")
     
-    top_control_col, top_formula_col = st.columns([0.95, 1.05], gap="large")
+    top_formula_col, top_control_col = st.columns([1.05, 0.95], gap="large")
 
     with top_control_col:
         a = st.slider(
@@ -768,25 +768,6 @@ if selected_module_key == "module1":
             on_change=enforce_m1z_not_above_a,
         )
         z1 = float(min(z1, a))
-        button_col_left, button_col_right = st.columns(2, gap="small")
-        with button_col_left:
-            if st.button("留下圖形", key="m1_save_a_curve", use_container_width=True):
-                saved_curve = cumulative_integral(f, a, xs)
-                color_idx = int(st.session_state.get("m1_saved_curve_color_idx", 0))
-                curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
-                st.session_state["m1_saved_curve_color_idx"] = color_idx + 1
-                st.session_state["m1_saved_a_curves"].append(
-                    {
-                        "a": float(a),
-                        "curve": np.array(saved_curve, dtype=float),
-                        "color": curve_color,
-                    }
-                )
-        with button_col_right:
-            if st.button("清除圖形", key="m1_clear_saved_curves", use_container_width=True):
-                st.session_state["m1_saved_a_curves"] = []
-                st.session_state["m1_saved_curve_color_idx"] = 0
-        show_full_A_curve = st.checkbox("顯示全部圖形", value=False, key="m1_show_full_curve")
 
     components.html(
         """
@@ -860,6 +841,25 @@ if selected_module_key == "module1":
         else:
             st.markdown('<div style="height: 2.2rem;"></div>', unsafe_allow_html=True)
 
+        button_col_left, button_col_right = st.columns(2, gap="small")
+        with button_col_left:
+            if st.button("留下圖形", key="m1_save_a_curve", use_container_width=True):
+                saved_curve = cumulative_integral(f, a, xs)
+                color_idx = int(st.session_state.get("m1_saved_curve_color_idx", 0))
+                curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
+                st.session_state["m1_saved_curve_color_idx"] = color_idx + 1
+                st.session_state["m1_saved_a_curves"].append(
+                    {
+                        "a": float(a),
+                        "curve": np.array(saved_curve, dtype=float),
+                        "color": curve_color,
+                    }
+                )
+        with button_col_right:
+            if st.button("清除圖形", key="m1_clear_saved_curves", use_container_width=True):
+                st.session_state["m1_saved_a_curves"] = []
+                st.session_state["m1_saved_curve_color_idx"] = 0
+        show_full_A_curve = st.checkbox("顯示全部圖形", value=False, key="m1_show_full_curve")
         st.markdown('</div>', unsafe_allow_html=True)
 
     m1_axis_positions = [a]
@@ -1133,9 +1133,9 @@ if selected_module_key == "module2":
 
     full_width_col = st.container()
     with full_width_col:
-        m2_left_slider_col, m2_right_control_col = st.columns([0.55, 0.45], gap="large")
+        m2_left_control_col, m2_right_slider_col = st.columns([0.45, 0.55], gap="large")
 
-        with m2_left_slider_col:
+        with m2_right_slider_col:
             a2 = st.slider(
                 "固定點 a",
                 min_value=float(domain_left),
@@ -1211,7 +1211,7 @@ if selected_module_key == "module2":
         current_A2_plus = np.interp(x2_plus, xs, Axs_m2)
         current_f2_plus = f(np.array([x2_plus]))[0]
 
-        with m2_right_control_col:
+        with m2_left_control_col:
             m2_check_col_left, m2_check_col_right = st.columns(2, gap="small")
             with m2_check_col_left:
                 show_secant_m2 = st.checkbox("割線", key="m2_show_secant")
