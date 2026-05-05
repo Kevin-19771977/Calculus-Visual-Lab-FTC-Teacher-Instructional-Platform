@@ -1292,32 +1292,33 @@ if selected_module_key == "module2":
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        m2_left_x_xytext = smart_point_xytext(
-            x2,
-            current_A2,
-            x_min_common,
-            x_max_common,
-            y_min_common,
-            y_max_common,
-            other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2_plus, current_A2_plus)] if show_secant_m2 else [(a2, np.interp(a2, xs, Axs_m2))],
-        )
-        ax22.annotate(
-            f"A({x2:.2f})={current_A2:.4f}",
-            xy=(x2, current_A2),
-            xytext=m2_left_x_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.0,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.22,rounding_size=0.16",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
+        if not show_tangent_m2:
+            m2_left_x_xytext = smart_point_xytext(
+                x2,
+                current_A2,
+                x_min_common,
+                x_max_common,
+                y_min_common,
+                y_max_common,
+                other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2_plus, current_A2_plus)] if show_secant_m2 else [(a2, np.interp(a2, xs, Axs_m2))],
+            )
+            ax22.annotate(
+                f"A({x2:.2f})={current_A2:.4f}",
+                xy=(x2, current_A2),
+                xytext=m2_left_x_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.0,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.22,rounding_size=0.16",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
         if show_secant_m2:
             draw_to_x_axis(ax22, x2_plus, current_A2_plus, "#9bd18b", linewidth=1.6, marker_size=36)
             m2_left_xplus_xytext = smart_point_xytext(
@@ -1432,27 +1433,26 @@ if selected_module_key == "module2":
             mask_m2_fill = (xs >= min(x2, x2_plus)) & (xs <= max(x2, x2_plus))
             fill_area_by_sign(ax2, xs[mask_m2_fill], ys[mask_m2_fill], fill_pos_color, fill_neg_color, alpha=0.40)
 
-        if show_tangent_m2:
-            m2_right_xytext = smart_point_xytext(
-                x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
-            )
-            ax2.annotate(
-                f"f({x2:.2f})={current_f2:.2f}",
-                xy=(x2, current_f2),
-                xytext=m2_right_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.2,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.24,rounding_size=0.18",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
+        m2_right_xytext = smart_point_xytext(
+            x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
+        )
+        ax2.annotate(
+            f"f({x2:.2f})={current_f2:.2f}",
+            xy=(x2, current_f2),
+            xytext=m2_right_xytext,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.2,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.24,rounding_size=0.18",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
         ax2.set_title("y=f(x)", fontsize=14)
         ax2.set_xlabel("x")
         ax2.set_ylabel("f(x)")
@@ -1521,15 +1521,11 @@ if selected_module_key == "module2":
     with row1_left:
         row1_left_card = st.container(border=True)
         with row1_left_card:
-            st.markdown(
-                r"$$\Large A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x$$"
-            )
+            st.latex(r"\Large A(x+\Delta x)-A(x)\;\approx\; f(x)\cdot \Delta x")
     with row1_right:
         row1_right_card = st.container(border=True)
         with row1_right_card:
-            st.markdown(
-                rf"$$\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}$$"
-            )
+            st.latex(rf"\Large A({x2:.2f}+{dx2:.2f})-A({x2:.2f})\;\approx\; f({x2:.2f})\cdot {dx2:.2f}")
 
             compare_col_left, compare_col_right = st.columns(2, gap="small")
 
@@ -1633,15 +1629,11 @@ if selected_module_key == "module2":
     with row2_left:
         row2_left_card = st.container(border=True)
         with row2_left_card:
-            st.markdown(
-                r"$$ {\huge \frac{A(x+\Delta x)-A(x)}{\Delta x}}\;\approx\;{\LARGE f(x)} $$"
-            )
+            st.latex(r"{\huge \frac{A(x+\Delta x)-A(x)}{\Delta x}}\;\approx\;{\LARGE f(x)}")
     with row2_right:
         row2_right_card = st.container(border=True)
         with row2_right_card:
-            st.markdown(
-                rf"$$ {{\huge \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}}}\;\approx\;{{\LARGE f({x2:.2f})}} $$"
-            )
+            st.latex(rf"{{\huge \frac{{A({x2:.2f}+{dx2:.2f})-A({x2:.2f})}}{{{dx2:.2f}}}}}\;\approx\;{{\LARGE f({x2:.2f})}}")
 
             slope_value_m2 = (current_A2_plus - current_A2) / dx2
             slope_value_col_left, slope_value_col_right = st.columns(2, gap="small")
@@ -1670,15 +1662,11 @@ if selected_module_key == "module2":
     with row3_left:
         row3_left_card = st.container(border=True)
         with row3_left_card:
-            st.markdown(
-                r"$$\LARGE A'(x)\;=\;f(x)$$"
-            )
+            st.latex(r"\LARGE A'(x)\;=\;f(x)")
     with row3_right:
         row3_right_card = st.container(border=True)
         with row3_right_card:
-            st.markdown(
-                rf"$$\LARGE A'({x2:.2f})\;=\;f({x2:.2f})$$"
-            )
+            st.latex(rf"\LARGE A'({x2:.2f})\;=\;f({x2:.2f})")
 
 
 # -----------------------------
