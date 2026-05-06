@@ -5,7 +5,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="微積分基本定理教學平台",
+    page_title="微積分基本定理三階段概念建構教學平台",
     page_icon="📘",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -406,7 +406,7 @@ if "func_str" not in st.session_state:
 st.markdown(
     """
     <div class="hero">
-        <h1 style="margin-bottom:0.4rem;">📘 微積分基本定理教學平台</h1>
+        <h1 style="margin-bottom:0.4rem;">📘 微積分基本定理三階段概念建構教學平台</h1>
     </div>
     """,
     unsafe_allow_html=True,
