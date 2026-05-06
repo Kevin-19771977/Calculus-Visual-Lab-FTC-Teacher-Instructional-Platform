@@ -643,6 +643,17 @@ if "m2_show_tangent" not in st.session_state:
 if "m2_show_secant" not in st.session_state:
     st.session_state["m2_show_secant"] = False
 
+# 第一次進入程式時，清除所有先前留下的圖形紀錄；
+# 之後學生按下「留下圖形」仍可正常保存，不會在 rerun 時被清除。
+if "saved_curves_cleaned_on_start" not in st.session_state:
+    st.session_state["m1_saved_a_curves"] = []
+    st.session_state["m1_saved_curve_color_idx"] = 0
+    st.session_state["m2_saved_a_curves"] = []
+    st.session_state["m2_saved_curve_color_idx"] = 0
+    st.session_state["m3_saved_a_curves"] = []
+    st.session_state["m3_saved_curve_color_idx"] = 0
+    st.session_state["saved_curves_cleaned_on_start"] = True
+
 show_help = False
 show_formula = True
 
@@ -1108,7 +1119,7 @@ if selected_module_key == "module1":
 
     st.markdown(
         """
-        <div style="margin-top:0.65rem; font-size:1rem; line-height:1.85; color:#42586f;">
+        <div style="margin-top:0.65rem; font-size:1.18rem; line-height:1.9; color:#42586f;">
         <b>觀察重點</b><br>
         1. 當 x 改變時，A(x) 也跟著改變。<br>
         2. A(x) 不是一個單一數值，而是一個會隨著 x 改變的新函數。
@@ -1740,12 +1751,12 @@ if selected_module_key == "module3":
             unsafe_allow_html=True
         )
         st.latex(r"""
-        \LARGE
+        \Huge
         \begin{aligned}
         A(x)=\int_a^x f(t)\,dt
-        &\Rightarrow
-        A(c)-A(b)=\int_a^c f(t)\,dt-\int_a^b f(t)\,dt\\[0.45em]
-        &\Rightarrow
+        &\qquad\Rightarrow\qquad
+        A(c)-A(b)=\int_a^c f(t)\,dt-\int_a^b f(t)\,dt\\[0.35em]
+        &\qquad\Rightarrow\qquad
         A(c)-A(b)=\int_b^c f(t)\,dt
         \end{aligned}
         """)
