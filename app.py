@@ -1697,34 +1697,37 @@ if selected_module_key == "module3":
     st.subheader("模組 3：用累積函數 A(x) 的端點差求定積分")
 
     m3_initial_value = float(min(max(1.0, domain_left), domain_right))
-    m3_dx_initial_value = 1.0
-    if "m3_defaults_initialized" not in st.session_state:
+
+    def enforce_m3b_not_above_c():
+        c_val = float(st.session_state.get("m3c", m3_initial_value))
+        b_val = float(st.session_state.get("m3b", m3_initial_value))
+        if b_val > c_val:
+            st.session_state["m3b"] = c_val
+
+    def enforce_m3c_not_below_b():
+        c_val = float(st.session_state.get("m3c", m3_initial_value))
+        b_val = float(st.session_state.get("m3b", m3_initial_value))
+        if c_val < b_val:
+            st.session_state["m3c"] = b_val
+
+    if "m3_endpoint_defaults_initialized" not in st.session_state:
         st.session_state["m3a"] = m3_initial_value
-        st.session_state["m3x"] = m3_initial_value
-        st.session_state["m3dx"] = m3_dx_initial_value
-        st.session_state["m3_show_tangent"] = False
-        st.session_state["m3_show_secant"] = False
-        st.session_state["m3_defaults_initialized"] = True
+        st.session_state["m3b"] = m3_initial_value
+        st.session_state["m3c"] = m3_initial_value
+        st.session_state["m3_endpoint_defaults_initialized"] = True
     else:
         if "m3a" not in st.session_state:
             st.session_state["m3a"] = m3_initial_value
-        if "m3x" not in st.session_state:
-            st.session_state["m3x"] = m3_initial_value
-        if "m3dx" not in st.session_state:
-            st.session_state["m3dx"] = m3_dx_initial_value
+        if "m3b" not in st.session_state:
+            st.session_state["m3b"] = float(st.session_state.get("m3a", m3_initial_value))
+        if "m3c" not in st.session_state:
+            st.session_state["m3c"] = float(st.session_state.get("m3a", m3_initial_value))
 
     st.session_state["m3a"] = float(min(max(st.session_state["m3a"], domain_left), domain_right))
-    st.session_state["m3x"] = float(min(max(st.session_state["m3x"], domain_left), domain_right))
-    st.session_state["m3dx"] = float(min(max(st.session_state["m3dx"], 0.01), 1.0))
-
-    if "m3_saved_a_curves" not in st.session_state:
-        st.session_state["m3_saved_a_curves"] = []
-    if "m3_saved_curve_color_idx" not in st.session_state:
-        st.session_state["m3_saved_curve_color_idx"] = 0
-    if "m3_show_tangent" not in st.session_state:
-        st.session_state["m3_show_tangent"] = False
-    if "m3_show_secant" not in st.session_state:
-        st.session_state["m3_show_secant"] = False
+    st.session_state["m3b"] = float(min(max(st.session_state["m3b"], domain_left), domain_right))
+    st.session_state["m3c"] = float(min(max(st.session_state["m3c"], domain_left), domain_right))
+    if st.session_state["m3b"] > st.session_state["m3c"]:
+        st.session_state["m3b"] = st.session_state["m3c"]
 
     if show_formula:
         st.markdown(
@@ -1732,11 +1735,15 @@ if selected_module_key == "module3":
             unsafe_allow_html=True
         )
         st.latex(r"""
-        \huge
+        \LARGE
         \begin{aligned}
-        A(x)&=\int_a^x f(t)\,dt \quad \Rightarrow \quad A'(x)=f(x)\\[1.2em]
-        &\Rightarrow \quad A(c)-A(b)=\int_a^c f(t)\,dt-\int_a^b f(t)\,dt\\[1.2em]
-        &\Rightarrow \quad A(c)-A(b)=\int_b^c f(t)\,dt
+        A(x)=\int_a^x f(t)\,dt
+        &\Rightarrow
+        A'(x)=f(x)\\[0.9em]
+        &\Rightarrow
+        A(c)-A(b)=\int_a^c f(t)\,dt-\int_a^b f(t)\,dt\\[0.9em]
+        &\Rightarrow
+        A(c)-A(b)=\int_b^c f(t)\,dt
         \end{aligned}
         """)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1754,21 +1761,23 @@ if selected_module_key == "module3":
                 step=0.05,
                 key="m3a",
             )
-            x3 = st.slider(
-                "拖動 x",
+            c3 = st.slider(
+                "右端點 c",
                 min_value=float(domain_left),
                 max_value=float(domain_right),
-                value=float(st.session_state.get("m3x", m3_initial_value)),
+                value=float(st.session_state.get("m3c", m3_initial_value)),
                 step=0.05,
-                key="m3x",
+                key="m3c",
+                on_change=enforce_m3c_not_below_b,
             )
-            dx3 = st.slider(
-                "Δx",
-                min_value=0.01,
-                max_value=1.0,
-                value=float(st.session_state.get("m3dx", m3_dx_initial_value)),
-                step=0.01,
-                key="m3dx",
+            b3 = st.slider(
+                "左端點 b",
+                min_value=float(domain_left),
+                max_value=float(domain_right),
+                value=float(st.session_state.get("m3b", m3_initial_value)),
+                step=0.05,
+                key="m3b",
+                on_change=enforce_m3b_not_above_c,
             )
 
         components.html(
@@ -1812,129 +1821,59 @@ if selected_module_key == "module3":
             height=0,
         )
 
+        c3 = float(max(c3, b3))
         Axs_m3 = cumulative_integral(f, a3, xs)
-        Aprime_m3 = safe_gradient(Axs_m3, xs)
-        current_A3 = np.interp(x3, xs, Axs_m3)
-        current_f3 = f(np.array([x3]))[0]
-        current_Ap3 = np.interp(x3, xs, Aprime_m3)
-        x3_plus = float(min(x3 + dx3, x_max_common))
-        current_A3_plus = np.interp(x3_plus, xs, Axs_m3)
-        current_f3_plus = f(np.array([x3_plus]))[0]
+        current_A3_b = float(np.interp(b3, xs, Axs_m3))
+        current_A3_c = float(np.interp(c3, xs, Axs_m3))
+        current_f3_b = float(f(np.array([b3]))[0])
+        current_f3_c = float(f(np.array([c3]))[0])
+        endpoint_diff_value_m3 = current_A3_c - current_A3_b
+        definite_integral_value_m3 = endpoint_diff_value_m3
 
-        with m3_left_control_col:
-            m3_check_col_left, m3_check_col_right = st.columns(2, gap="small")
-            with m3_check_col_left:
-                show_secant_m3 = st.checkbox("割線", key="m3_show_secant")
-            with m3_check_col_right:
-                show_tangent_m3 = st.checkbox("切線", key="m3_show_tangent")
-
-            m3_button_col_left, m3_button_col_right = st.columns(2, gap="small")
-            with m3_button_col_left:
-                if st.button("留下圖形", key="m3_save_a_curve", use_container_width=True):
-                    color_idx = int(st.session_state.get("m3_saved_curve_color_idx", 0))
-                    curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
-                    st.session_state["m3_saved_curve_color_idx"] = color_idx + 1
-                    st.session_state["m3_saved_a_curves"].append(
-                        {
-                            "a": float(a3),
-                            "curve": np.array(Axs_m3, dtype=float),
-                            "color": curve_color,
-                            "x": float(x3),
-                            "A": float(current_A3),
-                            "Aprime": float(current_Ap3),
-                            "show_secant": bool(show_secant_m3),
-                            "x_plus": float(x3_plus),
-                            "A_plus": float(current_A3_plus),
-                            "secant_slope": float((current_A3_plus - current_A3) / max(x3_plus - x3, 1e-9)),
-                        }
-                    )
-            with m3_button_col_right:
-                if st.button("清除圖形", key="m3_clear_saved_curves", use_container_width=True):
-                    st.session_state["m3_saved_a_curves"] = []
-                    st.session_state["m3_saved_curve_color_idx"] = 0
-
-        m3_axis_positions = [a3, x3]
+        m3_axis_positions = [a3, b3, c3]
+        m3_axis_keys = ["a", "b", "c"]
         m3_axis_levels = get_axis_label_levels(m3_axis_positions, threshold=0.45)
-        m3_axis_y_offsets = [-0.17 - 0.32 * lvl for lvl in m3_axis_levels]
-
-        if current_f3 > 1e-3:
-            trend = "A(x) 正在上升"
-        elif current_f3 < -1e-3:
-            trend = "A(x) 正在下降"
-        else:
-            trend = "A(x) 在這附近斜率接近 0"
+        m3_axis_y_offsets = {
+            key: -0.17 - 0.32 * lvl
+            for key, lvl in zip(m3_axis_keys, m3_axis_levels)
+        }
 
     left, right = st.columns(2, gap="large")
     with left:
         fig32, ax32 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-
-        for saved_item in st.session_state.get("m3_saved_a_curves", []):
-            saved_curve = np.array(saved_item["curve"], dtype=float)
-            saved_color = saved_item.get("color", "#9fd8b3")
-            saved_x = float(saved_item["x"])
-            saved_A = float(saved_item["A"])
-            saved_Aprime = float(saved_item["Aprime"])
-
-            ax32.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
-            ax32.scatter([saved_x], [saved_A], s=48, color="#9bd18b", zorder=7)
-
-            if show_tangent_m3:
-                saved_tangent_half_width = 1.05
-                saved_tangent_x = np.linspace(
-                    max(x_min_common, saved_x - saved_tangent_half_width),
-                    min(x_max_common, saved_x + saved_tangent_half_width),
-                    40,
-                )
-                saved_tangent_y = saved_A + saved_Aprime * (saved_tangent_x - saved_x)
-                ax32.plot(saved_tangent_x, saved_tangent_y, linewidth=2.6, color="#ffb347", alpha=0.72)
-
-            if saved_item.get("show_secant", False):
-                saved_x_plus = float(saved_item.get("x_plus", saved_x))
-                saved_A_plus = float(saved_item.get("A_plus", saved_A))
-                saved_secant_slope = float(saved_item.get("secant_slope", 0.0))
-                ax32.scatter([saved_x_plus], [saved_A_plus], s=38, color="#9bd18b", zorder=7)
-                saved_secant_half_width = 1.05
-                saved_secant_center_x = 0.5 * (saved_x + saved_x_plus)
-                saved_secant_center_y = 0.5 * (saved_A + saved_A_plus)
-                saved_secant_x = np.linspace(
-                    max(x_min_common, saved_secant_center_x - saved_secant_half_width),
-                    min(x_max_common, saved_secant_center_x + saved_secant_half_width),
-                    40,
-                )
-                saved_secant_y = saved_secant_center_y + saved_secant_slope * (saved_secant_x - saved_secant_center_x)
-                ax32.plot(saved_secant_x, saved_secant_y, linewidth=2.6, color="#ffb347", alpha=0.72)
-
         ax32.plot(xs, Axs_m3, linewidth=3.4, color="#8fc9a8")
+
         draw_to_x_axis(ax32, a3, np.interp(a3, xs, Axs_m3), "#f2a3c7", linewidth=1.6, marker_size=45)
         ax32.text(
             a3,
-            0 + m3_axis_y_offsets[0],
+            0 + m3_axis_y_offsets["a"],
             f"{a3:.2f}",
             **pretty_a_label_kwargs(),
         )
-        draw_to_x_axis(ax32, x3, current_A3, "#9bd18b", linewidth=1.6, marker_size=55)
+
+        draw_to_x_axis(ax32, b3, current_A3_b, "#9bd18b", linewidth=1.6, marker_size=55)
         ax32.text(
-            x3,
-            0 + m3_axis_y_offsets[1],
-            f"{x3:.2f}",
+            b3,
+            0 + m3_axis_y_offsets["b"],
+            f"{b3:.2f}",
             ha="center",
             va="top",
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        m3_left_x_xytext = smart_point_xytext(
-            x3,
-            current_A3,
+        b_xytext = smart_point_xytext(
+            b3,
+            current_A3_b,
             x_min_common,
             x_max_common,
             y_min_common,
             y_max_common,
-            other_points=[(a3, np.interp(a3, xs, Axs_m3)), (x3_plus, current_A3_plus)] if show_secant_m3 else [(a3, np.interp(a3, xs, Axs_m3))],
+            other_points=[(c3, current_A3_c), (a3, np.interp(a3, xs, Axs_m3))],
         )
         ax32.annotate(
-            f"A({x3:.2f})={current_A3:.4f}",
-            xy=(x3, current_A3),
-            xytext=m3_left_x_xytext,
+            f"A({b3:.2f})={current_A3_b:.4f}",
+            xy=(b3, current_A3_b),
+            xytext=b_xytext,
             textcoords="offset points",
             color="#2f6f4f",
             fontsize=13.0,
@@ -1948,77 +1887,43 @@ if selected_module_key == "module3":
             ),
             arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
         )
-        if show_secant_m3:
-            draw_to_x_axis(ax32, x3_plus, current_A3_plus, "#9bd18b", linewidth=1.6, marker_size=36)
-            m3_left_xplus_xytext = smart_point_xytext(
-                x3_plus,
-                current_A3_plus,
-                x_min_common,
-                x_max_common,
-                y_min_common,
-                y_max_common,
-                other_points=[(a3, np.interp(a3, xs, Axs_m3)), (x3, current_A3)],
-            )
-            ax32.annotate(
-                f"A({x3_plus:.2f})={current_A3_plus:.4f}",
-                xy=(x3_plus, current_A3_plus),
-                xytext=m3_left_xplus_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.0,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.22,rounding_size=0.16",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
 
-            secant_slope = (current_A3_plus - current_A3) / max(x3_plus - x3, 1e-9)
-            secant_half_width = 1.05
-            secant_center_x = 0.5 * (x3 + x3_plus)
-            secant_center_y = 0.5 * (current_A3 + current_A3_plus)
-            secant_x = np.linspace(
-                max(x_min_common, secant_center_x - secant_half_width),
-                min(x_max_common, secant_center_x + secant_half_width),
-                40,
-            )
-            secant_y = secant_center_y + secant_slope * (secant_x - secant_center_x)
-            ax32.plot(secant_x, secant_y, linewidth=3.0, color="#ffb347", zorder=6)
-
-        if show_tangent_m3:
-            tangent_half_width = 1.05
-            tangent_x = np.linspace(
-                max(x_min_common, x3 - tangent_half_width),
-                min(x_max_common, x3 + tangent_half_width),
-                40,
-            )
-            tangent_y = current_A3 + current_Ap3 * (tangent_x - x3)
-            ax32.plot(tangent_x, tangent_y, linewidth=3.0, color="#ffb347")
-
-            tangent_label_x = min(max(x3 + 0.35, x_min_common + 0.35), x_max_common - 0.35)
-            tangent_label_y = current_A3 + current_Ap3 * (tangent_label_x - x3)
-            tangent_label_y = min(max(tangent_label_y + 0.35, y_min_common + 0.45), y_max_common - 0.45)
-            ax32.text(
-                tangent_label_x,
-                tangent_label_y,
-                rf"$A'({x3:.2f})={current_Ap3:.4f}$",
-                ha="left",
-                va="center",
-                fontsize=14,
-                fontweight="semibold",
-                color="#b36b00",
-                bbox=dict(
-                    boxstyle="round,pad=0.26,rounding_size=0.16",
-                    fc="white",
-                    ec="#ffb347",
-                    lw=1.0,
-                    alpha=0.95,
-                ),
-            )
+        draw_to_x_axis(ax32, c3, current_A3_c, "#9bd18b", linewidth=1.6, marker_size=55)
+        ax32.text(
+            c3,
+            0 + m3_axis_y_offsets["c"],
+            f"{c3:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13,
+            bbox=smart_value_bbox(),
+        )
+        c_xytext = smart_point_xytext(
+            c3,
+            current_A3_c,
+            x_min_common,
+            x_max_common,
+            y_min_common,
+            y_max_common,
+            other_points=[(b3, current_A3_b), (a3, np.interp(a3, xs, Axs_m3))],
+        )
+        ax32.annotate(
+            f"A({c3:.2f})={current_A3_c:.4f}",
+            xy=(c3, current_A3_c),
+            xytext=c_xytext,
+            textcoords="offset points",
+            color="#2f6f4f",
+            fontsize=13.0,
+            fontweight="semibold",
+            bbox=dict(
+                boxstyle="round,pad=0.22,rounding_size=0.16",
+                fc="white",
+                ec="#86c79d",
+                lw=1.0,
+                alpha=0.96,
+            ),
+            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+        )
 
         ax32.set_title("y=A(x)", fontsize=14)
         ax32.set_xlabel("x")
@@ -2034,55 +1939,61 @@ if selected_module_key == "module3":
         draw_to_x_axis(ax3, a3, f(np.array([a3]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         ax3.text(
             a3,
-            0 + m3_axis_y_offsets[0],
+            0 + m3_axis_y_offsets["a"],
             f"{a3:.2f}",
             **pretty_a_label_kwargs(),
         )
-        draw_to_x_axis(ax3, x3, current_f3, "#9bd18b", linewidth=1.6, marker_size=55)
+
+        draw_to_x_axis(ax3, b3, current_f3_b, "#9bd18b", linewidth=1.6, marker_size=55)
         ax3.text(
-            x3,
-            0 + m3_axis_y_offsets[1],
-            f"{x3:.2f}",
+            b3,
+            0 + m3_axis_y_offsets["b"],
+            f"{b3:.2f}",
             ha="center",
             va="top",
             fontsize=13,
             bbox=smart_value_bbox(),
         )
-        if show_secant_m3:
-            ax3.plot(
-                [x3_plus, x3_plus],
-                [0, current_f3_plus],
-                linestyle="--",
-                linewidth=1.6,
-                color="#9bd18b",
-                zorder=6,
-            )
-            ax3.scatter([x3_plus], [current_f3_plus], s=36, color="#9bd18b", zorder=7)
+        draw_to_x_axis(ax3, c3, current_f3_c, "#9bd18b", linewidth=1.6, marker_size=55)
+        ax3.text(
+            c3,
+            0 + m3_axis_y_offsets["c"],
+            f"{c3:.2f}",
+            ha="center",
+            va="top",
+            fontsize=13,
+            bbox=smart_value_bbox(),
+        )
 
-            mask_m3_fill = (xs >= min(x3, x3_plus)) & (xs <= max(x3, x3_plus))
-            fill_area_by_sign(ax3, xs[mask_m3_fill], ys[mask_m3_fill], fill_pos_color, fill_neg_color, alpha=0.40)
-
-        if show_tangent_m3:
-            m3_right_xytext = smart_point_xytext(
-                x3, current_f3, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a3, f(np.array([a3]))[0])]
-            )
-            ax3.annotate(
-                f"f({x3:.2f})={current_f3:.2f}",
-                xy=(x3, current_f3),
-                xytext=m3_right_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.2,
+        mask_m3_fill = (xs >= min(b3, c3)) & (xs <= max(b3, c3))
+        fill_area_by_sign(ax3, xs[mask_m3_fill], ys[mask_m3_fill], fill_pos_color, fill_neg_color, alpha=0.40)
+        if np.any(mask_m3_fill) and abs(c3 - b3) > 1e-9:
+            area_x_mid = 0.5 * (b3 + c3)
+            ys_mask_m3 = ys[mask_m3_fill]
+            if definite_integral_value_m3 >= 0:
+                positive_part = ys_mask_m3[ys_mask_m3 >= 0]
+                if len(positive_part) > 0:
+                    area_y_mid = 0.52 * np.max(positive_part)
+                else:
+                    area_y_mid = 0.38 * max(y_max_common, 1.0)
+            else:
+                negative_part = ys_mask_m3[ys_mask_m3 < 0]
+                if len(negative_part) > 0:
+                    area_y_mid = 0.52 * np.min(negative_part)
+                else:
+                    area_y_mid = 0.38 * min(y_min_common, -1.0)
+            ax3.text(
+                area_x_mid,
+                area_y_mid,
+                f"{definite_integral_value_m3:.4f}",
+                ha="center",
+                va="center",
+                fontsize=14,
                 fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.24,rounding_size=0.18",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+                color="#2f2f2f",
+                bbox=smart_area_bbox(),
             )
+
         ax3.set_title("y=f(x)", fontsize=14)
         ax3.set_xlabel("x")
         ax3.set_ylabel("f(x)")
@@ -2090,3 +2001,59 @@ if selected_module_key == "module3":
         ax3.set_ylim(y_min_common, y_max_common)
         add_common_style(ax3)
         st.pyplot(fig3, use_container_width=True)
+
+    st.markdown(
+        """
+        <style>
+        .m3-table-header {
+            background: #f6f8fb;
+            border: 1px solid #dfe6ef;
+            border-radius: 12px;
+            padding: 0.55rem 0.8rem;
+            font-weight: 800;
+            color: #38506a;
+            text-align: center;
+            margin-bottom: 0.35rem;
+        }
+        .m3-row-gap {
+            height: 0.45rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    header_left, header_right = st.columns([0.45, 0.55], gap="large")
+    with header_left:
+        st.markdown('<div class="m3-table-header">一般推導式</div>', unsafe_allow_html=True)
+    with header_right:
+        st.markdown('<div class="m3-table-header">當下數值化與視覺化對照</div>', unsafe_allow_html=True)
+
+    row_left, row_right = st.columns([0.45, 0.55], gap="large")
+    with row_left:
+        row_left_card = st.container(border=True)
+        with row_left_card:
+            st.latex(r"\LARGE A(c)-A(b)=\int_b^c f(t)\,dt")
+    with row_right:
+        row_right_card = st.container(border=True)
+        with row_right_card:
+            st.latex(rf"\LARGE A({c3:.2f})-A({b3:.2f})=\int_{{{b3:.2f}}}^{{{c3:.2f}}} f(t)\,dt")
+            endpoint_value_col, integral_value_col = st.columns(2, gap="small")
+            with endpoint_value_col:
+                st.markdown(
+                    f"""
+                    <div style="margin-top:0.85rem; text-align:center; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                        {endpoint_diff_value_m3:.4f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            with integral_value_col:
+                st.markdown(
+                    f"""
+                    <div style="margin-top:0.85rem; text-align:center; font-size:2.1rem; font-weight:800; color:#d62728; line-height:1.35;">
+                        {definite_integral_value_m3:.4f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
