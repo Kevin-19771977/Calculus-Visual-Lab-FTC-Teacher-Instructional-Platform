@@ -1128,7 +1128,14 @@ if selected_module_key == "module2":
             '<div style="text-align:center; padding: 0.6rem 0 0.9rem 0;">',
             unsafe_allow_html=True
         )
-        st.latex(r"\Huge A(x)=\int_a^x f(t)\,dt \quad \Rightarrow \quad A'(x)=f(x)")
+        st.latex(r"""
+        \Large
+        \begin{aligned}
+        A(x)&=\int_a^x f(t)\,dt \quad \Rightarrow \quad A'(x)=f(x)\\[1.0em]
+        &\Rightarrow \quad A(c)-A(b)=\int_a^c f(t)\,dt-\int_a^b f(t)\,dt\\[1.0em]
+        &\Rightarrow \quad A(c)-A(b)=\int_b^c f(t)\,dt
+        \end{aligned}
+        """)
         st.markdown('</div>', unsafe_allow_html=True)
 
     full_width_col = st.container()
