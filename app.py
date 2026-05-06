@@ -1509,7 +1509,6 @@ if selected_module_key == "module2":
             width: 100%;
         }
         </style>
-        <div class="m2-derivation-title">A'(x)=f(x) 的視覺化推導</div>
         """,
         unsafe_allow_html=True,
     )
@@ -1536,7 +1535,7 @@ if selected_module_key == "module2":
     with header_left:
         st.markdown('<div class="m2-table-header">一般推導式</div>', unsafe_allow_html=True)
     with header_right:
-        st.markdown('<div class="m2-table-header">當下數值化與視覺化對照</div>', unsafe_allow_html=True)
+        st.markdown('<div class="m2-table-header">當下數值化對照</div>', unsafe_allow_html=True)
 
     row1_left, row1_right = st.columns([0.45, 0.55], gap="large")
     with row1_left:
@@ -1729,21 +1728,22 @@ if selected_module_key == "module3":
     if st.session_state["m3b"] > st.session_state["m3c"]:
         st.session_state["m3b"] = st.session_state["m3c"]
 
+    if "m3_saved_a_curves" not in st.session_state:
+        st.session_state["m3_saved_a_curves"] = []
+    if "m3_saved_curve_color_idx" not in st.session_state:
+        st.session_state["m3_saved_curve_color_idx"] = 0
+
     if show_formula:
         st.markdown(
             '<div style="text-align:center; padding: 0.6rem 0 0.9rem 0;">',
             unsafe_allow_html=True
         )
         st.latex(r"""
-        \LARGE
+        \Large
         \begin{aligned}
-        A(x)=\int_a^x f(t)\,dt
-        &\Rightarrow
-        A'(x)=f(x)\\[0.9em]
-        &\Rightarrow
-        A(c)-A(b)=\int_a^c f(t)\,dt-\int_a^b f(t)\,dt\\[0.9em]
-        &\Rightarrow
-        A(c)-A(b)=\int_b^c f(t)\,dt
+        A(x)&=\int_a^x f(t)\,dt\\[0.85em]
+        \Rightarrow\quad A(c)-A(b)&=\int_a^c f(t)\,dt-\int_a^b f(t)\,dt\\[0.85em]
+        \Rightarrow\quad A(c)-A(b)&=\int_b^c f(t)\,dt
         \end{aligned}
         """)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1830,6 +1830,32 @@ if selected_module_key == "module3":
         endpoint_diff_value_m3 = current_A3_c - current_A3_b
         definite_integral_value_m3 = endpoint_diff_value_m3
 
+        with m3_left_control_col:
+            m3_button_col_left, m3_button_col_right = st.columns(2, gap="small")
+            with m3_button_col_left:
+                if st.button("留下圖形", key="m3_save_a_curve", use_container_width=True):
+                    color_idx = int(st.session_state.get("m3_saved_curve_color_idx", 0))
+                    curve_color = RAINBOW_COLORS[color_idx % len(RAINBOW_COLORS)]
+                    st.session_state["m3_saved_curve_color_idx"] = color_idx + 1
+                    st.session_state["m3_saved_a_curves"].append(
+                        {
+                            "a": float(a3),
+                            "b": float(b3),
+                            "c": float(c3),
+                            "curve": np.array(Axs_m3, dtype=float),
+                            "color": curve_color,
+                            "A_b": float(current_A3_b),
+                            "A_c": float(current_A3_c),
+                            "f_b": float(current_f3_b),
+                            "f_c": float(current_f3_c),
+                            "endpoint_diff": float(endpoint_diff_value_m3),
+                        }
+                    )
+            with m3_button_col_right:
+                if st.button("清除圖形", key="m3_clear_saved_curves", use_container_width=True):
+                    st.session_state["m3_saved_a_curves"] = []
+                    st.session_state["m3_saved_curve_color_idx"] = 0
+
         m3_axis_positions = [a3, b3, c3]
         m3_axis_keys = ["a", "b", "c"]
         m3_axis_levels = get_axis_label_levels(m3_axis_positions, threshold=0.45)
@@ -1841,6 +1867,49 @@ if selected_module_key == "module3":
     left, right = st.columns(2, gap="large")
     with left:
         fig32, ax32 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+
+        for saved_item in st.session_state.get("m3_saved_a_curves", []):
+            saved_curve = np.array(saved_item.get("curve", []), dtype=float)
+            saved_color = saved_item.get("color", "#9fd8b3")
+            saved_b = float(saved_item.get("b", b3))
+            saved_c = float(saved_item.get("c", c3))
+            saved_A_b = float(saved_item.get("A_b", np.interp(saved_b, xs, Axs_m3)))
+            saved_A_c = float(saved_item.get("A_c", np.interp(saved_c, xs, Axs_m3)))
+
+            if len(saved_curve) == len(xs):
+                ax32.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.62)
+
+            for saved_x, saved_A in [(saved_b, saved_A_b), (saved_c, saved_A_c)]:
+                ax32.plot([saved_x, saved_x], [0, saved_A], linestyle="--", linewidth=1.3, color="#9bd18b", alpha=0.62)
+                ax32.scatter([saved_x], [saved_A], s=42, color="#9bd18b", alpha=0.78, zorder=7)
+                saved_xytext = smart_point_xytext(
+                    saved_x,
+                    saved_A,
+                    x_min_common,
+                    x_max_common,
+                    y_min_common,
+                    y_max_common,
+                    other_points=[(saved_b, saved_A_b), (saved_c, saved_A_c)],
+                )
+                ax32.annotate(
+                    f"A({saved_x:.2f})={saved_A:.4f}",
+                    xy=(saved_x, saved_A),
+                    xytext=saved_xytext,
+                    textcoords="offset points",
+                    color="#2f6f4f",
+                    fontsize=11.6,
+                    fontweight="semibold",
+                    alpha=0.82,
+                    bbox=dict(
+                        boxstyle="round,pad=0.20,rounding_size=0.14",
+                        fc="white",
+                        ec="#86c79d",
+                        lw=0.9,
+                        alpha=0.86,
+                    ),
+                    arrowprops=dict(arrowstyle="-", color="#86c79d", lw=0.9, alpha=0.72),
+                )
+
         ax32.plot(xs, Axs_m3, linewidth=3.4, color="#8fc9a8")
 
         draw_to_x_axis(ax32, a3, np.interp(a3, xs, Axs_m3), "#f2a3c7", linewidth=1.6, marker_size=45)
@@ -1936,6 +2005,47 @@ if selected_module_key == "module3":
     with right:
         fig3, ax3 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
         ax3.plot(xs, ys, linewidth=3.4, color="#8bbce9")
+
+        for saved_item in st.session_state.get("m3_saved_a_curves", []):
+            saved_b = float(saved_item.get("b", b3))
+            saved_c = float(saved_item.get("c", c3))
+            saved_f_b = float(saved_item.get("f_b", f(np.array([saved_b]))[0]))
+            saved_f_c = float(saved_item.get("f_c", f(np.array([saved_c]))[0]))
+            saved_endpoint_diff = float(saved_item.get("endpoint_diff", 0.0))
+            saved_mask = (xs >= min(saved_b, saved_c)) & (xs <= max(saved_b, saved_c))
+            fill_area_by_sign(ax3, xs[saved_mask], ys[saved_mask], fill_pos_color, fill_neg_color, alpha=0.18)
+            ax3.plot([saved_b, saved_b], [0, saved_f_b], linestyle="--", linewidth=1.2, color="#9bd18b", alpha=0.56)
+            ax3.plot([saved_c, saved_c], [0, saved_f_c], linestyle="--", linewidth=1.2, color="#9bd18b", alpha=0.56)
+            ax3.scatter([saved_b, saved_c], [saved_f_b, saved_f_c], s=36, color="#9bd18b", alpha=0.70, zorder=7)
+
+            if np.any(saved_mask) and abs(saved_c - saved_b) > 1e-9:
+                saved_area_x_mid = 0.5 * (saved_b + saved_c)
+                saved_ys_mask = ys[saved_mask]
+                if saved_endpoint_diff >= 0:
+                    saved_positive_part = saved_ys_mask[saved_ys_mask >= 0]
+                    if len(saved_positive_part) > 0:
+                        saved_area_y_mid = 0.52 * np.max(saved_positive_part)
+                    else:
+                        saved_area_y_mid = 0.38 * max(y_max_common, 1.0)
+                else:
+                    saved_negative_part = saved_ys_mask[saved_ys_mask < 0]
+                    if len(saved_negative_part) > 0:
+                        saved_area_y_mid = 0.52 * np.min(saved_negative_part)
+                    else:
+                        saved_area_y_mid = 0.38 * min(y_min_common, -1.0)
+                ax3.text(
+                    saved_area_x_mid,
+                    saved_area_y_mid,
+                    f"{saved_endpoint_diff:.4f}",
+                    ha="center",
+                    va="center",
+                    fontsize=11.5,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    alpha=0.78,
+                    bbox=smart_area_bbox(),
+                )
+
         draw_to_x_axis(ax3, a3, f(np.array([a3]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
         ax3.text(
             a3,
@@ -2027,7 +2137,7 @@ if selected_module_key == "module3":
     with header_left:
         st.markdown('<div class="m3-table-header">一般推導式</div>', unsafe_allow_html=True)
     with header_right:
-        st.markdown('<div class="m3-table-header">當下數值化與視覺化對照</div>', unsafe_allow_html=True)
+        st.markdown('<div class="m3-table-header">當下數值化對照</div>', unsafe_allow_html=True)
 
     row_left, row_right = st.columns([0.45, 0.55], gap="large")
     with row_left:
@@ -2042,7 +2152,7 @@ if selected_module_key == "module3":
             with endpoint_value_col:
                 st.markdown(
                     f"""
-                    <div style="margin-top:0.85rem; text-align:center; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
+                    <div style="margin-top:0.85rem; text-align:right; padding-right:0.8rem; font-size:2.1rem; font-weight:800; color:#1f77b4; line-height:1.35;">
                         {endpoint_diff_value_m3:.4f}
                     </div>
                     """,
