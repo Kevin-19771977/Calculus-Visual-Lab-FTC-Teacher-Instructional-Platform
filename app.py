@@ -1119,7 +1119,7 @@ if selected_module_key == "module1":
 
     st.markdown(
         """
-        <div style="margin-top:0.65rem; font-size:1.18rem; line-height:1.9; color:#42586f;">
+        <div style="margin-top:0.65rem; font-size:1.32rem; line-height:1.9; color:#42586f;">
         <b>觀察重點</b><br>
         1. 當 x 改變時，A(x) 也跟著改變。<br>
         2. A(x) 不是一個單一數值，而是一個會隨著 x 改變的新函數。
@@ -1751,7 +1751,7 @@ if selected_module_key == "module3":
             unsafe_allow_html=True
         )
         st.latex(r"""
-        \Huge
+        \huge
         \begin{aligned}
         A(x)=\int_a^x f(t)\,dt
         &\qquad\Rightarrow\qquad
