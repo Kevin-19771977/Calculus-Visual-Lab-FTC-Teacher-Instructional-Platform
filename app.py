@@ -638,6 +638,10 @@ st.session_state["m1x_raw"] = float(min(max(st.session_state["m1x_raw"], domain_
 st.session_state["m1z_raw"] = float(min(max(st.session_state["m1z_raw"], domain_left), domain_right))
 if "m1_slider_panel_open" not in st.session_state:
     st.session_state["m1_slider_panel_open"] = False
+if "m2_slider_panel_open" not in st.session_state:
+    st.session_state["m2_slider_panel_open"] = False
+if "m3_slider_panel_open" not in st.session_state:
+    st.session_state["m3_slider_panel_open"] = False
 
 m2_initial_value = float(min(max(1.0, domain_left), domain_right))
 m2_dx_initial_value = 1.0
@@ -758,6 +762,22 @@ def close_m1_slider_panel():
     st.session_state["m1_slider_panel_open"] = False
 
 
+def open_m2_slider_panel():
+    st.session_state["m2_slider_panel_open"] = True
+
+
+def close_m2_slider_panel():
+    st.session_state["m2_slider_panel_open"] = False
+
+
+def open_m3_slider_panel():
+    st.session_state["m3_slider_panel_open"] = True
+
+
+def close_m3_slider_panel():
+    st.session_state["m3_slider_panel_open"] = False
+
+
 def render_m1_slider_controls():
     a_val = st.slider(
         "固定點 a",
@@ -792,6 +812,144 @@ def render_m1_slider_controls():
     )
     z_val = float(min(z_val, a_val))
     return float(a_val), x_val, z_val
+
+
+def render_m2_slider_controls():
+    a_val = st.slider(
+        "固定點 a",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m2a", m2_initial_value)),
+        step=0.05,
+        key="m2a",
+    )
+    x_val = st.slider(
+        "拖動 x",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m2x", m2_initial_value)),
+        step=0.05,
+        key="m2x",
+    )
+    dx_val = st.slider(
+        "Δx",
+        min_value=0.01,
+        max_value=1.0,
+        value=float(st.session_state.get("m2dx", m2_dx_initial_value)),
+        step=0.01,
+        key="m2dx",
+    )
+    return float(a_val), float(x_val), float(dx_val)
+
+
+def render_floating_slider_window_script(module_key, default_top=145):
+    script = """
+    <script>
+    const setup__MODULE__FloatingPanel = () => {
+        const doc = window.parent.document;
+        const marker = doc.getElementById("__MODULE__-floating-panel-marker");
+        const handle = doc.getElementById("__MODULE__-floating-panel-handle");
+        if (!marker || !handle) return;
+
+        let panel = marker.closest('div[data-testid="stVerticalBlockBorderWrapper"]');
+        if (!panel) {
+            let node = marker.parentElement;
+            while (node && node !== doc.body) {
+                const hasMarker = node.querySelector("#__MODULE__-floating-panel-marker");
+                const sliderCount = node.querySelectorAll('div[data-testid="stSlider"]').length;
+                if (hasMarker && sliderCount >= 3) {
+                    panel = node;
+                    break;
+                }
+                node = node.parentElement;
+            }
+        }
+        if (!panel) return;
+
+        panel.id = "__MODULE__-floating-slider-window";
+        panel.style.position = "fixed";
+        panel.style.zIndex = "2147483000";
+        panel.style.width = "390px";
+        panel.style.maxWidth = "calc(100vw - 32px)";
+        panel.style.background = "rgba(255, 255, 255, 0.985)";
+        panel.style.border = "1px solid #cfe0ff";
+        panel.style.borderRadius = "18px";
+        panel.style.boxShadow = "0 18px 45px rgba(39, 70, 120, 0.22)";
+        panel.style.padding = "0.8rem 0.9rem 0.9rem 0.9rem";
+        panel.style.backdropFilter = "blur(8px)";
+
+        const parentWindow = window.parent;
+        const storage = parentWindow.localStorage || window.localStorage;
+        const savedLeft = storage.getItem("__MODULE__FloatingPanelLeft");
+        const savedTop = storage.getItem("__MODULE__FloatingPanelTop");
+        const defaultLeft = Math.max(parentWindow.innerWidth - 430, 16);
+        const defaultTop = __DEFAULT_TOP__;
+        panel.style.left = savedLeft || `${defaultLeft}px`;
+        panel.style.top = savedTop || `${defaultTop}px`;
+
+        const clampPanel = () => {
+            const rect = panel.getBoundingClientRect();
+            const maxLeft = Math.max(parentWindow.innerWidth - rect.width - 12, 12);
+            const maxTop = Math.max(parentWindow.innerHeight - rect.height - 12, 12);
+            const left = Math.min(Math.max(rect.left, 12), maxLeft);
+            const top = Math.min(Math.max(rect.top, 12), maxTop);
+            panel.style.left = `${left}px`;
+            panel.style.top = `${top}px`;
+            storage.setItem("__MODULE__FloatingPanelLeft", panel.style.left);
+            storage.setItem("__MODULE__FloatingPanelTop", panel.style.top);
+        };
+        setTimeout(clampPanel, 50);
+
+        if (panel.dataset.__MODULE__DraggableReady === "1") return;
+        panel.dataset.__MODULE__DraggableReady = "1";
+
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let startLeft = 0;
+        let startTop = 0;
+
+        handle.addEventListener("mousedown", (event) => {
+            isDragging = true;
+            startX = event.clientX;
+            startY = event.clientY;
+            const rect = panel.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            panel.style.transition = "none";
+            event.preventDefault();
+        });
+
+        doc.addEventListener("mousemove", (event) => {
+            if (!isDragging) return;
+            const panelRect = panel.getBoundingClientRect();
+            const nextLeft = Math.min(
+                Math.max(startLeft + event.clientX - startX, 12),
+                Math.max(parentWindow.innerWidth - panelRect.width - 12, 12)
+            );
+            const nextTop = Math.min(
+                Math.max(startTop + event.clientY - startY, 12),
+                Math.max(parentWindow.innerHeight - panelRect.height - 12, 12)
+            );
+            panel.style.left = `${nextLeft}px`;
+            panel.style.top = `${nextTop}px`;
+        });
+
+        doc.addEventListener("mouseup", () => {
+            if (!isDragging) return;
+            isDragging = false;
+            storage.setItem("__MODULE__FloatingPanelLeft", panel.style.left);
+            storage.setItem("__MODULE__FloatingPanelTop", panel.style.top);
+        });
+    };
+
+    setup__MODULE__FloatingPanel();
+    setTimeout(setup__MODULE__FloatingPanel, 250);
+    setTimeout(setup__MODULE__FloatingPanel, 800);
+    </script>
+    """
+    script = script.replace("__MODULE__", module_key).replace("__DEFAULT_TOP__", str(default_top))
+    components.html(script, height=0)
 
 # -----------------------------
 # Module display is selected from the sidebar
@@ -1344,30 +1502,46 @@ if selected_module_key == "module2":
         m2_left_control_col, m2_right_slider_col = st.columns([0.45, 0.55], gap="large")
 
         with m2_right_slider_col:
-            a2 = st.slider(
-                "固定點 a",
-                min_value=float(domain_left),
-                max_value=float(domain_right),
-                value=float(st.session_state.get("m2a", m2_initial_value)),
-                step=0.05,
-                key="m2a",
+            st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
+            st.button(
+                "開啟滑桿控制面板",
+                key="m2_open_slider_panel",
+                use_container_width=True,
+                on_click=open_m2_slider_panel,
             )
-            x2 = st.slider(
-                "拖動 x",
-                min_value=float(domain_left),
-                max_value=float(domain_right),
-                value=float(st.session_state.get("m2x", m2_initial_value)),
-                step=0.05,
-                key="m2x",
-            )
-            dx2 = st.slider(
-                "Δx",
-                min_value=0.01,
-                max_value=1.0,
-                value=float(st.session_state.get("m2dx", m2_dx_initial_value)),
-                step=0.01,
-                key="m2dx",
-            )
+            if st.session_state.get("m2_slider_panel_open", False):
+                st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        if st.session_state.get("m2_slider_panel_open", False):
+            floating_panel = st.container(border=True)
+            with floating_panel:
+                st.markdown(
+                    """
+                    <div id="m2-floating-panel-marker"></div>
+                    <div id="m2-floating-panel-handle" class="m1-floating-panel-title">
+                        <span>☰ 模組 2｜滑桿控制面板</span>
+                        <span class="m1-floating-panel-hint">拖曳此處移動</span>
+                    </div>
+                    <div class="m1-floating-panel-note">
+                        調整滑桿後，模組 2 的圖形會立即依目前數值重新更新。
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                render_m2_slider_controls()
+                st.button(
+                    "關閉控制面板",
+                    key="m2_close_slider_panel",
+                    use_container_width=True,
+                    on_click=close_m2_slider_panel,
+                )
+
+            render_floating_slider_window_script("m2", default_top=165)
+
+        a2 = float(st.session_state.get("m2a", m2_initial_value))
+        x2 = float(st.session_state.get("m2x", m2_initial_value))
+        dx2 = float(st.session_state.get("m2dx", m2_dx_initial_value))
 
         components.html(
             """
@@ -1942,6 +2116,37 @@ if selected_module_key == "module3":
     if "m3_saved_curve_color_idx" not in st.session_state:
         st.session_state["m3_saved_curve_color_idx"] = 0
 
+    def render_m3_slider_controls():
+        a_val = st.slider(
+            "固定點 a",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m3a", m3_initial_value)),
+            step=0.05,
+            key="m3a",
+        )
+        c_val = st.slider(
+            "右端點 c",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m3c", m3_initial_value)),
+            step=0.05,
+            key="m3c",
+            on_change=enforce_m3c_not_below_b,
+        )
+        b_val = st.slider(
+            "左端點 b",
+            min_value=float(domain_left),
+            max_value=float(domain_right),
+            value=float(st.session_state.get("m3b", m3_initial_value)),
+            step=0.05,
+            key="m3b",
+            on_change=enforce_m3b_not_above_c,
+        )
+        c_val = float(max(c_val, b_val))
+        b_val = float(min(b_val, c_val))
+        return float(a_val), b_val, c_val
+
     if show_formula:
         st.markdown(
             '<div style="text-align:center; padding: 0.6rem 0 0.9rem 0;">',
@@ -1964,32 +2169,49 @@ if selected_module_key == "module3":
         m3_left_control_col, m3_right_slider_col = st.columns([0.45, 0.55], gap="large")
 
         with m3_right_slider_col:
-            a3 = st.slider(
-                "固定點 a",
-                min_value=float(domain_left),
-                max_value=float(domain_right),
-                value=float(st.session_state.get("m3a", m3_initial_value)),
-                step=0.05,
-                key="m3a",
+            st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
+            st.button(
+                "開啟滑桿控制面板",
+                key="m3_open_slider_panel",
+                use_container_width=True,
+                on_click=open_m3_slider_panel,
             )
-            c3 = st.slider(
-                "右端點 c",
-                min_value=float(domain_left),
-                max_value=float(domain_right),
-                value=float(st.session_state.get("m3c", m3_initial_value)),
-                step=0.05,
-                key="m3c",
-                on_change=enforce_m3c_not_below_b,
-            )
-            b3 = st.slider(
-                "左端點 b",
-                min_value=float(domain_left),
-                max_value=float(domain_right),
-                value=float(st.session_state.get("m3b", m3_initial_value)),
-                step=0.05,
-                key="m3b",
-                on_change=enforce_m3b_not_above_c,
-            )
+            if st.session_state.get("m3_slider_panel_open", False):
+                st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        if st.session_state.get("m3_slider_panel_open", False):
+            floating_panel = st.container(border=True)
+            with floating_panel:
+                st.markdown(
+                    """
+                    <div id="m3-floating-panel-marker"></div>
+                    <div id="m3-floating-panel-handle" class="m1-floating-panel-title">
+                        <span>☰ 模組 3｜滑桿控制面板</span>
+                        <span class="m1-floating-panel-hint">拖曳此處移動</span>
+                    </div>
+                    <div class="m1-floating-panel-note">
+                        調整滑桿後，模組 3 的圖形會立即依目前數值重新更新。
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                render_m3_slider_controls()
+                st.button(
+                    "關閉控制面板",
+                    key="m3_close_slider_panel",
+                    use_container_width=True,
+                    on_click=close_m3_slider_panel,
+                )
+
+            render_floating_slider_window_script("m3", default_top=185)
+
+        a3 = float(st.session_state.get("m3a", m3_initial_value))
+        b3 = float(st.session_state.get("m3b", m3_initial_value))
+        c3 = float(st.session_state.get("m3c", m3_initial_value))
+        if b3 > c3:
+            st.session_state["m3b"] = c3
+            b3 = c3
 
         components.html(
             """
