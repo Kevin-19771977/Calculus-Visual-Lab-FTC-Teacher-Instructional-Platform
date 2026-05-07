@@ -642,6 +642,12 @@ if "m2_slider_panel_open" not in st.session_state:
     st.session_state["m2_slider_panel_open"] = False
 if "m3_slider_panel_open" not in st.session_state:
     st.session_state["m3_slider_panel_open"] = False
+if "m1_graph_window_open" not in st.session_state:
+    st.session_state["m1_graph_window_open"] = False
+if "m2_graph_window_open" not in st.session_state:
+    st.session_state["m2_graph_window_open"] = False
+if "m3_graph_window_open" not in st.session_state:
+    st.session_state["m3_graph_window_open"] = False
 
 m2_initial_value = float(min(max(1.0, domain_left), domain_right))
 m2_dx_initial_value = 1.0
@@ -776,6 +782,30 @@ def open_m3_slider_panel():
 
 def close_m3_slider_panel():
     st.session_state["m3_slider_panel_open"] = False
+
+
+def open_m1_graph_window():
+    st.session_state["m1_graph_window_open"] = True
+
+
+def close_m1_graph_window():
+    st.session_state["m1_graph_window_open"] = False
+
+
+def open_m2_graph_window():
+    st.session_state["m2_graph_window_open"] = True
+
+
+def close_m2_graph_window():
+    st.session_state["m2_graph_window_open"] = False
+
+
+def open_m3_graph_window():
+    st.session_state["m3_graph_window_open"] = True
+
+
+def close_m3_graph_window():
+    st.session_state["m3_graph_window_open"] = False
 
 
 def render_m1_slider_controls():
@@ -951,6 +981,116 @@ def render_floating_slider_window_script(module_key, default_top=145):
     script = script.replace("__MODULE__", module_key).replace("__DEFAULT_TOP__", str(default_top))
     components.html(script, height=0)
 
+
+def render_floating_graph_window_script(module_key, default_top=115):
+    script = """
+    <script>
+    const setup__MODULE__FloatingGraphWindow = () => {
+        const doc = window.parent.document;
+        const marker = doc.getElementById("__MODULE__-graph-window-marker");
+        const handle = doc.getElementById("__MODULE__-graph-window-handle");
+        if (!marker || !handle) return;
+
+        let panel = marker.closest('div[data-testid="stVerticalBlockBorderWrapper"]');
+        if (!panel) {
+            let node = marker.parentElement;
+            while (node && node !== doc.body) {
+                const hasMarker = node.querySelector("#__MODULE__-graph-window-marker");
+                if (hasMarker) {
+                    panel = node;
+                    break;
+                }
+                node = node.parentElement;
+            }
+        }
+        if (!panel) return;
+
+        panel.id = "__MODULE__-floating-graph-window";
+        panel.style.position = "fixed";
+        panel.style.zIndex = "2147482500";
+        panel.style.width = "min(1180px, calc(100vw - 32px))";
+        panel.style.maxHeight = "calc(100vh - 32px)";
+        panel.style.overflow = "auto";
+        panel.style.background = "rgba(255, 255, 255, 0.985)";
+        panel.style.border = "1px solid #cfe0ff";
+        panel.style.borderRadius = "18px";
+        panel.style.boxShadow = "0 18px 45px rgba(39, 70, 120, 0.24)";
+        panel.style.padding = "0.8rem 0.9rem 0.9rem 0.9rem";
+        panel.style.backdropFilter = "blur(8px)";
+
+        const parentWindow = window.parent;
+        const storage = parentWindow.localStorage || window.localStorage;
+        const savedLeft = storage.getItem("__MODULE__GraphWindowLeft");
+        const savedTop = storage.getItem("__MODULE__GraphWindowTop");
+        const defaultLeft = 24;
+        const defaultTop = __DEFAULT_TOP__;
+        panel.style.left = savedLeft || `${defaultLeft}px`;
+        panel.style.top = savedTop || `${defaultTop}px`;
+
+        const clampPanel = () => {
+            const rect = panel.getBoundingClientRect();
+            const maxLeft = Math.max(parentWindow.innerWidth - rect.width - 12, 12);
+            const maxTop = Math.max(parentWindow.innerHeight - Math.min(rect.height, parentWindow.innerHeight - 24) - 12, 12);
+            const left = Math.min(Math.max(rect.left, 12), maxLeft);
+            const top = Math.min(Math.max(rect.top, 12), maxTop);
+            panel.style.left = `${left}px`;
+            panel.style.top = `${top}px`;
+            storage.setItem("__MODULE__GraphWindowLeft", panel.style.left);
+            storage.setItem("__MODULE__GraphWindowTop", panel.style.top);
+        };
+        setTimeout(clampPanel, 50);
+
+        if (panel.dataset.__MODULE__GraphDraggableReady === "1") return;
+        panel.dataset.__MODULE__GraphDraggableReady = "1";
+
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let startLeft = 0;
+        let startTop = 0;
+
+        handle.addEventListener("mousedown", (event) => {
+            isDragging = true;
+            startX = event.clientX;
+            startY = event.clientY;
+            const rect = panel.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            panel.style.transition = "none";
+            event.preventDefault();
+        });
+
+        doc.addEventListener("mousemove", (event) => {
+            if (!isDragging) return;
+            const panelRect = panel.getBoundingClientRect();
+            const nextLeft = Math.min(
+                Math.max(startLeft + event.clientX - startX, 12),
+                Math.max(parentWindow.innerWidth - panelRect.width - 12, 12)
+            );
+            const nextTop = Math.min(
+                Math.max(startTop + event.clientY - startY, 12),
+                Math.max(parentWindow.innerHeight - Math.min(panelRect.height, parentWindow.innerHeight - 24) - 12, 12)
+            );
+            panel.style.left = `${nextLeft}px`;
+            panel.style.top = `${nextTop}px`;
+        });
+
+        doc.addEventListener("mouseup", () => {
+            if (!isDragging) return;
+            isDragging = false;
+            storage.setItem("__MODULE__GraphWindowLeft", panel.style.left);
+            storage.setItem("__MODULE__GraphWindowTop", panel.style.top);
+        });
+    };
+
+    setup__MODULE__FloatingGraphWindow();
+    setTimeout(setup__MODULE__FloatingGraphWindow, 250);
+    setTimeout(setup__MODULE__FloatingGraphWindow, 800);
+    </script>
+    """
+    script = script.replace("__MODULE__", module_key).replace("__DEFAULT_TOP__", str(default_top))
+    components.html(script, height=0)
+
 # -----------------------------
 # Module display is selected from the sidebar
 # -----------------------------
@@ -990,8 +1130,18 @@ if selected_module_key == "module1":
             use_container_width=True,
             on_click=open_m1_slider_panel,
         )
+        st.button(
+            "開啟圖形視窗",
+            key="m1_open_graph_window",
+            use_container_width=True,
+            on_click=open_m1_graph_window,
+        )
         if st.session_state.get("m1_slider_panel_open", False):
             st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
+        if st.session_state.get("m1_graph_window_open", False):
+            st.caption("圖形視窗已開啟，可拖曳視窗上方標題列移動位置。")
+        if not st.session_state.get("m1_slider_panel_open", False):
+            render_m1_slider_controls()
         st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.get("m1_slider_panel_open", False):
@@ -1242,235 +1392,264 @@ if selected_module_key == "module1":
         for key, lvl in zip(m1_axis_keys, m1_axis_levels)
     }
 
-    chart_col_left, chart_col_right = st.columns(2, gap="large")
+    def render_m1_graphs():
+        chart_col_left, chart_col_right = st.columns(2, gap="large")
 
-    # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
-    if x1 >= domain_left:
-        mask_A = xs <= x1
-    else:
-        mask_A = xs >= x1
-
-    with chart_col_left:
-        fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-
-        for saved_item in st.session_state.get("m1_saved_a_curves", []):
-            saved_a = float(saved_item["a"])
-            saved_curve = np.array(saved_item["curve"], dtype=float)
-            saved_color = saved_item.get("color", "#9fd8b3")
-            ax12.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
-            saved_y_at_a = np.interp(saved_a, xs, saved_curve)
-            ax12.scatter([saved_a], [saved_y_at_a], s=34, color="#d84a4a", zorder=7)
-
-        if show_full_A_curve:
-            mask_A_display = np.full_like(xs, True, dtype=bool)
-            ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
+        # 累積函數只顯示到目前滑桿位置，形成「逐漸長出來」的效果
+        if x1 >= domain_left:
+            mask_A = xs <= x1
         else:
-            if show_right_formula:
-                mask_A_display = (xs >= a) & mask_A
+            mask_A = xs >= x1
+
+        with chart_col_left:
+            fig12, ax12 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+
+            for saved_item in st.session_state.get("m1_saved_a_curves", []):
+                saved_a = float(saved_item["a"])
+                saved_curve = np.array(saved_item["curve"], dtype=float)
+                saved_color = saved_item.get("color", "#9fd8b3")
+                ax12.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
+                saved_y_at_a = np.interp(saved_a, xs, saved_curve)
+                ax12.scatter([saved_a], [saved_y_at_a], s=34, color="#d84a4a", zorder=7)
+
+            if show_full_A_curve:
+                mask_A_display = np.full_like(xs, True, dtype=bool)
                 ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
+            else:
+                if show_right_formula:
+                    mask_A_display = (xs >= a) & mask_A
+                    ax12.plot(xs[mask_A_display], Axs[mask_A_display], linewidth=4.2, color="#8fc9a8")
+                if show_left_formula:
+                    mask_Z_display = (xs >= z1) & (xs <= a)
+                    ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
+            draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
+            ax12.text(
+                a,
+                0 + m1_axis_y_offsets["a"] - 0.02,
+                f"{a:.2f}",
+                **pretty_a_label_kwargs(),
+            )
+            if show_right_formula:
+                draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
+                # 顯示 x 的數值（左圖綠色線與 x 軸交點）
+                ax12.text(
+                    x1,
+                    0 + m1_axis_y_offsets["x"],
+                    f"{x1:.2f}",
+                    ha="center",
+                    va="top",
+                    fontsize=13,
+                    bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+                )
+
+                x_xytext = smart_point_xytext(
+                    x1, current_A, x_min_common, x_max_common, y_min_common, y_max_common,
+                    other_points=[(z1, current_Z)] if show_left_formula else []
+                )
+                ax12.annotate(
+                    f"A({x1:.2f})={current_A:.4f}",
+                    xy=(x1, current_A),
+                    xytext=x_xytext,
+                    textcoords="offset points",
+                    color="#2f6f4f",
+                    fontsize=13.5,
+                    fontweight="semibold",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.18",
+                        fc="white",
+                        ec="#86c79d",
+                        lw=1.0,
+                        alpha=0.96,
+                    ),
+                    arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+                )
+
             if show_left_formula:
-                mask_Z_display = (xs >= z1) & (xs <= a)
-                ax12.plot(xs[mask_Z_display], Axs[mask_Z_display], linewidth=4.2, color="#8fc9a8")
-        draw_to_x_axis(ax12, a, np.interp(a, xs, Axs), "#f2a3c7", linewidth=1.6, marker_size=45)
-        ax12.text(
-            a,
-            0 + m1_axis_y_offsets["a"] - 0.02,
-            f"{a:.2f}",
-            **pretty_a_label_kwargs(),
-        )
-        if show_right_formula:
-            draw_to_x_axis(ax12, x1, current_A, "#9bd18b", linewidth=1.6, marker_size=55)
-            # 顯示 x 的數值（左圖綠色線與 x 軸交點）
-            ax12.text(
-                x1,
-                0 + m1_axis_y_offsets["x"],
-                f"{x1:.2f}",
-                ha="center",
-                va="top",
-                fontsize=13,
-                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-            )
+                draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
+                ax12.text(
+                    z1,
+                    0 + m1_axis_y_offsets["z"],
+                    f"{z1:.2f}",
+                    ha="center",
+                    va="top",
+                    fontsize=13,
+                    bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+                )
 
-            x_xytext = smart_point_xytext(
-                x1, current_A, x_min_common, x_max_common, y_min_common, y_max_common,
-                other_points=[(z1, current_Z)] if show_left_formula else []
-            )
-            ax12.annotate(
-                f"A({x1:.2f})={current_A:.4f}",
-                xy=(x1, current_A),
-                xytext=x_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.5,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.24,rounding_size=0.18",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
+                z_xytext = smart_point_xytext(
+                    z1, current_Z, x_min_common, x_max_common, y_min_common, y_max_common,
+                    other_points=[(x1, current_A)] if show_right_formula else []
+                )
+                ax12.annotate(
+                    f"A({z1:.2f})={current_Z:.4f}",
+                    xy=(z1, current_Z),
+                    xytext=z_xytext,
+                    textcoords="offset points",
+                    color="#2f6f4f",
+                    fontsize=13.5,
+                    fontweight="semibold",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.18",
+                        fc="white",
+                        ec="#86c79d",
+                        lw=1.0,
+                        alpha=0.96,
+                    ),
+                    arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+                )
+            ax12.set_title("y=A(x)", fontsize=16, pad=14)
+            ax12.set_xlabel("x", fontsize=12)
+            ax12.set_ylabel("A(x)", fontsize=12)
+            ax12.set_xlim(x_min_common, x_max_common)
+            ax12.set_ylim(y_min_common, y_max_common)
+            ax12.tick_params(labelsize=11)
+            add_common_style(ax12)
+            st.pyplot(fig12, use_container_width=True)
 
-        if show_left_formula:
-            draw_to_x_axis(ax12, z1, current_Z, "#9bd18b", linewidth=1.6, marker_size=55)
-            ax12.text(
-                z1,
-                0 + m1_axis_y_offsets["z"],
-                f"{z1:.2f}",
-                ha="center",
-                va="top",
-                fontsize=13,
-                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
-            )
-
-            z_xytext = smart_point_xytext(
-                z1, current_Z, x_min_common, x_max_common, y_min_common, y_max_common,
-                other_points=[(x1, current_A)] if show_right_formula else []
-            )
-            ax12.annotate(
-                f"A({z1:.2f})={current_Z:.4f}",
-                xy=(z1, current_Z),
-                xytext=z_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.5,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.24,rounding_size=0.18",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
-        ax12.set_title("y=A(x)", fontsize=16, pad=14)
-        ax12.set_xlabel("x", fontsize=12)
-        ax12.set_ylabel("A(x)", fontsize=12)
-        ax12.set_xlim(x_min_common, x_max_common)
-        ax12.set_ylim(y_min_common, y_max_common)
-        ax12.tick_params(labelsize=11)
-        add_common_style(ax12)
-        st.pyplot(fig12, use_container_width=True)
-
-    with chart_col_right:
-        fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
-        draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
-        ax11.text(
-            a,
-            0 + m1_axis_y_offsets["a"] - 0.02,
-            f"{a:.2f}",
-            **pretty_a_label_kwargs(),
-        )
-        if show_right_formula:
-            draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
-            # 顯示 x 的數值（綠色線與 x 軸交點）
+        with chart_col_right:
+            fig11, ax11 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+            ax11.plot(xs, ys, linewidth=4.2, color="#8bbce9")
+            draw_to_x_axis(ax11, a, f(np.array([a]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
             ax11.text(
-                x1,
-                0 + m1_axis_y_offsets["x"],
-                f"{x1:.2f}",
-                ha="center",
-                va="top",
-                fontsize=13,
-                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+                a,
+                0 + m1_axis_y_offsets["a"] - 0.02,
+                f"{a:.2f}",
+                **pretty_a_label_kwargs(),
             )
-        if show_left_formula:
-            draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
-            ax11.text(
-                z1,
-                0 + m1_axis_y_offsets["z"],
-                f"{z1:.2f}",
-                ha="center",
-                va="top",
-                fontsize=13,
-                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+            if show_right_formula:
+                draw_to_x_axis(ax11, x1, current_f, "#9bd18b", linewidth=1.6, marker_size=55)
+                # 顯示 x 的數值（綠色線與 x 軸交點）
+                ax11.text(
+                    x1,
+                    0 + m1_axis_y_offsets["x"],
+                    f"{x1:.2f}",
+                    ha="center",
+                    va="top",
+                    fontsize=13,
+                    bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+                )
+            if show_left_formula:
+                draw_to_x_axis(ax11, z1, current_fz, "#9bd18b", linewidth=1.6, marker_size=55)
+                ax11.text(
+                    z1,
+                    0 + m1_axis_y_offsets["z"],
+                    f"{z1:.2f}",
+                    ha="center",
+                    va="top",
+                    fontsize=13,
+                    bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="#d9e7d9", lw=0.6, alpha=0.92),
+                )
+            if show_right_formula and x1 >= a:
+                fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
+                x_mid = (a + x1) / 2
+                if abs(x1 - z1) < 0.90:
+                    x_mid = a + 0.72 * (x1 - a)
+                ys_mask = ys[mask]
+                positive_part = ys_mask[ys_mask >= 0]
+                negative_part = ys_mask[ys_mask < 0]
+
+                if current_A >= 0:
+                    if len(positive_part) > 0:
+                        y_mid = 0.52 * np.max(positive_part)
+                    else:
+                        y_mid = 0.38 * max(y_max_common, 1.0)
+                else:
+                    if len(negative_part) > 0:
+                        y_mid = 0.52 * np.min(negative_part)
+                    else:
+                        y_mid = 0.38 * min(y_min_common, -1.0)
+
+                ax11.text(
+                    x_mid,
+                    y_mid,
+                    f"{current_A:.2f}",
+                    ha="center",
+                    va="center",
+                    fontsize=14,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=dict(
+                        boxstyle="round,pad=0.28,rounding_size=0.16",
+                        fc="white",
+                        ec="#c9d2de",
+                        lw=1.0,
+                        alpha=0.94,
+                    ),
+                )
+            if show_left_formula and z1 <= a:
+                fill_area_by_sign(ax11, xs[mask_z], ys[mask_z], fill_pos_color, fill_neg_color, alpha=0.40)
+                z_mid = (z1 + a) / 2
+                ys_mask_z = ys[mask_z]
+                positive_part_z = ys_mask_z[ys_mask_z >= 0]
+                negative_part_z = ys_mask_z[ys_mask_z < 0]
+
+                if current_Z >= 0:
+                    if len(positive_part_z) > 0:
+                        y_mid_z = 0.52 * np.max(positive_part_z)
+                    else:
+                        y_mid_z = 0.38 * max(y_max_common, 1.0)
+                else:
+                    if len(negative_part_z) > 0:
+                        y_mid_z = 0.52 * np.min(negative_part_z)
+                    else:
+                        y_mid_z = 0.38 * min(y_min_common, -1.0)
+
+                z_mid = z1 + 0.22 * (a - z1)
+                if abs(x1 - z1) < 0.90:
+                    z_mid = z1 + 0.12 * (a - z1)
+                ax11.text(
+                    z_mid,
+                    y_mid_z,
+                    f"{current_Z:.2f}",
+                    ha="center",
+                    va="center",
+                    fontsize=14,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=dict(
+                        boxstyle="round,pad=0.28,rounding_size=0.16",
+                        fc="white",
+                        ec="#c9d2de",
+                        lw=1.0,
+                        alpha=0.94,
+                    ),
+                )
+            ax11.set_title("y=f(x)", fontsize=16, pad=14)
+            ax11.set_xlabel("x", fontsize=12)
+            ax11.set_ylabel("f(x)", fontsize=12)
+            ax11.set_xlim(x_min_common, x_max_common)
+            ax11.set_ylim(y_min_common, y_max_common)
+            ax11.tick_params(labelsize=11)
+            add_common_style(ax11)
+            st.pyplot(fig11, use_container_width=True)
+
+
+    if st.session_state.get("m1_graph_window_open", False):
+        floating_graph_window = st.container(border=True)
+        with floating_graph_window:
+            st.markdown(
+                """
+                <div id="m1-graph-window-marker"></div>
+                <div id="m1-graph-window-handle" class="m1-floating-panel-title">
+                    <span>☰ 模組 1｜圖形視窗</span>
+                    <span class="m1-floating-panel-hint">拖曳此處移動</span>
+                </div>
+                <div class="m1-floating-panel-note">
+                    拖動滑桿後，這裡的兩個圖形會立即依目前數值重新更新。
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-        if show_right_formula and x1 >= a:
-            fill_area_by_sign(ax11, xs[mask], ys[mask], fill_pos_color, fill_neg_color, alpha=0.40)
-            x_mid = (a + x1) / 2
-            if abs(x1 - z1) < 0.90:
-                x_mid = a + 0.72 * (x1 - a)
-            ys_mask = ys[mask]
-            positive_part = ys_mask[ys_mask >= 0]
-            negative_part = ys_mask[ys_mask < 0]
-
-            if current_A >= 0:
-                if len(positive_part) > 0:
-                    y_mid = 0.52 * np.max(positive_part)
-                else:
-                    y_mid = 0.38 * max(y_max_common, 1.0)
-            else:
-                if len(negative_part) > 0:
-                    y_mid = 0.52 * np.min(negative_part)
-                else:
-                    y_mid = 0.38 * min(y_min_common, -1.0)
-
-            ax11.text(
-                x_mid,
-                y_mid,
-                f"{current_A:.2f}",
-                ha="center",
-                va="center",
-                fontsize=14,
-                fontweight="semibold",
-                color="#2f2f2f",
-                bbox=dict(
-                    boxstyle="round,pad=0.28,rounding_size=0.16",
-                    fc="white",
-                    ec="#c9d2de",
-                    lw=1.0,
-                    alpha=0.94,
-                ),
+            render_m1_graphs()
+            st.button(
+                "關閉圖形視窗",
+                key="m1_close_graph_window",
+                use_container_width=True,
+                on_click=close_m1_graph_window,
             )
-        if show_left_formula and z1 <= a:
-            fill_area_by_sign(ax11, xs[mask_z], ys[mask_z], fill_pos_color, fill_neg_color, alpha=0.40)
-            z_mid = (z1 + a) / 2
-            ys_mask_z = ys[mask_z]
-            positive_part_z = ys_mask_z[ys_mask_z >= 0]
-            negative_part_z = ys_mask_z[ys_mask_z < 0]
-
-            if current_Z >= 0:
-                if len(positive_part_z) > 0:
-                    y_mid_z = 0.52 * np.max(positive_part_z)
-                else:
-                    y_mid_z = 0.38 * max(y_max_common, 1.0)
-            else:
-                if len(negative_part_z) > 0:
-                    y_mid_z = 0.52 * np.min(negative_part_z)
-                else:
-                    y_mid_z = 0.38 * min(y_min_common, -1.0)
-
-            z_mid = z1 + 0.22 * (a - z1)
-            if abs(x1 - z1) < 0.90:
-                z_mid = z1 + 0.12 * (a - z1)
-            ax11.text(
-                z_mid,
-                y_mid_z,
-                f"{current_Z:.2f}",
-                ha="center",
-                va="center",
-                fontsize=14,
-                fontweight="semibold",
-                color="#2f2f2f",
-                bbox=dict(
-                    boxstyle="round,pad=0.28,rounding_size=0.16",
-                    fc="white",
-                    ec="#c9d2de",
-                    lw=1.0,
-                    alpha=0.94,
-                ),
-            )
-        ax11.set_title("y=f(x)", fontsize=16, pad=14)
-        ax11.set_xlabel("x", fontsize=12)
-        ax11.set_ylabel("f(x)", fontsize=12)
-        ax11.set_xlim(x_min_common, x_max_common)
-        ax11.set_ylim(y_min_common, y_max_common)
-        ax11.tick_params(labelsize=11)
-        add_common_style(ax11)
-        st.pyplot(fig11, use_container_width=True)
+        render_floating_graph_window_script("m1", default_top=105)
+    else:
+        render_m1_graphs()
 
     st.markdown(
         """
@@ -1509,8 +1688,18 @@ if selected_module_key == "module2":
                 use_container_width=True,
                 on_click=open_m2_slider_panel,
             )
+            st.button(
+                "開啟圖形視窗",
+                key="m2_open_graph_window",
+                use_container_width=True,
+                on_click=open_m2_graph_window,
+            )
             if st.session_state.get("m2_slider_panel_open", False):
                 st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
+            if st.session_state.get("m2_graph_window_open", False):
+                st.caption("圖形視窗已開啟，可拖曳視窗上方標題列移動位置。")
+            if not st.session_state.get("m2_slider_panel_open", False):
+                render_m2_slider_controls()
             st.markdown('</div>', unsafe_allow_html=True)
 
         if st.session_state.get("m2_slider_panel_open", False):
@@ -1636,233 +1825,262 @@ if selected_module_key == "module2":
         else:
             trend = "A(x) 在這附近斜率接近 0"
 
-    left, right = st.columns(2, gap="large")
-    with left:
-        fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+    def render_m2_graphs():
+        left, right = st.columns(2, gap="large")
+        with left:
+            fig22, ax22 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
 
-        for saved_item in st.session_state.get("m2_saved_a_curves", []):
-            saved_curve = np.array(saved_item["curve"], dtype=float)
-            saved_color = saved_item.get("color", "#9fd8b3")
-            saved_x = float(saved_item["x"])
-            saved_A = float(saved_item["A"])
-            saved_Aprime = float(saved_item["Aprime"])
+            for saved_item in st.session_state.get("m2_saved_a_curves", []):
+                saved_curve = np.array(saved_item["curve"], dtype=float)
+                saved_color = saved_item.get("color", "#9fd8b3")
+                saved_x = float(saved_item["x"])
+                saved_A = float(saved_item["A"])
+                saved_Aprime = float(saved_item["Aprime"])
 
-            ax22.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
-            ax22.scatter([saved_x], [saved_A], s=48, color="#9bd18b", zorder=7)
+                ax22.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
+                ax22.scatter([saved_x], [saved_A], s=48, color="#9bd18b", zorder=7)
+
+                if show_tangent_m2:
+                    saved_tangent_half_width = 1.05
+                    saved_tangent_x = np.linspace(
+                        max(x_min_common, saved_x - saved_tangent_half_width),
+                        min(x_max_common, saved_x + saved_tangent_half_width),
+                        40,
+                    )
+                    saved_tangent_y = saved_A + saved_Aprime * (saved_tangent_x - saved_x)
+                    ax22.plot(saved_tangent_x, saved_tangent_y, linewidth=2.6, color="#ffb347", alpha=0.72)
+
+                if saved_item.get("show_secant", False):
+                    saved_x_plus = float(saved_item.get("x_plus", saved_x))
+                    saved_A_plus = float(saved_item.get("A_plus", saved_A))
+                    saved_secant_slope = float(saved_item.get("secant_slope", 0.0))
+                    ax22.scatter([saved_x_plus], [saved_A_plus], s=38, color="#9bd18b", zorder=7)
+                    saved_secant_half_width = 1.05
+                    saved_secant_center_x = 0.5 * (saved_x + saved_x_plus)
+                    saved_secant_center_y = 0.5 * (saved_A + saved_A_plus)
+                    saved_secant_x = np.linspace(
+                        max(x_min_common, saved_secant_center_x - saved_secant_half_width),
+                        min(x_max_common, saved_secant_center_x + saved_secant_half_width),
+                        40,
+                    )
+                    saved_secant_y = saved_secant_center_y + saved_secant_slope * (saved_secant_x - saved_secant_center_x)
+                    ax22.plot(saved_secant_x, saved_secant_y, linewidth=2.6, color="#ffb347", alpha=0.72)
+
+            ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
+            draw_to_x_axis(ax22, a2, np.interp(a2, xs, Axs_m2), "#f2a3c7", linewidth=1.6, marker_size=45)
+            ax22.text(
+                a2,
+                0 + m2_axis_y_offsets[0],
+                f"{a2:.2f}",
+                **pretty_a_label_kwargs(),
+            )
+            draw_to_x_axis(ax22, x2, current_A2, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax22.text(
+                x2,
+                0 + m2_axis_y_offsets[1],
+                f"{x2:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=smart_value_bbox(),
+            )
+            if show_secant_m2:
+                m2_left_x_xytext = smart_point_xytext(
+                    x2,
+                    current_A2,
+                    x_min_common,
+                    x_max_common,
+                    y_min_common,
+                    y_max_common,
+                    other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2_plus, current_A2_plus)] if show_secant_m2 else [(a2, np.interp(a2, xs, Axs_m2))],
+                )
+                ax22.annotate(
+                    f"A({x2:.2f})={current_A2:.4f}",
+                    xy=(x2, current_A2),
+                    xytext=m2_left_x_xytext,
+                    textcoords="offset points",
+                    color="#2f6f4f",
+                    fontsize=13.0,
+                    fontweight="semibold",
+                    bbox=dict(
+                        boxstyle="round,pad=0.22,rounding_size=0.16",
+                        fc="white",
+                        ec="#86c79d",
+                        lw=1.0,
+                        alpha=0.96,
+                    ),
+                    arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+                )
+            if show_secant_m2:
+                draw_to_x_axis(ax22, x2_plus, current_A2_plus, "#9bd18b", linewidth=1.6, marker_size=36)
+                m2_left_xplus_xytext = smart_point_xytext(
+                    x2_plus,
+                    current_A2_plus,
+                    x_min_common,
+                    x_max_common,
+                    y_min_common,
+                    y_max_common,
+                    other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2, current_A2)],
+                )
+                ax22.annotate(
+                    f"A({x2_plus:.2f})={current_A2_plus:.4f}",
+                    xy=(x2_plus, current_A2_plus),
+                    xytext=m2_left_xplus_xytext,
+                    textcoords="offset points",
+                    color="#2f6f4f",
+                    fontsize=13.0,
+                    fontweight="semibold",
+                    bbox=dict(
+                        boxstyle="round,pad=0.22,rounding_size=0.16",
+                        fc="white",
+                        ec="#86c79d",
+                        lw=1.0,
+                        alpha=0.96,
+                    ),
+                    arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+                )
+
+                secant_slope = (current_A2_plus - current_A2) / max(x2_plus - x2, 1e-9)
+                secant_half_width = 1.05
+                secant_center_x = 0.5 * (x2 + x2_plus)
+                secant_center_y = 0.5 * (current_A2 + current_A2_plus)
+                secant_x = np.linspace(
+                    max(x_min_common, secant_center_x - secant_half_width),
+                    min(x_max_common, secant_center_x + secant_half_width),
+                    40,
+                )
+                secant_y = secant_center_y + secant_slope * (secant_x - secant_center_x)
+                ax22.plot(secant_x, secant_y, linewidth=3.0, color="#ffb347", zorder=6)
 
             if show_tangent_m2:
-                saved_tangent_half_width = 1.05
-                saved_tangent_x = np.linspace(
-                    max(x_min_common, saved_x - saved_tangent_half_width),
-                    min(x_max_common, saved_x + saved_tangent_half_width),
+                tangent_half_width = 1.05
+                tangent_x = np.linspace(
+                    max(x_min_common, x2 - tangent_half_width),
+                    min(x_max_common, x2 + tangent_half_width),
                     40,
                 )
-                saved_tangent_y = saved_A + saved_Aprime * (saved_tangent_x - saved_x)
-                ax22.plot(saved_tangent_x, saved_tangent_y, linewidth=2.6, color="#ffb347", alpha=0.72)
+                tangent_y = current_A2 + current_Ap2 * (tangent_x - x2)
+                ax22.plot(tangent_x, tangent_y, linewidth=3.0, color="#ffb347")
 
-            if saved_item.get("show_secant", False):
-                saved_x_plus = float(saved_item.get("x_plus", saved_x))
-                saved_A_plus = float(saved_item.get("A_plus", saved_A))
-                saved_secant_slope = float(saved_item.get("secant_slope", 0.0))
-                ax22.scatter([saved_x_plus], [saved_A_plus], s=38, color="#9bd18b", zorder=7)
-                saved_secant_half_width = 1.05
-                saved_secant_center_x = 0.5 * (saved_x + saved_x_plus)
-                saved_secant_center_y = 0.5 * (saved_A + saved_A_plus)
-                saved_secant_x = np.linspace(
-                    max(x_min_common, saved_secant_center_x - saved_secant_half_width),
-                    min(x_max_common, saved_secant_center_x + saved_secant_half_width),
-                    40,
+                tangent_label_x = min(max(x2 + 0.35, x_min_common + 0.35), x_max_common - 0.35)
+                tangent_label_y = current_A2 + current_Ap2 * (tangent_label_x - x2)
+                tangent_label_y = min(max(tangent_label_y + 0.35, y_min_common + 0.45), y_max_common - 0.45)
+                ax22.text(
+                    tangent_label_x,
+                    tangent_label_y,
+                    rf"$A'({x2:.2f})={current_Ap2:.4f}$",
+                    ha="left",
+                    va="center",
+                    fontsize=14,
+                    fontweight="semibold",
+                    color="#b36b00",
+                    bbox=dict(
+                        boxstyle="round,pad=0.26,rounding_size=0.16",
+                        fc="white",
+                        ec="#ffb347",
+                        lw=1.0,
+                        alpha=0.95,
+                    ),
                 )
-                saved_secant_y = saved_secant_center_y + saved_secant_slope * (saved_secant_x - saved_secant_center_x)
-                ax22.plot(saved_secant_x, saved_secant_y, linewidth=2.6, color="#ffb347", alpha=0.72)
 
-        ax22.plot(xs, Axs_m2, linewidth=3.4, color="#8fc9a8")
-        draw_to_x_axis(ax22, a2, np.interp(a2, xs, Axs_m2), "#f2a3c7", linewidth=1.6, marker_size=45)
-        ax22.text(
-            a2,
-            0 + m2_axis_y_offsets[0],
-            f"{a2:.2f}",
-            **pretty_a_label_kwargs(),
-        )
-        draw_to_x_axis(ax22, x2, current_A2, "#9bd18b", linewidth=1.6, marker_size=55)
-        ax22.text(
-            x2,
-            0 + m2_axis_y_offsets[1],
-            f"{x2:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=smart_value_bbox(),
-        )
-        if show_secant_m2:
-            m2_left_x_xytext = smart_point_xytext(
+            ax22.set_title("y=A(x)", fontsize=14)
+            ax22.set_xlabel("x")
+            ax22.set_ylabel("A(x)")
+            ax22.set_xlim(x_min_common, x_max_common)
+            ax22.set_ylim(y_min_common, y_max_common)
+            add_common_style(ax22)
+            st.pyplot(fig22, use_container_width=True)
+
+        with right:
+            fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+            ax2.plot(xs, ys, linewidth=3.4, color="#8bbce9")
+            draw_to_x_axis(ax2, a2, f(np.array([a2]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
+            ax2.text(
+                a2,
+                0 + m2_axis_y_offsets[0],
+                f"{a2:.2f}",
+                **pretty_a_label_kwargs(),
+            )
+            draw_to_x_axis(ax2, x2, current_f2, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax2.text(
                 x2,
-                current_A2,
-                x_min_common,
-                x_max_common,
-                y_min_common,
-                y_max_common,
-                other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2_plus, current_A2_plus)] if show_secant_m2 else [(a2, np.interp(a2, xs, Axs_m2))],
+                0 + m2_axis_y_offsets[1],
+                f"{x2:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=smart_value_bbox(),
             )
-            ax22.annotate(
-                f"A({x2:.2f})={current_A2:.4f}",
-                xy=(x2, current_A2),
-                xytext=m2_left_x_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.0,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.22,rounding_size=0.16",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
-        if show_secant_m2:
-            draw_to_x_axis(ax22, x2_plus, current_A2_plus, "#9bd18b", linewidth=1.6, marker_size=36)
-            m2_left_xplus_xytext = smart_point_xytext(
-                x2_plus,
-                current_A2_plus,
-                x_min_common,
-                x_max_common,
-                y_min_common,
-                y_max_common,
-                other_points=[(a2, np.interp(a2, xs, Axs_m2)), (x2, current_A2)],
-            )
-            ax22.annotate(
-                f"A({x2_plus:.2f})={current_A2_plus:.4f}",
-                xy=(x2_plus, current_A2_plus),
-                xytext=m2_left_xplus_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.0,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.22,rounding_size=0.16",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
+            if show_secant_m2:
+                ax2.plot(
+                    [x2_plus, x2_plus],
+                    [0, current_f2_plus],
+                    linestyle="--",
+                    linewidth=1.6,
+                    color="#9bd18b",
+                    zorder=6,
+                )
+                ax2.scatter([x2_plus], [current_f2_plus], s=36, color="#9bd18b", zorder=7)
 
-            secant_slope = (current_A2_plus - current_A2) / max(x2_plus - x2, 1e-9)
-            secant_half_width = 1.05
-            secant_center_x = 0.5 * (x2 + x2_plus)
-            secant_center_y = 0.5 * (current_A2 + current_A2_plus)
-            secant_x = np.linspace(
-                max(x_min_common, secant_center_x - secant_half_width),
-                min(x_max_common, secant_center_x + secant_half_width),
-                40,
-            )
-            secant_y = secant_center_y + secant_slope * (secant_x - secant_center_x)
-            ax22.plot(secant_x, secant_y, linewidth=3.0, color="#ffb347", zorder=6)
+                mask_m2_fill = (xs >= min(x2, x2_plus)) & (xs <= max(x2, x2_plus))
+                fill_area_by_sign(ax2, xs[mask_m2_fill], ys[mask_m2_fill], fill_pos_color, fill_neg_color, alpha=0.40)
 
-        if show_tangent_m2:
-            tangent_half_width = 1.05
-            tangent_x = np.linspace(
-                max(x_min_common, x2 - tangent_half_width),
-                min(x_max_common, x2 + tangent_half_width),
-                40,
-            )
-            tangent_y = current_A2 + current_Ap2 * (tangent_x - x2)
-            ax22.plot(tangent_x, tangent_y, linewidth=3.0, color="#ffb347")
+            if show_secant_m2 or show_tangent_m2:
+                m2_right_xytext = smart_point_xytext(
+                    x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
+                )
+                ax2.annotate(
+                    f"f({x2:.2f})={current_f2:.2f}",
+                    xy=(x2, current_f2),
+                    xytext=m2_right_xytext,
+                    textcoords="offset points",
+                    color="#2f6f4f",
+                    fontsize=13.2,
+                    fontweight="semibold",
+                    bbox=dict(
+                        boxstyle="round,pad=0.24,rounding_size=0.18",
+                        fc="white",
+                        ec="#86c79d",
+                        lw=1.0,
+                        alpha=0.96,
+                    ),
+                    arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+                )
+            ax2.set_title("y=f(x)", fontsize=14)
+            ax2.set_xlabel("x")
+            ax2.set_ylabel("f(x)")
+            ax2.set_xlim(x_min_common, x_max_common)
+            ax2.set_ylim(y_min_common, y_max_common)
+            add_common_style(ax2)
+            st.pyplot(fig2, use_container_width=True)
 
-            tangent_label_x = min(max(x2 + 0.35, x_min_common + 0.35), x_max_common - 0.35)
-            tangent_label_y = current_A2 + current_Ap2 * (tangent_label_x - x2)
-            tangent_label_y = min(max(tangent_label_y + 0.35, y_min_common + 0.45), y_max_common - 0.45)
-            ax22.text(
-                tangent_label_x,
-                tangent_label_y,
-                rf"$A'({x2:.2f})={current_Ap2:.4f}$",
-                ha="left",
-                va="center",
-                fontsize=14,
-                fontweight="semibold",
-                color="#b36b00",
-                bbox=dict(
-                    boxstyle="round,pad=0.26,rounding_size=0.16",
-                    fc="white",
-                    ec="#ffb347",
-                    lw=1.0,
-                    alpha=0.95,
-                ),
-            )
 
-        ax22.set_title("y=A(x)", fontsize=14)
-        ax22.set_xlabel("x")
-        ax22.set_ylabel("A(x)")
-        ax22.set_xlim(x_min_common, x_max_common)
-        ax22.set_ylim(y_min_common, y_max_common)
-        add_common_style(ax22)
-        st.pyplot(fig22, use_container_width=True)
-
-    with right:
-        fig2, ax2 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax2.plot(xs, ys, linewidth=3.4, color="#8bbce9")
-        draw_to_x_axis(ax2, a2, f(np.array([a2]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
-        ax2.text(
-            a2,
-            0 + m2_axis_y_offsets[0],
-            f"{a2:.2f}",
-            **pretty_a_label_kwargs(),
-        )
-        draw_to_x_axis(ax2, x2, current_f2, "#9bd18b", linewidth=1.6, marker_size=55)
-        ax2.text(
-            x2,
-            0 + m2_axis_y_offsets[1],
-            f"{x2:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=smart_value_bbox(),
-        )
-        if show_secant_m2:
-            ax2.plot(
-                [x2_plus, x2_plus],
-                [0, current_f2_plus],
-                linestyle="--",
-                linewidth=1.6,
-                color="#9bd18b",
-                zorder=6,
+    if st.session_state.get("m2_graph_window_open", False):
+        floating_graph_window = st.container(border=True)
+        with floating_graph_window:
+            st.markdown(
+                """
+                <div id="m2-graph-window-marker"></div>
+                <div id="m2-graph-window-handle" class="m1-floating-panel-title">
+                    <span>☰ 模組 2｜圖形視窗</span>
+                    <span class="m1-floating-panel-hint">拖曳此處移動</span>
+                </div>
+                <div class="m1-floating-panel-note">
+                    拖動滑桿後，這裡的兩個圖形會立即依目前數值重新更新。
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-            ax2.scatter([x2_plus], [current_f2_plus], s=36, color="#9bd18b", zorder=7)
-
-            mask_m2_fill = (xs >= min(x2, x2_plus)) & (xs <= max(x2, x2_plus))
-            fill_area_by_sign(ax2, xs[mask_m2_fill], ys[mask_m2_fill], fill_pos_color, fill_neg_color, alpha=0.40)
-
-        if show_secant_m2 or show_tangent_m2:
-            m2_right_xytext = smart_point_xytext(
-                x2, current_f2, x_min_common, x_max_common, y_min_common, y_max_common, other_points=[(a2, f(np.array([a2]))[0])]
+            render_m2_graphs()
+            st.button(
+                "關閉圖形視窗",
+                key="m2_close_graph_window",
+                use_container_width=True,
+                on_click=close_m2_graph_window,
             )
-            ax2.annotate(
-                f"f({x2:.2f})={current_f2:.2f}",
-                xy=(x2, current_f2),
-                xytext=m2_right_xytext,
-                textcoords="offset points",
-                color="#2f6f4f",
-                fontsize=13.2,
-                fontweight="semibold",
-                bbox=dict(
-                    boxstyle="round,pad=0.24,rounding_size=0.18",
-                    fc="white",
-                    ec="#86c79d",
-                    lw=1.0,
-                    alpha=0.96,
-                ),
-                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-            )
-        ax2.set_title("y=f(x)", fontsize=14)
-        ax2.set_xlabel("x")
-        ax2.set_ylabel("f(x)")
-        ax2.set_xlim(x_min_common, x_max_common)
-        ax2.set_ylim(y_min_common, y_max_common)
-        add_common_style(ax2)
-        st.pyplot(fig2, use_container_width=True)
+        render_floating_graph_window_script("m2", default_top=105)
+    else:
+        render_m2_graphs()
 
     st.markdown(
         """
@@ -2176,8 +2394,18 @@ if selected_module_key == "module3":
                 use_container_width=True,
                 on_click=open_m3_slider_panel,
             )
+            st.button(
+                "開啟圖形視窗",
+                key="m3_open_graph_window",
+                use_container_width=True,
+                on_click=open_m3_graph_window,
+            )
             if st.session_state.get("m3_slider_panel_open", False):
                 st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
+            if st.session_state.get("m3_graph_window_open", False):
+                st.caption("圖形視窗已開啟，可拖曳視窗上方標題列移動位置。")
+            if not st.session_state.get("m3_slider_panel_open", False):
+                render_m3_slider_controls()
             st.markdown('</div>', unsafe_allow_html=True)
 
         if st.session_state.get("m3_slider_panel_open", False):
@@ -2294,180 +2522,209 @@ if selected_module_key == "module3":
                     st.session_state["m3_saved_a_curves"] = []
                     st.session_state["m3_saved_curve_color_idx"] = 0
 
-    left, right = st.columns(2, gap="large")
-    with left:
-        fig32, ax32 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+    def render_m3_graphs():
+        left, right = st.columns(2, gap="large")
+        with left:
+            fig32, ax32 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
 
-        for saved_item in st.session_state.get("m3_saved_a_curves", []):
-            saved_curve = np.array(saved_item["curve"], dtype=float)
-            saved_color = saved_item.get("color", "#9fd8b3")
-            saved_b = float(saved_item.get("b", a3))
-            saved_c = float(saved_item.get("c", a3))
-            saved_A_b = float(saved_item.get("A_b", np.interp(saved_b, xs, saved_curve)))
-            saved_A_c = float(saved_item.get("A_c", np.interp(saved_c, xs, saved_curve)))
-            ax32.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
-            ax32.scatter([saved_b, saved_c], [saved_A_b, saved_A_c], s=48, color="#9bd18b", zorder=7)
+            for saved_item in st.session_state.get("m3_saved_a_curves", []):
+                saved_curve = np.array(saved_item["curve"], dtype=float)
+                saved_color = saved_item.get("color", "#9fd8b3")
+                saved_b = float(saved_item.get("b", a3))
+                saved_c = float(saved_item.get("c", a3))
+                saved_A_b = float(saved_item.get("A_b", np.interp(saved_b, xs, saved_curve)))
+                saved_A_c = float(saved_item.get("A_c", np.interp(saved_c, xs, saved_curve)))
+                ax32.plot(xs, saved_curve, linewidth=2.2, color=saved_color, alpha=0.70)
+                ax32.scatter([saved_b, saved_c], [saved_A_b, saved_A_c], s=48, color="#9bd18b", zorder=7)
 
-        ax32.plot(xs, Axs_m3, linewidth=3.4, color="#8fc9a8")
+            ax32.plot(xs, Axs_m3, linewidth=3.4, color="#8fc9a8")
 
-        draw_to_x_axis(ax32, a3, np.interp(a3, xs, Axs_m3), "#f2a3c7", linewidth=1.6, marker_size=45)
-        ax32.text(
-            a3,
-            0 + m3_axis_y_offsets["a"],
-            f"{a3:.2f}",
-            **pretty_a_label_kwargs(),
-        )
-
-        draw_to_x_axis(ax32, b3, current_A3_b, "#9bd18b", linewidth=1.6, marker_size=55)
-        ax32.text(
-            b3,
-            0 + m3_axis_y_offsets["b"],
-            f"{b3:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=smart_value_bbox(),
-        )
-        b_xytext = smart_point_xytext(
-            b3,
-            current_A3_b,
-            x_min_common,
-            x_max_common,
-            y_min_common,
-            y_max_common,
-            other_points=[(c3, current_A3_c), (a3, np.interp(a3, xs, Axs_m3))],
-        )
-        ax32.annotate(
-            f"A({b3:.2f})={current_A3_b:.4f}",
-            xy=(b3, current_A3_b),
-            xytext=b_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.0,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.22,rounding_size=0.16",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
-
-        draw_to_x_axis(ax32, c3, current_A3_c, "#9bd18b", linewidth=1.6, marker_size=55)
-        ax32.text(
-            c3,
-            0 + m3_axis_y_offsets["c"],
-            f"{c3:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=smart_value_bbox(),
-        )
-        c_xytext = smart_point_xytext(
-            c3,
-            current_A3_c,
-            x_min_common,
-            x_max_common,
-            y_min_common,
-            y_max_common,
-            other_points=[(b3, current_A3_b), (a3, np.interp(a3, xs, Axs_m3))],
-        )
-        ax32.annotate(
-            f"A({c3:.2f})={current_A3_c:.4f}",
-            xy=(c3, current_A3_c),
-            xytext=c_xytext,
-            textcoords="offset points",
-            color="#2f6f4f",
-            fontsize=13.0,
-            fontweight="semibold",
-            bbox=dict(
-                boxstyle="round,pad=0.22,rounding_size=0.16",
-                fc="white",
-                ec="#86c79d",
-                lw=1.0,
-                alpha=0.96,
-            ),
-            arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
-        )
-
-        ax32.set_title("y=A(x)", fontsize=14)
-        ax32.set_xlabel("x")
-        ax32.set_ylabel("A(x)")
-        ax32.set_xlim(x_min_common, x_max_common)
-        ax32.set_ylim(y_min_common, y_max_common)
-        add_common_style(ax32)
-        st.pyplot(fig32, use_container_width=True)
-
-    with right:
-        fig3, ax3 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
-        ax3.plot(xs, ys, linewidth=3.4, color="#8bbce9")
-        draw_to_x_axis(ax3, a3, f(np.array([a3]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
-        ax3.text(
-            a3,
-            0 + m3_axis_y_offsets["a"],
-            f"{a3:.2f}",
-            **pretty_a_label_kwargs(),
-        )
-
-        draw_to_x_axis(ax3, b3, current_f3_b, "#9bd18b", linewidth=1.6, marker_size=55)
-        ax3.text(
-            b3,
-            0 + m3_axis_y_offsets["b"],
-            f"{b3:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=smart_value_bbox(),
-        )
-        draw_to_x_axis(ax3, c3, current_f3_c, "#9bd18b", linewidth=1.6, marker_size=55)
-        ax3.text(
-            c3,
-            0 + m3_axis_y_offsets["c"],
-            f"{c3:.2f}",
-            ha="center",
-            va="top",
-            fontsize=13,
-            bbox=smart_value_bbox(),
-        )
-
-        mask_m3_fill = (xs >= min(b3, c3)) & (xs <= max(b3, c3))
-        fill_area_by_sign(ax3, xs[mask_m3_fill], ys[mask_m3_fill], fill_pos_color, fill_neg_color, alpha=0.40)
-        if np.any(mask_m3_fill) and abs(c3 - b3) > 1e-9:
-            area_x_mid = 0.5 * (b3 + c3)
-            ys_mask_m3 = ys[mask_m3_fill]
-            if definite_integral_value_m3 >= 0:
-                positive_part = ys_mask_m3[ys_mask_m3 >= 0]
-                if len(positive_part) > 0:
-                    area_y_mid = 0.52 * np.max(positive_part)
-                else:
-                    area_y_mid = 0.38 * max(y_max_common, 1.0)
-            else:
-                negative_part = ys_mask_m3[ys_mask_m3 < 0]
-                if len(negative_part) > 0:
-                    area_y_mid = 0.52 * np.min(negative_part)
-                else:
-                    area_y_mid = 0.38 * min(y_min_common, -1.0)
-            ax3.text(
-                area_x_mid,
-                area_y_mid,
-                f"{definite_integral_value_m3:.4f}",
-                ha="center",
-                va="center",
-                fontsize=14,
-                fontweight="semibold",
-                color="#2f2f2f",
-                bbox=smart_area_bbox(),
+            draw_to_x_axis(ax32, a3, np.interp(a3, xs, Axs_m3), "#f2a3c7", linewidth=1.6, marker_size=45)
+            ax32.text(
+                a3,
+                0 + m3_axis_y_offsets["a"],
+                f"{a3:.2f}",
+                **pretty_a_label_kwargs(),
             )
 
-        ax3.set_title("y=f(x)", fontsize=14)
-        ax3.set_xlabel("x")
-        ax3.set_ylabel("f(x)")
-        ax3.set_xlim(x_min_common, x_max_common)
-        ax3.set_ylim(y_min_common, y_max_common)
-        add_common_style(ax3)
-        st.pyplot(fig3, use_container_width=True)
+            draw_to_x_axis(ax32, b3, current_A3_b, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax32.text(
+                b3,
+                0 + m3_axis_y_offsets["b"],
+                f"{b3:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=smart_value_bbox(),
+            )
+            b_xytext = smart_point_xytext(
+                b3,
+                current_A3_b,
+                x_min_common,
+                x_max_common,
+                y_min_common,
+                y_max_common,
+                other_points=[(c3, current_A3_c), (a3, np.interp(a3, xs, Axs_m3))],
+            )
+            ax32.annotate(
+                f"A({b3:.2f})={current_A3_b:.4f}",
+                xy=(b3, current_A3_b),
+                xytext=b_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.0,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.22,rounding_size=0.16",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
+
+            draw_to_x_axis(ax32, c3, current_A3_c, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax32.text(
+                c3,
+                0 + m3_axis_y_offsets["c"],
+                f"{c3:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=smart_value_bbox(),
+            )
+            c_xytext = smart_point_xytext(
+                c3,
+                current_A3_c,
+                x_min_common,
+                x_max_common,
+                y_min_common,
+                y_max_common,
+                other_points=[(b3, current_A3_b), (a3, np.interp(a3, xs, Axs_m3))],
+            )
+            ax32.annotate(
+                f"A({c3:.2f})={current_A3_c:.4f}",
+                xy=(c3, current_A3_c),
+                xytext=c_xytext,
+                textcoords="offset points",
+                color="#2f6f4f",
+                fontsize=13.0,
+                fontweight="semibold",
+                bbox=dict(
+                    boxstyle="round,pad=0.22,rounding_size=0.16",
+                    fc="white",
+                    ec="#86c79d",
+                    lw=1.0,
+                    alpha=0.96,
+                ),
+                arrowprops=dict(arrowstyle="-", color="#86c79d", lw=1.0, alpha=0.9),
+            )
+
+            ax32.set_title("y=A(x)", fontsize=14)
+            ax32.set_xlabel("x")
+            ax32.set_ylabel("A(x)")
+            ax32.set_xlim(x_min_common, x_max_common)
+            ax32.set_ylim(y_min_common, y_max_common)
+            add_common_style(ax32)
+            st.pyplot(fig32, use_container_width=True)
+
+        with right:
+            fig3, ax3 = plt.subplots(figsize=(8.6, 5.8), constrained_layout=True)
+            ax3.plot(xs, ys, linewidth=3.4, color="#8bbce9")
+            draw_to_x_axis(ax3, a3, f(np.array([a3]))[0], "#f2a3c7", linewidth=1.6, marker_size=45)
+            ax3.text(
+                a3,
+                0 + m3_axis_y_offsets["a"],
+                f"{a3:.2f}",
+                **pretty_a_label_kwargs(),
+            )
+
+            draw_to_x_axis(ax3, b3, current_f3_b, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax3.text(
+                b3,
+                0 + m3_axis_y_offsets["b"],
+                f"{b3:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=smart_value_bbox(),
+            )
+            draw_to_x_axis(ax3, c3, current_f3_c, "#9bd18b", linewidth=1.6, marker_size=55)
+            ax3.text(
+                c3,
+                0 + m3_axis_y_offsets["c"],
+                f"{c3:.2f}",
+                ha="center",
+                va="top",
+                fontsize=13,
+                bbox=smart_value_bbox(),
+            )
+
+            mask_m3_fill = (xs >= min(b3, c3)) & (xs <= max(b3, c3))
+            fill_area_by_sign(ax3, xs[mask_m3_fill], ys[mask_m3_fill], fill_pos_color, fill_neg_color, alpha=0.40)
+            if np.any(mask_m3_fill) and abs(c3 - b3) > 1e-9:
+                area_x_mid = 0.5 * (b3 + c3)
+                ys_mask_m3 = ys[mask_m3_fill]
+                if definite_integral_value_m3 >= 0:
+                    positive_part = ys_mask_m3[ys_mask_m3 >= 0]
+                    if len(positive_part) > 0:
+                        area_y_mid = 0.52 * np.max(positive_part)
+                    else:
+                        area_y_mid = 0.38 * max(y_max_common, 1.0)
+                else:
+                    negative_part = ys_mask_m3[ys_mask_m3 < 0]
+                    if len(negative_part) > 0:
+                        area_y_mid = 0.52 * np.min(negative_part)
+                    else:
+                        area_y_mid = 0.38 * min(y_min_common, -1.0)
+                ax3.text(
+                    area_x_mid,
+                    area_y_mid,
+                    f"{definite_integral_value_m3:.4f}",
+                    ha="center",
+                    va="center",
+                    fontsize=14,
+                    fontweight="semibold",
+                    color="#2f2f2f",
+                    bbox=smart_area_bbox(),
+                )
+
+            ax3.set_title("y=f(x)", fontsize=14)
+            ax3.set_xlabel("x")
+            ax3.set_ylabel("f(x)")
+            ax3.set_xlim(x_min_common, x_max_common)
+            ax3.set_ylim(y_min_common, y_max_common)
+            add_common_style(ax3)
+            st.pyplot(fig3, use_container_width=True)
+
+
+    if st.session_state.get("m3_graph_window_open", False):
+        floating_graph_window = st.container(border=True)
+        with floating_graph_window:
+            st.markdown(
+                """
+                <div id="m3-graph-window-marker"></div>
+                <div id="m3-graph-window-handle" class="m1-floating-panel-title">
+                    <span>☰ 模組 3｜圖形視窗</span>
+                    <span class="m1-floating-panel-hint">拖曳此處移動</span>
+                </div>
+                <div class="m1-floating-panel-note">
+                    拖動滑桿後，這裡的兩個圖形會立即依目前數值重新更新。
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            render_m3_graphs()
+            st.button(
+                "關閉圖形視窗",
+                key="m3_close_graph_window",
+                use_container_width=True,
+                on_click=close_m3_graph_window,
+            )
+        render_floating_graph_window_script("m3", default_top=105)
+    else:
+        render_m3_graphs()
 
     st.markdown(
         """
