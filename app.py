@@ -991,21 +991,51 @@ def render_floating_graph_window_script(module_key, default_top=115):
         const handle = doc.getElementById("__MODULE__-graph-window-handle");
         if (!marker || !handle) return;
 
-        let panel = marker.closest('div[data-testid="stVerticalBlockBorderWrapper"]');
-        if (!panel) {
-            let node = marker.parentElement;
-            while (node && node !== doc.body) {
-                const hasMarker = node.querySelector("#__MODULE__-graph-window-marker");
-                if (hasMarker) {
-                    panel = node;
-                    break;
-                }
-                node = node.parentElement;
+        const plotSelector = 'img, canvas, svg, [data-testid="stImage"], [data-testid="stPyplot"]';
+
+        const scorePanel = (node) => {
+            if (!node || node === doc.body || node === doc.documentElement) return -1;
+            const hasMarker = !!node.querySelector("#__MODULE__-graph-window-marker");
+            const hasHandle = !!node.querySelector("#__MODULE__-graph-window-handle");
+            const plotCount = node.querySelectorAll(plotSelector).length;
+            const buttonCount = node.querySelectorAll('button').length;
+            if (!hasMarker || !hasHandle) return -1;
+            if (plotCount < 2 && buttonCount < 1) return -1;
+            let score = 0;
+            if (plotCount >= 2) score += 20;
+            if (buttonCount >= 1) score += 8;
+            if (node.matches('div[data-testid="stVerticalBlockBorderWrapper"]')) score += 4;
+            if (node.matches('div[data-testid="stVerticalBlock"]')) score += 2;
+            score -= Math.max(plotCount - 2, 0);
+            return score;
+        };
+
+        let candidates = [];
+        let node = marker.parentElement;
+        while (node && node !== doc.body && node !== doc.documentElement) {
+            const score = scorePanel(node);
+            if (score >= 0) {
+                candidates.push({ node, score, area: node.getBoundingClientRect().width * node.getBoundingClientRect().height });
             }
+            node = node.parentElement;
+        }
+
+        candidates.sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            return a.area - b.area;
+        });
+
+        let panel = candidates.length ? candidates[0].node : null;
+
+        if (!panel) {
+            panel = marker.closest('div[data-testid="stVerticalBlockBorderWrapper"]') ||
+                    marker.closest('div[data-testid="stVerticalBlock"]') ||
+                    marker.parentElement;
         }
         if (!panel) return;
 
         panel.id = "__MODULE__-floating-graph-window";
+        panel.dataset.floatingGraphWindow = "__MODULE__";
         panel.style.position = "fixed";
         panel.style.zIndex = "2147482500";
         panel.style.width = "min(1180px, calc(100vw - 32px))";
@@ -1017,6 +1047,7 @@ def render_floating_graph_window_script(module_key, default_top=115):
         panel.style.boxShadow = "0 18px 45px rgba(39, 70, 120, 0.24)";
         panel.style.padding = "0.8rem 0.9rem 0.9rem 0.9rem";
         panel.style.backdropFilter = "blur(8px)";
+        panel.style.boxSizing = "border-box";
 
         const parentWindow = window.parent;
         const storage = parentWindow.localStorage || window.localStorage;
@@ -1029,8 +1060,9 @@ def render_floating_graph_window_script(module_key, default_top=115):
 
         const clampPanel = () => {
             const rect = panel.getBoundingClientRect();
+            const visibleHeight = Math.min(rect.height, parentWindow.innerHeight - 24);
             const maxLeft = Math.max(parentWindow.innerWidth - rect.width - 12, 12);
-            const maxTop = Math.max(parentWindow.innerHeight - Math.min(rect.height, parentWindow.innerHeight - 24) - 12, 12);
+            const maxTop = Math.max(parentWindow.innerHeight - visibleHeight - 12, 12);
             const left = Math.min(Math.max(rect.left, 12), maxLeft);
             const top = Math.min(Math.max(rect.top, 12), maxTop);
             panel.style.left = `${left}px`;
@@ -1039,6 +1071,7 @@ def render_floating_graph_window_script(module_key, default_top=115):
             storage.setItem("__MODULE__GraphWindowTop", panel.style.top);
         };
         setTimeout(clampPanel, 50);
+        setTimeout(clampPanel, 400);
 
         if (panel.dataset.__MODULE__GraphDraggableReady === "1") return;
         panel.dataset.__MODULE__GraphDraggableReady = "1";
@@ -1063,13 +1096,14 @@ def render_floating_graph_window_script(module_key, default_top=115):
         doc.addEventListener("mousemove", (event) => {
             if (!isDragging) return;
             const panelRect = panel.getBoundingClientRect();
+            const visibleHeight = Math.min(panelRect.height, parentWindow.innerHeight - 24);
             const nextLeft = Math.min(
                 Math.max(startLeft + event.clientX - startX, 12),
                 Math.max(parentWindow.innerWidth - panelRect.width - 12, 12)
             );
             const nextTop = Math.min(
                 Math.max(startTop + event.clientY - startY, 12),
-                Math.max(parentWindow.innerHeight - Math.min(panelRect.height, parentWindow.innerHeight - 24) - 12, 12)
+                Math.max(parentWindow.innerHeight - visibleHeight - 12, 12)
             );
             panel.style.left = `${nextLeft}px`;
             panel.style.top = `${nextTop}px`;
@@ -1081,15 +1115,39 @@ def render_floating_graph_window_script(module_key, default_top=115):
             storage.setItem("__MODULE__GraphWindowLeft", panel.style.left);
             storage.setItem("__MODULE__GraphWindowTop", panel.style.top);
         });
+
+        parentWindow.addEventListener("resize", clampPanel);
     };
 
     setup__MODULE__FloatingGraphWindow();
-    setTimeout(setup__MODULE__FloatingGraphWindow, 250);
-    setTimeout(setup__MODULE__FloatingGraphWindow, 800);
+    setTimeout(setup__MODULE__FloatingGraphWindow, 150);
+    setTimeout(setup__MODULE__FloatingGraphWindow, 500);
+    setTimeout(setup__MODULE__FloatingGraphWindow, 1000);
     </script>
     """
     script = script.replace("__MODULE__", module_key).replace("__DEFAULT_TOP__", str(default_top))
     components.html(script, height=0)
+
+
+def show_graph_moved_placeholder(module_label):
+    st.markdown(
+        f"""
+        <div style="
+            margin: 0.75rem 0 1rem 0;
+            padding: 1.05rem 1.2rem;
+            border-radius: 16px;
+            border: 1px dashed #9abcf5;
+            background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 100%);
+            color: #38506a;
+            font-size: 1.05rem;
+            line-height: 1.75;
+        ">
+            <b>{module_label}｜圖形已移至浮動視窗</b><br>
+            原畫面圖形已暫時隱藏。請在浮動視窗中觀察兩個函數圖形；拖動滑桿後，浮動視窗中的圖形會同步更新。
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # -----------------------------
 # Module display is selected from the sidebar
@@ -1625,6 +1683,7 @@ if selected_module_key == "module1":
 
 
     if st.session_state.get("m1_graph_window_open", False):
+        show_graph_moved_placeholder("模組 1")
         floating_graph_window = st.container(border=True)
         with floating_graph_window:
             st.markdown(
@@ -2056,6 +2115,7 @@ if selected_module_key == "module2":
 
 
     if st.session_state.get("m2_graph_window_open", False):
+        show_graph_moved_placeholder("模組 2")
         floating_graph_window = st.container(border=True)
         with floating_graph_window:
             st.markdown(
@@ -2700,6 +2760,7 @@ if selected_module_key == "module3":
 
 
     if st.session_state.get("m3_graph_window_open", False):
+        show_graph_moved_placeholder("模組 3")
         floating_graph_window = st.container(border=True)
         with floating_graph_window:
             st.markdown(
