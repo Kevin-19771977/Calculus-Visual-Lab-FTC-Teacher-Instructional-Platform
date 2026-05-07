@@ -715,6 +715,42 @@ def enforce_m4b_not_below_a():
     if raw_val < a_val:
         st.session_state["m4b_raw"] = a_val
 
+
+def render_m1_slider_controls():
+    a_val = st.slider(
+        "固定點 a",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1a", m1_initial_value)),
+        step=0.05,
+        key="m1a",
+    )
+    if st.session_state.get("m1x_raw", m1_initial_value) < a_val:
+        st.session_state["m1x_raw"] = float(a_val)
+    x_val = st.slider(
+        "向右拖動x",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1x_raw", max(m1_initial_value, float(a_val)))),
+        step=0.05,
+        key="m1x_raw",
+        on_change=enforce_m1x_not_below_a,
+    )
+    x_val = float(max(x_val, a_val))
+    if st.session_state.get("m1z_raw", m1_initial_value) > a_val:
+        st.session_state["m1z_raw"] = float(a_val)
+    z_val = st.slider(
+        "向左拖動x",
+        min_value=float(domain_left),
+        max_value=float(domain_right),
+        value=float(st.session_state.get("m1z_raw", min(m1_initial_value, float(a_val)))),
+        step=0.05,
+        key="m1z_raw",
+        on_change=enforce_m1z_not_above_a,
+    )
+    z_val = float(min(z_val, a_val))
+    return float(a_val), x_val, z_val
+
 # -----------------------------
 # Module display is selected from the sidebar
 # -----------------------------
@@ -747,38 +783,32 @@ if selected_module_key == "module1":
     top_formula_col, top_control_col = st.columns([1.05, 0.95], gap="large")
 
     with top_control_col:
-        a = st.slider(
-            "固定點 a",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m1a", m1_initial_value)),
-            step=0.05,
-            key="m1a",
-        )
-        if st.session_state.get("m1x_raw", m1_initial_value) < a:
-            st.session_state["m1x_raw"] = float(a)
-        x1 = st.slider(
-            "向右拖動x",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m1x_raw", max(m1_initial_value, float(a)))),
-            step=0.05,
-            key="m1x_raw",
-            on_change=enforce_m1x_not_below_a,
-        )
-        x1 = float(max(x1, a))
-        if st.session_state.get("m1z_raw", m1_initial_value) > a:
-            st.session_state["m1z_raw"] = float(a)
-        z1 = st.slider(
-            "向左拖動x",
-            min_value=float(domain_left),
-            max_value=float(domain_right),
-            value=float(st.session_state.get("m1z_raw", min(m1_initial_value, float(a)))),
-            step=0.05,
-            key="m1z_raw",
-            on_change=enforce_m1z_not_above_a,
-        )
-        z1 = float(min(z1, a))
+        st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
+        if hasattr(st, "dialog"):
+            @st.dialog("模組 1｜滑桿控制面板")
+            def m1_slider_control_dialog():
+                st.markdown("請在這裡調整固定點 a、向右拖動 x 與向左拖動 x。")
+                render_m1_slider_controls()
+
+            if st.button("開啟滑桿控制面板", key="m1_open_slider_panel", use_container_width=True):
+                m1_slider_control_dialog()
+        elif hasattr(st, "popover"):
+            with st.popover("開啟滑桿控制面板", use_container_width=True):
+                st.markdown("請在這裡調整固定點 a、向右拖動 x 與向左拖動 x。")
+                render_m1_slider_controls()
+        else:
+            with st.expander("開啟滑桿控制面板"):
+                st.markdown("請在這裡調整固定點 a、向右拖動 x 與向左拖動 x。")
+                render_m1_slider_controls()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    a = float(st.session_state.get("m1a", m1_initial_value))
+    if st.session_state.get("m1x_raw", m1_initial_value) < a:
+        st.session_state["m1x_raw"] = float(a)
+    if st.session_state.get("m1z_raw", m1_initial_value) > a:
+        st.session_state["m1z_raw"] = float(a)
+    x1 = float(max(st.session_state.get("m1x_raw", max(m1_initial_value, a)), a))
+    z1 = float(min(st.session_state.get("m1z_raw", min(m1_initial_value, a)), a))
 
     components.html(
         """
