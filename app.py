@@ -135,6 +135,38 @@ div[data-testid="stMetric"] {
         flex: 1 1 0;
         min-width: 0;
     }
+    .m1-floating-panel-title {
+        cursor: move;
+        user-select: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin: -0.2rem -0.15rem 0.65rem -0.15rem;
+        padding: 0.62rem 0.75rem;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #eef5ff 0%, #ffffff 100%);
+        border: 1px solid #dbe8fb;
+        color: #184a90;
+        font-weight: 800;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .m1-floating-panel-hint {
+        color: #607a96;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .m1-floating-panel-note {
+        color: #4f6478;
+        font-size: 0.92rem;
+        line-height: 1.55;
+        margin: 0 0 0.65rem 0;
+        padding: 0.55rem 0.65rem;
+        border-radius: 12px;
+        background: #f8fbff;
+        border: 1px solid #e2ebf7;
+    }
 
     </style>
     """,
@@ -604,6 +636,8 @@ else:
 st.session_state["m1a"] = float(min(max(st.session_state["m1a"], domain_left), domain_right))
 st.session_state["m1x_raw"] = float(min(max(st.session_state["m1x_raw"], domain_left), domain_right))
 st.session_state["m1z_raw"] = float(min(max(st.session_state["m1z_raw"], domain_left), domain_right))
+if "m1_slider_panel_open" not in st.session_state:
+    st.session_state["m1_slider_panel_open"] = False
 
 m2_initial_value = float(min(max(1.0, domain_left), domain_right))
 m2_dx_initial_value = 1.0
@@ -716,6 +750,14 @@ def enforce_m4b_not_below_a():
         st.session_state["m4b_raw"] = a_val
 
 
+def open_m1_slider_panel():
+    st.session_state["m1_slider_panel_open"] = True
+
+
+def close_m1_slider_panel():
+    st.session_state["m1_slider_panel_open"] = False
+
+
 def render_m1_slider_controls():
     a_val = st.slider(
         "固定點 a",
@@ -784,23 +826,148 @@ if selected_module_key == "module1":
 
     with top_control_col:
         st.markdown('<div style="padding: 1.2rem 0 0.3rem 0;">', unsafe_allow_html=True)
-        if hasattr(st, "dialog"):
-            @st.dialog("模組 1｜滑桿控制面板")
-            def m1_slider_control_dialog():
-                st.markdown("請在這裡調整固定點 a、向右拖動 x 與向左拖動 x。")
-                render_m1_slider_controls()
-
-            if st.button("開啟滑桿控制面板", key="m1_open_slider_panel", use_container_width=True):
-                m1_slider_control_dialog()
-        elif hasattr(st, "popover"):
-            with st.popover("開啟滑桿控制面板", use_container_width=True):
-                st.markdown("請在這裡調整固定點 a、向右拖動 x 與向左拖動 x。")
-                render_m1_slider_controls()
-        else:
-            with st.expander("開啟滑桿控制面板"):
-                st.markdown("請在這裡調整固定點 a、向右拖動 x 與向左拖動 x。")
-                render_m1_slider_controls()
+        st.button(
+            "開啟滑桿控制面板",
+            key="m1_open_slider_panel",
+            use_container_width=True,
+            on_click=open_m1_slider_panel,
+        )
+        if st.session_state.get("m1_slider_panel_open", False):
+            st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
         st.markdown('</div>', unsafe_allow_html=True)
+
+    if st.session_state.get("m1_slider_panel_open", False):
+        floating_panel = st.container(border=True)
+        with floating_panel:
+            st.markdown(
+                """
+                <div id="m1-floating-panel-marker"></div>
+                <div id="m1-floating-panel-handle" class="m1-floating-panel-title">
+                    <span>☰ 模組 1｜滑桿控制面板</span>
+                    <span class="m1-floating-panel-hint">拖曳此處移動</span>
+                </div>
+                <div class="m1-floating-panel-note">
+                    調整滑桿後，模組 1 的圖形會立即依目前數值重新更新。
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            render_m1_slider_controls()
+            st.button(
+                "關閉控制面板",
+                key="m1_close_slider_panel",
+                use_container_width=True,
+                on_click=close_m1_slider_panel,
+            )
+
+        components.html(
+            """
+            <script>
+            const setupM1FloatingPanel = () => {
+                const doc = window.parent.document;
+                const marker = doc.getElementById("m1-floating-panel-marker");
+                const handle = doc.getElementById("m1-floating-panel-handle");
+                if (!marker || !handle) return;
+
+                let panel = marker.closest('div[data-testid="stVerticalBlockBorderWrapper"]');
+                if (!panel) {
+                    let node = marker.parentElement;
+                    while (node && node !== doc.body) {
+                        const hasMarker = node.querySelector("#m1-floating-panel-marker");
+                        const sliderCount = node.querySelectorAll('div[data-testid="stSlider"]').length;
+                        if (hasMarker && sliderCount >= 3) {
+                            panel = node;
+                            break;
+                        }
+                        node = node.parentElement;
+                    }
+                }
+                if (!panel) return;
+
+                panel.id = "m1-floating-slider-window";
+                panel.style.position = "fixed";
+                panel.style.zIndex = "2147483000";
+                panel.style.width = "390px";
+                panel.style.maxWidth = "calc(100vw - 32px)";
+                panel.style.background = "rgba(255, 255, 255, 0.985)";
+                panel.style.border = "1px solid #cfe0ff";
+                panel.style.borderRadius = "18px";
+                panel.style.boxShadow = "0 18px 45px rgba(39, 70, 120, 0.22)";
+                panel.style.padding = "0.8rem 0.9rem 0.9rem 0.9rem";
+                panel.style.backdropFilter = "blur(8px)";
+
+                const parentWindow = window.parent;
+                const storage = parentWindow.localStorage || window.localStorage;
+                const savedLeft = storage.getItem("m1FloatingPanelLeft");
+                const savedTop = storage.getItem("m1FloatingPanelTop");
+                const defaultLeft = Math.max(parentWindow.innerWidth - 430, 16);
+                const defaultTop = 145;
+                panel.style.left = savedLeft || `${defaultLeft}px`;
+                panel.style.top = savedTop || `${defaultTop}px`;
+
+                const clampPanel = () => {
+                    const rect = panel.getBoundingClientRect();
+                    const maxLeft = Math.max(parentWindow.innerWidth - rect.width - 12, 12);
+                    const maxTop = Math.max(parentWindow.innerHeight - rect.height - 12, 12);
+                    const left = Math.min(Math.max(rect.left, 12), maxLeft);
+                    const top = Math.min(Math.max(rect.top, 12), maxTop);
+                    panel.style.left = `${left}px`;
+                    panel.style.top = `${top}px`;
+                    storage.setItem("m1FloatingPanelLeft", panel.style.left);
+                    storage.setItem("m1FloatingPanelTop", panel.style.top);
+                };
+                setTimeout(clampPanel, 50);
+
+                if (panel.dataset.m1DraggableReady === "1") return;
+                panel.dataset.m1DraggableReady = "1";
+
+                let isDragging = false;
+                let startX = 0;
+                let startY = 0;
+                let startLeft = 0;
+                let startTop = 0;
+
+                handle.addEventListener("mousedown", (event) => {
+                    isDragging = true;
+                    startX = event.clientX;
+                    startY = event.clientY;
+                    const rect = panel.getBoundingClientRect();
+                    startLeft = rect.left;
+                    startTop = rect.top;
+                    panel.style.transition = "none";
+                    event.preventDefault();
+                });
+
+                doc.addEventListener("mousemove", (event) => {
+                    if (!isDragging) return;
+                    const panelRect = panel.getBoundingClientRect();
+                    const nextLeft = Math.min(
+                        Math.max(startLeft + event.clientX - startX, 12),
+                        Math.max(parentWindow.innerWidth - panelRect.width - 12, 12)
+                    );
+                    const nextTop = Math.min(
+                        Math.max(startTop + event.clientY - startY, 12),
+                        Math.max(parentWindow.innerHeight - panelRect.height - 12, 12)
+                    );
+                    panel.style.left = `${nextLeft}px`;
+                    panel.style.top = `${nextTop}px`;
+                });
+
+                doc.addEventListener("mouseup", () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    storage.setItem("m1FloatingPanelLeft", panel.style.left);
+                    storage.setItem("m1FloatingPanelTop", panel.style.top);
+                });
+            };
+
+            setupM1FloatingPanel();
+            setTimeout(setupM1FloatingPanel, 250);
+            setTimeout(setupM1FloatingPanel, 800);
+            </script>
+            """,
+            height=0,
+        )
 
     a = float(st.session_state.get("m1a", m1_initial_value))
     if st.session_state.get("m1x_raw", m1_initial_value) < a:
