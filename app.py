@@ -1188,16 +1188,8 @@ if selected_module_key == "module1":
             use_container_width=True,
             on_click=open_m1_slider_panel,
         )
-        st.button(
-            "開啟圖形視窗",
-            key="m1_open_graph_window",
-            use_container_width=True,
-            on_click=open_m1_graph_window,
-        )
         if st.session_state.get("m1_slider_panel_open", False):
             st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
-        if st.session_state.get("m1_graph_window_open", False):
-            st.caption("圖形視窗已開啟，可拖曳視窗上方標題列移動位置。")
         if not st.session_state.get("m1_slider_panel_open", False):
             render_m1_slider_controls()
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1682,33 +1674,7 @@ if selected_module_key == "module1":
             st.pyplot(fig11, use_container_width=True)
 
 
-    if st.session_state.get("m1_graph_window_open", False):
-        show_graph_moved_placeholder("模組 1")
-        floating_graph_window = st.container(border=True)
-        with floating_graph_window:
-            st.markdown(
-                """
-                <div id="m1-graph-window-marker"></div>
-                <div id="m1-graph-window-handle" class="m1-floating-panel-title">
-                    <span>☰ 模組 1｜圖形視窗</span>
-                    <span class="m1-floating-panel-hint">拖曳此處移動</span>
-                </div>
-                <div class="m1-floating-panel-note">
-                    拖動滑桿後，這裡的兩個圖形會立即依目前數值重新更新。
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            render_m1_graphs()
-            st.button(
-                "關閉圖形視窗",
-                key="m1_close_graph_window",
-                use_container_width=True,
-                on_click=close_m1_graph_window,
-            )
-        render_floating_graph_window_script("m1", default_top=105)
-    else:
-        render_m1_graphs()
+    render_m1_graphs()
 
     st.markdown(
         """
@@ -1747,16 +1713,8 @@ if selected_module_key == "module2":
                 use_container_width=True,
                 on_click=open_m2_slider_panel,
             )
-            st.button(
-                "開啟圖形視窗",
-                key="m2_open_graph_window",
-                use_container_width=True,
-                on_click=open_m2_graph_window,
-            )
             if st.session_state.get("m2_slider_panel_open", False):
                 st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
-            if st.session_state.get("m2_graph_window_open", False):
-                st.caption("圖形視窗已開啟，可拖曳視窗上方標題列移動位置。")
             if not st.session_state.get("m2_slider_panel_open", False):
                 render_m2_slider_controls()
             st.markdown('</div>', unsafe_allow_html=True)
@@ -2114,33 +2072,7 @@ if selected_module_key == "module2":
             st.pyplot(fig2, use_container_width=True)
 
 
-    if st.session_state.get("m2_graph_window_open", False):
-        show_graph_moved_placeholder("模組 2")
-        floating_graph_window = st.container(border=True)
-        with floating_graph_window:
-            st.markdown(
-                """
-                <div id="m2-graph-window-marker"></div>
-                <div id="m2-graph-window-handle" class="m1-floating-panel-title">
-                    <span>☰ 模組 2｜圖形視窗</span>
-                    <span class="m1-floating-panel-hint">拖曳此處移動</span>
-                </div>
-                <div class="m1-floating-panel-note">
-                    拖動滑桿後，這裡的兩個圖形會立即依目前數值重新更新。
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            render_m2_graphs()
-            st.button(
-                "關閉圖形視窗",
-                key="m2_close_graph_window",
-                use_container_width=True,
-                on_click=close_m2_graph_window,
-            )
-        render_floating_graph_window_script("m2", default_top=105)
-    else:
-        render_m2_graphs()
+    render_m2_graphs()
 
     st.markdown(
         """
@@ -2454,16 +2386,8 @@ if selected_module_key == "module3":
                 use_container_width=True,
                 on_click=open_m3_slider_panel,
             )
-            st.button(
-                "開啟圖形視窗",
-                key="m3_open_graph_window",
-                use_container_width=True,
-                on_click=open_m3_graph_window,
-            )
             if st.session_state.get("m3_slider_panel_open", False):
                 st.caption("控制面板已開啟，可拖曳面板上方標題列移動位置。")
-            if st.session_state.get("m3_graph_window_open", False):
-                st.caption("圖形視窗已開啟，可拖曳視窗上方標題列移動位置。")
             if not st.session_state.get("m3_slider_panel_open", False):
                 render_m3_slider_controls()
             st.markdown('</div>', unsafe_allow_html=True)
@@ -2759,33 +2683,7 @@ if selected_module_key == "module3":
             st.pyplot(fig3, use_container_width=True)
 
 
-    if st.session_state.get("m3_graph_window_open", False):
-        show_graph_moved_placeholder("模組 3")
-        floating_graph_window = st.container(border=True)
-        with floating_graph_window:
-            st.markdown(
-                """
-                <div id="m3-graph-window-marker"></div>
-                <div id="m3-graph-window-handle" class="m1-floating-panel-title">
-                    <span>☰ 模組 3｜圖形視窗</span>
-                    <span class="m1-floating-panel-hint">拖曳此處移動</span>
-                </div>
-                <div class="m1-floating-panel-note">
-                    拖動滑桿後，這裡的兩個圖形會立即依目前數值重新更新。
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            render_m3_graphs()
-            st.button(
-                "關閉圖形視窗",
-                key="m3_close_graph_window",
-                use_container_width=True,
-                on_click=close_m3_graph_window,
-            )
-        render_floating_graph_window_script("m3", default_top=105)
-    else:
-        render_m3_graphs()
+    render_m3_graphs()
 
     st.markdown(
         """
